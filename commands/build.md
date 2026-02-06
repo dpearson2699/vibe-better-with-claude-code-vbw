@@ -180,20 +180,20 @@ Display: "○ QA verification skipped" (with reason: --skip-qa flag or turbo mod
     {PASS | PARTIAL | FAIL | skipped}
     Checks: {passed}/{total}
 
-  ➜ Next Up:
-    {Suggest next action based on context:}
-    - If more phases remain: "/vbw:plan {N+1} to plan the next phase"
-    - If QA was skipped: "/vbw:qa {N} to verify this phase"
-    - If this was the last phase: "/vbw:ship to complete the milestone"
+  ➜ Next Up
+    {Suggest 1-3 commands based on context:}
+    /vbw:plan {N+1} -- Plan the next phase
+    /vbw:qa {N} -- Verify this phase (if QA was skipped)
+    /vbw:ship -- Complete the milestone (if last phase)
 ```
 
 ## Output Format
 
 Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md for all visual formatting:
-- Double-line box for phase-level completion banner
-- Single-line box for wave banners
-- ✓ for completed plans, ✗ for failed plans, ○ for skipped steps
+- Use the **Phase Banner** template for the phase completion banner (double-line box)
+- Use the **Wave Banner** template for wave group headers (single-line box)
+- Use the **Execution Progress** template for per-plan status lines (◆ ✓ ✗ ○)
+- Use the **Metrics Block** template for the completion summary stats
+- Use the **Next Up Block** template for navigation (➜ header, indented commands with --)
 - ⚠ for warnings (checkpoint plans, partial completions)
-- ◆ for currently executing plans
-- ➜ for Next Up navigation
 - No ANSI color codes

@@ -509,7 +509,8 @@ If validation found warnings:
 
 Next steps:
 ```
-➜ Next Up: Run /vbw:plan {next-phase} to plan with codebase context.
+➜ Next Up
+  /vbw:plan {next-phase} -- Plan with codebase context
 ```
 
 ### Step 9: Post-mapping security verification (CMAP-10)
@@ -539,9 +540,9 @@ This is a safety net, not the primary enforcement. The primary enforcement is th
 ## Output Format
 
 Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md for all visual formatting:
-- Double-line box (╔═╗║╚═╝) for mapping completion banner
-- Checkmark (✓) for each produced document
-- Diamond (◆) for key findings
-- Warning (⚠) for validation notes and security concerns
-- Arrow (➜) for Next Up navigation
+- Use the **Phase Banner** template for the mapping completion banner (double-line box)
+- Use the **File Checklist** template for produced documents (✓ prefix)
+- ◆ for key findings
+- ⚠ for validation notes and security concerns
+- Use the **Next Up Block** template for navigation (➜ header, indented commands with --)
 - No ANSI color codes

@@ -110,13 +110,17 @@ Present planning summary using vbw-brand.md formatting:
 - Plan list with wave assignments
 - Task count per plan
 - Effort profile used
-- Next Up block: "Run /vbw:build {N} to execute this phase."
+- Next Up block:
+```
+➜ Next Up
+  /vbw:build {N} -- Execute this phase
+```
 
 ## Output Format
 
 Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md for all visual formatting:
-- Double-line box for phase planning banner
-- Checkmark for completed validation checks
-- Circle for plans ready to execute
-- Arrow for Next Up navigation
+- Use the **Phase Banner** template for the planning completion banner (double-line box)
+- Use the **File Checklist** template for validation checks (✓ prefix)
+- ○ for plans ready to execute
+- Use the **Next Up Block** template for navigation (➜ header, indented commands with --)
 - No ANSI color codes
