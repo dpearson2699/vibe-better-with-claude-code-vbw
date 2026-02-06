@@ -6,10 +6,6 @@ allowed-tools: Read, Glob
 
 # VBW Help $ARGUMENTS
 
-## Context
-
-Available commands: `!`ls ${CLAUDE_PLUGIN_ROOT}/commands/*.md 2>/dev/null | wc -l`` installed
-
 ## Behavior
 
 ### No arguments: Display complete command reference
