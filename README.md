@@ -129,13 +129,17 @@ For the "I'll just prompt carefully" crowd.
 
 <br>
 
-### Real-time dashboard for your expensive new hobby
+### Real-time statusline that knows more about your project than you do
 
 <img src="assets/statusline.png" width="100%" />
 
-Five lines of cold, hard accountability rendered after every single response. Phase progress so you can see how little you've accomplished. Context window burn rate so you can watch your session die in real time. Usage limits with countdown timers, because nothing says "I'm a productive developer" like a progress bar showing how fast you're hitting your API ceiling. Cost tracking down to the cent, updating live, so you can calculate exactly how much you're paying per line of code you didn't write. And a clickable GitHub link, in case you want to visit the repo and pretend you understand what's in it.
+Five lines of pure situational awareness, rendered after every response. Phase progress, plan completion, effort profile, QA status... everything a senior engineer would track on a whiteboard, except the whiteboard has been replaced by a terminal and the senior engineer has been replaced by you.
 
-Most developers use `htop` to monitor their systems. You use a statusline to monitor how much of your Anthropic subscription an AI burned while you watched.
+Context window with a live burn bar and token counts. Because somewhere, a staff engineer just felt a disturbance in the force - someone with no CS degree is managing memory allocation, and they're doing it with a progress bar that updates automatically.
+
+API usage limits with countdown timers for session, weekly, and per-model quotas. Session running hot? The bar goes red. Weekly ceiling approaching? You'll know before Anthropic does. Extra usage tracking down to the cent so you always know exactly where your money went. Spoiler: it went to an AI that writes better code than most bootcamp graduates. And some actual graduates, but we don't talk about that at dinner parties.
+
+Cost, duration, diff stats, model info, and GitHub branch, all in one line. It's the kind of dashboard a real engineering team would build after three sprints and a retrospective. You got it by installing a plugin. Twenty years of software craftsmanship, mass layoffs, and all it took to replace the monitoring team was `bash -c` and a dream.
 
 <br>
 
