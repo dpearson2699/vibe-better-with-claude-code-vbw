@@ -90,9 +90,7 @@ Environment setup complete:
   {✓ or ○} Statusline {add "(restart to activate)" if newly installed}
 ```
 
-**STOP. Do NOT proceed to Step 1 until this summary has been displayed and settings.json has been written.**
-
-### Step 1: Scaffold directory
+**0d. Scaffold directory (before any project questions):**
 
 Read each template from `${CLAUDE_PLUGIN_ROOT}/templates/` and write to .vbw-planning/:
 
@@ -108,7 +106,9 @@ Create `.vbw-planning/phases/` directory.
 
 Ensure config.json includes `"agent_teams": true`.
 
-### Step 2: Fill PROJECT.md
+**STOP. Do NOT proceed to Step 1 until this summary has been displayed, settings.json has been written, and the directory scaffold is complete.**
+
+### Step 1: Fill PROJECT.md
 
 If $ARGUMENTS provided, use as project description. Otherwise ask:
 - "What is the name of your project?"
@@ -116,7 +116,7 @@ If $ARGUMENTS provided, use as project description. Otherwise ask:
 
 Fill placeholders: {project-name}, {core-value}, {date}.
 
-### Step 3: Gather requirements
+### Step 2: Gather requirements
 
 Ask 3-5 focused questions:
 1. Must-have features for first release?
@@ -127,22 +127,22 @@ Ask 3-5 focused questions:
 
 Populate REQUIREMENTS.md with REQ-ID format, organized into v1/v2/out-of-scope.
 
-### Step 4: Create roadmap
+### Step 3: Create roadmap
 
 Suggest 3-5 phases based on requirements. Each phase: name, goal, mapped requirements, success criteria. Fill ROADMAP.md.
 
-### Step 5: Initialize state
+### Step 4: Initialize state
 
 Update STATE.md: project name, Phase 1 position, today's date, empty decisions, 0% progress.
 
-### Step 5.5: Brownfield codebase summary
+### Step 4.5: Brownfield codebase summary
 
 If BROWNFIELD=true:
 1. Count source files by extension (Glob)
 2. Check for test files, CI/CD, Docker, monorepo indicators
 3. Add Codebase Profile section to STATE.md
 
-### Step 5.7: Skill discovery
+### Step 4.7: Skill discovery
 
 Follow `${CLAUDE_PLUGIN_ROOT}/references/skill-discovery.md`:
 1. Scan installed skills (global, project, MCP)
@@ -152,19 +152,19 @@ Follow `${CLAUDE_PLUGIN_ROOT}/references/skill-discovery.md`:
 
 **IMPORTANT:** Do NOT mention `find-skills` to the user during init. The find-skills meta-skill is only used during `/vbw:plan` for dynamic registry lookups. During init, curated stack mappings are sufficient. If find-skills is not installed, proceed silently — do not report it as missing or suggest installing it.
 
-### Step 5.8: Generate CLAUDE.md
+### Step 4.8: Generate CLAUDE.md
 
 Follow `${CLAUDE_PLUGIN_ROOT}/references/memory-protocol.md`. Write CLAUDE.md at project root with:
 - Project header (name, core value)
 - Active Context (milestone, phase, next action)
 - Key Decisions (empty)
-- Installed Skills (from 5.7)
+- Installed Skills (from 4.7)
 - Learned Patterns (empty)
 - VBW Commands section (static)
 
 Keep under 200 lines.
 
-### Step 6: Present summary
+### Step 5: Present summary
 
 ```
 ╔══════════════════════════════════════════╗
@@ -182,7 +182,7 @@ Keep under 200 lines.
   {include next line only if statusline was installed during Step 0b}
   ✓ Statusline (restart to activate)
 
-  {include Skills block only if skills were discovered in Step 5.7}
+  {include Skills block only if skills were discovered in Step 4.7}
   Skills:
     Installed: {count} ({names})
     Suggested: {count} ({names})
