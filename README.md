@@ -1,3 +1,5 @@
+<div align="center">
+
 # Vibe Better With Claude Code (Opus 4.6+) - VBW
 
 *You're not an engineer anymore.*
@@ -6,7 +8,19 @@
 
 *At least do it properly.*
 
-<p align="center"><img src="assets/abraham.jpeg" width="300" /></p>
+<br>
+
+<img src="assets/abraham.jpeg" width="300" />
+
+<br>
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Claude Code](https://img.shields.io/badge/Claude_Code-v1.0.33+-blue.svg)](https://code.claude.com)
+[![Opus 4.6+](https://img.shields.io/badge/Model-Opus_4.6+-purple.svg)](https://anthropic.com)
+
+</div>
+
+<br>
 
 ## What Is This
 
@@ -15,6 +29,29 @@ VBW is a Claude Code plugin that bolts an actual development lifecycle onto your
 You describe what you want. VBW breaks it into phases. Agents plan, write, and verify the code. Commits are atomic. Verification is goal-backward. State persists across sessions. It's the entire software development lifecycle, except you replaced the engineering team with a plugin and a prayer.
 
 Think of it as project management for the post-dignity era of software development.
+
+<br>
+
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [How It Works](#how-it-works)
+- [Quick Tutorial](#quick-tutorial)
+- [Commands](#commands)
+- [The Agents](#the-agents)
+- [Effort Profiles](#effort-profiles)
+- [Project Structure](#project-structure)
+- [Under the Hood](#under-the-hood)
+- [Requirements](#requirements)
+- [Contributing](#contributing)
+- [License](#license)
+
+<br>
+
+---
+
+<br>
 
 ## Features
 
@@ -27,6 +64,8 @@ Most Claude Code plugins were built for the subagent era, one main session spawn
 - **Native hooks for continuous verification.** 8 hook events run automatically during builds -- validating writes, checking commits, gating quality, blocking access to sensitive files. No more spawning a QA agent after every task. The platform enforces it, not the prompt.
 
 - **Platform-enforced tool permissions.** Each agent has `tools`/`disallowedTools` in their YAML frontmatter. Scout and QA literally cannot write files. Dev can't be tricked into reading your `.env`. It's enforced by Claude Code itself, not by instructions an agent might ignore during compaction.
+
+<br>
 
 ### Solves Agent Teams limitations out of the box
 
@@ -42,6 +81,8 @@ Agent Teams are [experimental with known limitations](https://code.claude.com/do
 
 Agent Teams ship with seven known limitations. VBW solves them. The eighth... that you're using AI to write software doesn't need a fix. It needs an intervention.
 
+<br>
+
 ### Skills.sh integration
 
 VBW integrates with [Skills.sh](https://skills.sh), the open-source skill registry for AI agents with 20+ supported platforms and thousands of community-contributed skills:
@@ -54,12 +95,14 @@ VBW integrates with [Skills.sh](https://skills.sh), the open-source skill regist
 
 - **Zero lock-in.** Skills are standard Claude Code skills. They work with or without VBW. VBW just makes discovering and using them part of your workflow instead of an afterthought.
 
+<br>
+
 ### What you get versus raw Claude Code
 
 For the "I'll just prompt carefully" crowd.
 
 | Without VBW | With VBW |
-|---|---|
+| :--- | :--- |
 | One long session, no structure | Phased roadmap with requirements traceability |
 | Manual agent spawning | 6 specialized agents with enforced permissions |
 | Hope the AI remembers context | Persistent state across sessions via `.vbw-planning/` |
@@ -68,6 +111,12 @@ For the "I'll just prompt carefully" crowd.
 | "It works on my machine" | Goal-backward verification against success criteria |
 | Skills exist somewhere | Stack-aware skill discovery and auto-suggestion |
 
+<br>
+
+---
+
+<br>
+
 ## Installation
 
 ```
@@ -75,6 +124,12 @@ claude plugin install vbw
 ```
 
 That's it. If that was too many steps, this plugin might actually be for you.
+
+<br>
+
+---
+
+<br>
 
 ## How It Works
 
@@ -115,7 +170,7 @@ VBW operates on a simple loop that will feel familiar to anyone who's ever shipp
                     │  Lead agent: researches,     │
                     │  decomposes into tasks,      │
                     │  self-reviews the plan       │
-                    │  Outputs: PLAN.md per wve    │
+                    │  Outputs: PLAN.md per wave   │
                     └──────────────┬───────────────┘
                                    │
                                    ▼
@@ -154,6 +209,12 @@ VBW operates on a simple loop that will feel familiar to anyone who's ever shipp
                                      └──────────────────┘
 ```
 
+<br>
+
+---
+
+<br>
+
 ## Quick Tutorial
 
 ### Starting a brand new project
@@ -182,6 +243,8 @@ An Agent Team of Dev teammates executes each task in parallel, making atomic com
 
 Archives the milestone, tags the release, updates project docs. You shipped. With actual verification. Your future self won't want to set the codebase on fire. Probably.
 
+<br>
+
 ### Picking up an existing codebase
 
 ```
@@ -193,6 +256,12 @@ Archives the milestone, tags the release, updates project docs. You shipped. Wit
 
 Then proceed with `/vbw:plan`, `/vbw:build`, `/vbw:qa`, `/vbw:ship` as above.
 
+<br>
+
+---
+
+<br>
+
 ## Commands
 
 ### Lifecycle -- The Main Loop
@@ -200,23 +269,27 @@ Then proceed with `/vbw:plan`, `/vbw:build`, `/vbw:qa`, `/vbw:ship` as above.
 These are the commands you'll use every day. This is the job now.
 
 | Command | Description |
-|---|---|
+| :--- | :--- |
 | `/vbw:init` | Initialize a project. Scaffolds `.vbw-planning/` with PROJECT.md, REQUIREMENTS.md, ROADMAP.md, and STATE.md. Detects your tech stack and suggests Claude Code skills. Works for both new and existing codebases. |
 | `/vbw:plan {phase}` | Plan a phase. The Lead agent researches context, decomposes work into tasks grouped by wave, and self-reviews the plan. Produces PLAN.md files with YAML frontmatter. Accepts `--effort` flag (thorough/balanced/fast/turbo). |
 | `/vbw:build {phase}` | Execute a planned phase. Creates an Agent Team with Dev teammates for parallel execution. Atomic commits per task. Continuous QA via hooks. Produces SUMMARY.md. Resumes from last checkpoint if interrupted. |
 | `/vbw:ship` | Complete a milestone. Runs audit, archives state to `.vbw-planning/milestones/`, tags the git release, merges milestone branch (if any), and updates project docs. The one command that means you actually finished something. |
 
+<br>
+
 ### Monitoring -- Trust But Verify
 
 | Command | Description |
-|---|---|
+| :--- | :--- |
 | `/vbw:status` | Progress dashboard showing all phases, completion bars, velocity metrics, and suggested next action. Add `--metrics` for token consumption breakdown per agent. |
 | `/vbw:qa {phase}` | Deep verification on demand. Three tiers (Quick, Standard, Deep) with goal-backward methodology. Continuous QA runs automatically via hooks during builds -- this command is for thorough, on-demand verification. Produces VERIFICATION.md. |
+
+<br>
 
 ### Supporting -- The Safety Net
 
 | Command | Description |
-|---|---|
+| :--- | :--- |
 | `/vbw:fix` | Quick task in Turbo mode. One commit, no ceremony. For when the fix is obvious and you don't need six agents to add a missing comma. |
 | `/vbw:debug` | Systematic bug investigation via the Debugger agent. Hypothesis, evidence, root cause, fix. Like the scientific method, except it actually finds things. |
 | `/vbw:todo` | Add an item to a persistent backlog that survives across sessions. For all those "we should really..." thoughts that usually die in a terminal tab. |
@@ -225,10 +298,12 @@ These are the commands you'll use every day. This is the job now.
 | `/vbw:config` | View and toggle VBW settings: effort profiles, skill suggestions, auto-install behavior, and skill-hook wiring. |
 | `/vbw:help` | Command reference with usage examples. You are reading its output's spiritual ancestor right now. |
 
+<br>
+
 ### Advanced -- For When You're Feeling Ambitious
 
 | Command | Description |
-|---|---|
+| :--- | :--- |
 | `/vbw:map` | Analyze a codebase with 4 parallel Scout teammates (Tech, Architecture, Quality, Concerns). Produces synthesis documents (INDEX.md, PATTERNS.md). Supports monorepo per-package mapping. Security-enforced via hooks: never reads `.env` or credentials. |
 | `/vbw:discuss {phase}` | Gather context through adaptive questioning before planning. For when you want to think before you type. Revolutionary concept. |
 | `/vbw:assumptions {phase}` | Surface Claude's assumptions about your phase approach. Useful for catching misunderstandings before they become commits. |
@@ -242,18 +317,26 @@ These are the commands you'll use every day. This is the job now.
 | `/vbw:whats-new` | View changelog entries since your installed version. |
 | `/vbw:update` | Update VBW to the latest version. |
 
+<br>
+
+---
+
+<br>
+
 ## The Agents
 
 VBW uses 6 specialized agents, each with native tool permissions enforced via YAML frontmatter. They can't do what they shouldn't, which is more than can be said for most interns.
 
 | Agent | Role | Tools |
-|---|---|---|
+| :--- | :--- | :--- |
 | **Scout** | Research and information gathering. Reads everything, writes nothing. The responsible one. | Read, Grep, Glob, WebSearch, WebFetch |
 | **Architect** | Creates roadmaps, derives success criteria, designs phase structure. Writes plans, not code. | Read, Write, Grep, Glob |
 | **Lead** | Merges research + planning + self-review in one session. The one who actually makes decisions. | Read, Write, Grep, Glob, Task |
 | **Dev** | Writes code, makes commits, builds things. Full tool access. Handle with care. | Full access |
 | **QA** | Goal-backward verification. Reads everything, trusts nothing. Cannot modify code. | Read, Grep, Glob, Bash |
 | **Debugger** | Scientific method bug investigation. One issue per session to prevent scope creep. | Full access |
+
+<br>
 
 Here's when each one shows up to work:
 
@@ -283,10 +366,10 @@ Here's when each one shows up to work:
                                                                        ▼
   HOOKS (continuous)                                             VERIFICATION.md
   ┌──────────────────────────────────────────────────────────────────────────┐
-  │  PostToolUse ──── Validates writes and commits continuously             │
-  │  TeammateIdle ─── QA gate before teammate goes idle                     │
-  │  TaskCompleted ── Verifies atomic commit exists                         │
-  │  PreToolUse ───── Blocks access to sensitive files (.env, keys)         │
+  │  PostToolUse ──── Validates writes and commits continuously              │
+  │  TeammateIdle ─── QA gate before teammate goes idle                      │
+  │  TaskCompleted ── Verifies atomic commit exists                          │
+  │  PreToolUse ───── Blocks access to sensitive files (.env, keys)          │
   └──────────────────────────────────────────────────────────────────────────┘
 
   ┌──────────────────────────────────────────────────────────────────────────┐
@@ -299,12 +382,18 @@ Here's when each one shows up to work:
   └──────────────────────────────────────────────────────────────────────────┘
 ```
 
+<br>
+
+---
+
+<br>
+
 ## Effort Profiles
 
 Not every task deserves the same level of scrutiny. Most of yours don't. VBW provides four effort profiles that control how much your agents think before they act.
 
 | Profile | What It Does | When To Use It |
-|---|---|---|
+| :--- | :--- | :--- |
 | **Thorough** | Maximum agent depth. Full Lead planning, deep QA, comprehensive research. | Architecture decisions. Things that would be embarrassing to get wrong. |
 | **Balanced** | Standard depth. Good planning, solid QA. The default. | Most work. The sweet spot between quality and not burning your API budget. |
 | **Fast** | Lighter planning, quicker verification. | Straightforward phases where the path is obvious. |
@@ -313,6 +402,12 @@ Not every task deserves the same level of scrutiny. Most of yours don't. VBW pro
 ```
 /vbw:plan 3 --effort=turbo
 ```
+
+<br>
+
+---
+
+<br>
 
 ## Project Structure
 
@@ -327,6 +422,8 @@ references/        Brand vocabulary, verification protocol, effort profiles
 templates/         Artifact templates (PLAN.md, SUMMARY.md, etc.)
 assets/            Images and static files
 ```
+
+<br>
 
 When you run `/vbw:init` in your project, it creates:
 
@@ -343,6 +440,12 @@ When you run `/vbw:init` in your project, it creates:
 
 Your AI-managed project now has more structure than most startups that raised a Series A.
 
+<br>
+
+---
+
+<br>
+
 ## Under the Hood
 
 VBW leverages three Opus 4.6 features that make the whole thing work:
@@ -355,6 +458,12 @@ VBW leverages three Opus 4.6 features that make the whole thing work:
 
 Three platform features. Zero faith in the developer. As it should be.
 
+<br>
+
+---
+
+<br>
+
 ## Requirements
 
 - **Claude Code** with **Opus 4.6+** model
@@ -364,8 +473,20 @@ Three platform features. Zero faith in the developer. As it should be.
 
 That last one is the real barrier to entry.
 
+<br>
+
+---
+
+<br>
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on local development, project structure, and pull requests.
+
+<br>
+
 ## License
 
 MIT -- see [LICENSE](LICENSE) for details.
 
-Built by [Tiago Serôdio](https://github.com/yidakee).
+Built by [Tiago Serodio](https://github.com/yidakee).
