@@ -3,6 +3,22 @@
 
 PLANNING_DIR=".vbw-planning"
 UPDATE_MSG=""
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# --- First-run welcome (shows once, creates marker file) ---
+
+MARKER="$HOME/.claude/.vbw-welcomed"
+if [ ! -f "$MARKER" ]; then
+  LOCAL_VER=$(jq -r '.version // "?"' "$SCRIPT_DIR/../.claude-plugin/plugin.json" 2>/dev/null)
+  mkdir -p "$HOME/.claude" 2>/dev/null
+  date +%s > "$MARKER" 2>/dev/null
+  jq -n --arg v "$LOCAL_VER" '{
+    "hookSpecificOutput": {
+      "additionalContext": ("VBW v" + $v + " installed. You are no longer an engineer. You are a prompt jockey with commit access. At least do it properly. Run /vbw:init to get started.")
+    }
+  }'
+  exit 0
+fi
 
 # --- Update check (once per day, fail-silent) ---
 
@@ -16,7 +32,6 @@ fi
 
 if [ ! -f "$CACHE" ] || [ $((NOW - MT)) -gt 86400 ]; then
   # Get installed version from plugin.json next to this script
-  SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
   LOCAL_VER=$(jq -r '.version // "0.0.0"' "$SCRIPT_DIR/../.claude-plugin/plugin.json" 2>/dev/null)
 
   # Fetch latest version from GitHub (3s timeout)

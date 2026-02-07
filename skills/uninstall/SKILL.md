@@ -59,7 +59,15 @@ If user approves: remove `env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` from setting
 
 If user declines: display "○ Agent Teams setting kept"
 
-### Step 4: Summary and final command
+### Step 4: Clean welcome marker
+
+Remove the first-run marker file so the welcome message shows again if VBW is reinstalled:
+```bash
+rm -f ~/.claude/.vbw-welcomed
+```
+Display "✓ Welcome marker removed"
+
+### Step 5: Summary and final command
 
 Display:
 ```
