@@ -12,74 +12,49 @@ Working directory: `!`pwd``
 
 Active milestone:
 ```
-!`cat .planning/ACTIVE 2>/dev/null || echo "No active milestone"`
+!`cat .vbw-planning/ACTIVE 2>/dev/null || echo "No active milestone"`
 ```
 
 Available milestones:
 ```
-!`ls -d .planning/*/ROADMAP.md 2>/dev/null || echo "No milestone directories"`
+!`ls -d .vbw-planning/*/ROADMAP.md 2>/dev/null || echo "No milestone directories"`
 ```
 
 ## Guard
 
-1. **Not initialized:** If `.planning/` directory doesn't exist, STOP: "Run /vbw:init first."
-
-2. **No milestones:** If `.planning/ACTIVE` does not exist, STOP: "No milestones configured. Use /vbw:milestone <name> to create one."
-
-3. **Missing milestone name:** If `$ARGUMENTS` is empty, display available milestones and prompt:
-
-   List all milestone directories under `.planning/` that contain a `ROADMAP.md`. Mark the currently active one (from `.planning/ACTIVE`) with ◆ and others with ○:
-
-   ```
-   Available milestones:
-     ◆ {active-slug} (active)
-     ○ {other-slug}
-     ○ {other-slug}
-
-   Usage: /vbw:switch <milestone-name>
-   ```
-
-   Then STOP.
-
-4. **Invalid milestone:** If `.planning/{slug}/` does not exist or does not contain a `ROADMAP.md`, STOP: "Milestone '{name}' not found." followed by the available milestones list (same format as condition 3).
+1. **Not initialized:** If .vbw-planning/ doesn't exist, STOP: "Run /vbw:init first."
+2. **No milestones:** If ACTIVE doesn't exist, STOP: "No milestones configured. Use /vbw:milestone <name>."
+3. **Missing name:** If $ARGUMENTS empty, list milestones (◆ active, ○ others) and STOP.
+4. **Invalid milestone:** If .vbw-planning/{slug}/ doesn't exist, STOP with available list.
 
 ## Steps
 
-### Step 1: Parse arguments
+### Step 1: Parse and validate
 
-- Extract milestone name or slug from `$ARGUMENTS`
-- Normalize to slug format: lowercase, replace spaces with hyphens, strip special characters except hyphens
-  - Example: "Mobile App" normalizes to "mobile-app"
-- Validate that `.planning/{slug}/` exists and contains `ROADMAP.md`
+Normalize name to slug. Verify .vbw-planning/{slug}/ROADMAP.md exists. If target = current active, display "Already on '{name}'." and STOP.
 
-### Step 2: Read current state
+### Step 2: Check for uncommitted changes
 
-- Read `.planning/ACTIVE` to get the current active milestone slug
-- If the target slug matches the current active slug, display: "Already on milestone '{name}'." and STOP
-- Read `.planning/{slug}/STATE.md` to get the target milestone's current position:
-  - Phase number and total phases
-  - Plan count and progress percentage
-  - Progress bar data
+Run `git status --porcelain`. If output is non-empty:
+- WARN: "⚠ Uncommitted changes detected. Commit or stash before switching to avoid losing work."
+- List the dirty files
+- Ask: "Continue anyway?"
 
 ### Step 3: Update ACTIVE pointer
 
-Write the new milestone slug to `.planning/ACTIVE` (overwrite existing content):
+Write slug to .vbw-planning/ACTIVE.
 
-```
-{slug}
-```
+### Step 4: Git branch switch
 
-### Step 4: Optional git branch switch
+Check if `milestone/{slug}` branch exists (`git branch --list milestone/{slug}`).
+If exists: `git checkout milestone/{slug}` and display "✓ Switched to branch milestone/{slug}"
+If not: skip silently.
 
-Check if a git branch named `milestone/{slug}` exists:
+### Step 5: Read target state
 
-- Use `git branch --list milestone/{slug}` to check
-- If the branch exists: switch to it with `git checkout milestone/{slug}` and display: "✓ Switched to branch milestone/{slug}"
-- If no matching branch exists: skip silently (no message)
+Read .vbw-planning/{slug}/STATE.md for phase, progress, percentage.
 
-### Step 5: Present summary
-
-Display using brand formatting from @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+### Step 6: Present summary
 
 ```
 ╔═══════════════════════════════════════════╗
@@ -88,28 +63,22 @@ Display using brand formatting from @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.
 
   Previous: {old-slug}
   Active:   {new-slug}
+  {If branch: "Branch: milestone/{slug}"}
 
   Milestone State:
-    Phase:    {current-phase}/{total-phases}
-    Progress: {progress-bar} {percent}%
+    Phase:    {current}/{total}
+    Progress: {bar} {percent}%
 
 ➜ Next Up
   /vbw:status -- View milestone progress
   /vbw:plan {N} -- Plan the next phase
 ```
 
-If git branch was switched in Step 4, add after the Active line:
-
-```
-  Branch:   milestone/{slug}
-```
-
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md for all visual formatting:
-- Use the **Phase Banner** template (double-line box) for the switch confirmation banner
-- Use the **Metrics Block** template for the previous/active and milestone state display
-- Progress bar: 10 characters wide using █ for filled, ░ for empty, paired with percentage
-- Use the **Next Up Block** template for navigation (➜ header, indented commands with --)
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+- Phase Banner (double-line box) for switch confirmation
+- Metrics Block for state display
+- Progress bar: 10 chars, █ filled, ░ empty
+- Next Up Block for navigation
 - No ANSI color codes
-- Keep lines under 80 characters inside boxes

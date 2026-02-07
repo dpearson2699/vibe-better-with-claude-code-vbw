@@ -39,7 +39,7 @@ Everything in Quick, plus:
 - **Import/export chain:** Referenced files exist and cross-references resolve
 - **Frontmatter cross-consistency:** Field values align across related artifacts (e.g., phase IDs match)
 - **Line count thresholds:** Files meet minimum size expectations for their type
-- **Convention compliance:** If `.planning/codebase/CONVENTIONS.md` exists, check new/modified files against established conventions (see Section 5)
+- **Convention compliance:** If `.vbw-planning/codebase/CONVENTIONS.md` exists, check new/modified files against established conventions (see Section 5)
 - **Skill-augmented checks:** If quality-related skills are installed (per STATE.md Skills section), run additional domain-specific checks (e.g., security-audit, a11y-check)
 
 **Used for:** Most phases, the recommended default tier.
@@ -108,7 +108,7 @@ Traditional verification asks "did we write the code?" Goal-backward verificatio
 
 ## 5. Convention Verification (VRFY-06)
 
-When `.planning/codebase/CONVENTIONS.md` exists, QA checks new and modified code against documented conventions.
+When `.vbw-planning/codebase/CONVENTIONS.md` exists, QA checks new and modified code against documented conventions.
 
 ### Convention Categories
 

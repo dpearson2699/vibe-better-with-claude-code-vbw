@@ -17,13 +17,11 @@ Current version:
 
 ### Step 1: Read current version
 
-Read `${CLAUDE_PLUGIN_ROOT}/VERSION` using the Read tool. Store the version string as `old_version`.
+Read `${CLAUDE_PLUGIN_ROOT}/VERSION`. Store as `old_version`.
 
-### Step 2: Handle --check flag
+### Step 2: Handle --check
 
-If `$ARGUMENTS` contains "--check", only report the current version and advise how to update. Do NOT attempt to update.
-
-Display:
+If --check: display version and update instructions, then STOP.
 
 ```
 ╔═══════════════════════════════════════════╗
@@ -32,74 +30,50 @@ Display:
 
   Current version: {old_version}
 
-  To update VBW, use the Claude Code plugin manager:
-    claude plugin update vbw
+  To update: claude plugin update vbw
 ```
-
-Then show Next Up block and STOP. Do not continue to Step 3.
 
 ### Step 3: Attempt update
 
-Since VBW is distributed as a Claude Code plugin (not npm), the update mechanism is the Claude Code plugin manager.
+Run: `claude plugin update vbw`
 
-Run via Bash tool:
-```
-claude plugin update vbw
-```
-
-If this command succeeds, proceed to Step 4.
-
-If this command is not available or fails (exit code non-zero, "command not found", or similar), fall back to manual instructions:
-
+If fails, show manual instructions:
 ```
 ⚠ Automatic update not available
 
-  The Claude Code plugin manager could not complete the update.
-
-  To update manually:
   1. Visit the VBW repository
-  2. Pull the latest version
-  3. Re-install the plugin with: claude plugin install
+  2. Pull latest version
+  3. Re-install: claude plugin install
 ```
 
-Then show Next Up block and STOP. Do not continue to Step 4.
+### Step 4: Verify and display
 
-### Step 4: Verify update
+Read VERSION again for `new_version`.
 
-After a successful update attempt, read `${CLAUDE_PLUGIN_ROOT}/VERSION` again using the Read tool to get `new_version`.
-
-### Step 5: Display result
-
-**If version changed (new_version differs from old_version):**
-
+If changed:
 ```
 ╔═══════════════════════════════════════════╗
 ║  VBW Updated                              ║
 ╚═══════════════════════════════════════════╝
 
-✓ Updated: {old_version} -> {new_version}
+  ✓ Updated: {old_version} -> {new_version}
+
+➜ Next Up
+  /vbw:whats-new {old_version} -- See what changed
 ```
 
-Then suggest `/vbw:whats-new {old_version}` to see what changed.
-
-**If version unchanged (new_version equals old_version):**
-
+If unchanged:
 ```
-╔═══════════════════════════════════════════╗
-║  VBW Update                               ║
-╚═══════════════════════════════════════════╝
-
 ✓ VBW is already up to date ({new_version}).
+
+➜ Next Up
+  /vbw:help -- View all commands
 ```
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md for all visual formatting:
-- Double-line box for the update header banner
-- ✓ for success confirmation (update completed or already up to date)
-- ⚠ for fallback warning (automatic update not available)
-- Next Up Block:
-  - After update success: `/vbw:whats-new {old_version} -- See what changed`
-  - After already up to date: `/vbw:help -- View all available commands`
-  - After fallback: `/vbw:help -- View all available commands`
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+- Double-line box for header
+- ✓ success, ⚠ fallback warning
+- Next Up Block
 - No ANSI color codes

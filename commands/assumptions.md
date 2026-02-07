@@ -10,78 +10,64 @@ allowed-tools: Read, Glob, Grep, Bash
 
 Working directory: `!`pwd``
 
-Current roadmap:
+Roadmap:
 ```
-!`cat .planning/ROADMAP.md 2>/dev/null || echo "No roadmap found"`
+!`cat .vbw-planning/ROADMAP.md 2>/dev/null || echo "No roadmap found"`
 ```
 
-Existing codebase signals:
+Codebase signals:
 ```
 !`ls package.json pyproject.toml Cargo.toml go.mod 2>/dev/null || echo "No detected project files"`
 ```
 
 ## Guard
 
-1. **Not initialized:** If .planning/ doesn't exist, STOP: "Run /vbw:init first."
-2. **Missing phase number:** If $ARGUMENTS doesn't include a phase number, STOP: "Usage: /vbw:assumptions <phase-number>"
-3. **Phase not in roadmap:** If phase doesn't exist in ROADMAP.md, STOP: "Phase {N} not found."
+1. **Not initialized:** If .vbw-planning/ doesn't exist, STOP: "Run /vbw:init first."
+2. **Missing phase number:** STOP: "Usage: /vbw:assumptions <phase-number>"
+3. **Phase not in roadmap:** STOP: "Phase {N} not found."
 
 ## Purpose
 
-Before planning a phase, Claude inevitably makes assumptions about scope, approach, technology, and user preferences. These assumptions are usually invisible -- they become embedded in plans without the user ever seeing or approving them. This command makes them explicit.
-
-The user can then confirm, correct, or expand on each assumption before /vbw:plan runs.
+Before planning, Claude makes invisible assumptions about scope, approach, and preferences. This command makes them explicit so the user can confirm, correct, or expand before /vbw:plan runs.
 
 ## Steps
 
 ### Step 1: Load phase context
 
-Read:
-- ROADMAP.md phase details (goal, requirements, success criteria)
-- REQUIREMENTS.md (full descriptions of mapped requirements)
-- PROJECT.md (constraints, key decisions)
-- STATE.md (accumulated decisions, concerns)
-- Any existing CONTEXT.md for this phase (from /vbw:discuss)
-- Codebase signals (package.json, existing code patterns)
+Read: ROADMAP.md, REQUIREMENTS.md, PROJECT.md, STATE.md, CONTEXT.md (if exists), codebase signals.
 
-### Step 2: Generate assumptions
+### Step 2: Generate 5-10 assumptions
 
-Based on the loaded context, identify and categorize assumptions:
+Categories (prioritized by impact):
+- **Scope:** What's included/excluded beyond requirements
+- **Technical:** Implementation approaches implied but unspecified
+- **Ordering:** Task sequencing assumptions
+- **Dependency:** What must exist from prior phases
+- **User preference:** Defaults chosen without stated preference
 
-**Scope assumptions:** What is included/excluded that the requirements don't explicitly state.
-- Example: "I assume AGNT-07 (compaction profiles) means per-agent instructions in the system prompt, not a separate configuration file."
+### Step 3: Gather feedback
 
-**Technical assumptions:** Implementation approaches implied but not specified.
-- Example: "I assume the effort parameter maps to Claude's reasoning_effort API parameter."
-
-**Ordering assumptions:** How tasks should be sequenced.
-- Example: "I assume effort profiles must be defined before agent system prompts, since agents reference them."
-
-**Dependency assumptions:** What must exist from prior phases.
-- Example: "I assume the PLAN.md template from Phase 1 is the correct output format."
-
-**User preference assumptions:** Defaults chosen in absence of stated preference.
-- Example: "I assume Balanced is the right default effort profile for this phase."
-
-Present 5-10 assumptions, prioritized by impact (high-impact assumptions first).
-
-### Step 3: Gather user feedback
-
-For each assumption, ask: "Confirm, correct, or expand?"
-- **Confirm**: Assumption is correct, proceed.
-- **Correct**: User provides the right answer.
-- **Expand**: Assumption is partially correct, user adds nuance.
+For each assumption: "Confirm, correct, or expand?"
+- **Confirm**: correct, proceed
+- **Correct**: user provides right answer
+- **Expand**: partially correct, user adds nuance
 
 ### Step 4: Present summary
 
-Present all assumptions with the user's feedback as a formatted summary. Group by status: confirmed, corrected, expanded.
+Group by status: confirmed, corrected, expanded.
 
-This command does NOT write any files. The assumptions and user feedback exist only in the conversation. If the user wants formal persistence, suggest: "Run /vbw:discuss {N} to capture your preferences as a CONTEXT.md file that /vbw:plan will use."
+This command does NOT write files. For persistence: "Run /vbw:discuss {N} to capture preferences as CONTEXT.md."
+
+```
+➜ Next Up
+  /vbw:discuss {N} -- Persist preferences as CONTEXT.md
+  /vbw:plan {N} -- Plan with assumptions clarified
+```
 
 ## Output Format
 
 Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
-- Numbered list for assumptions (not bullets -- order conveys priority)
-- Checkmark for confirmed, cross for corrected, circle for expanded
-- Arrow for Next Up
+- Numbered list (order = priority)
+- ✓ confirmed, ✗ corrected, ○ expanded
+- Next Up Block
 - No ANSI color codes

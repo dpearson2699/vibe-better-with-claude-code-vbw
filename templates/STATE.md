@@ -5,7 +5,7 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated {date})
+See: .vbw-planning/PROJECT.md (updated {date})
 
 **Core value:** {core-value-one-liner}
 **Current focus:** Phase {N} - {phase-name}

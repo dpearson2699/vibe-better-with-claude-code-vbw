@@ -12,62 +12,57 @@ Working directory: `!`pwd``
 
 Current state:
 ```
-!`cat .planning/STATE.md 2>/dev/null || echo "No state found"`
+!`cat .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
 ```
 
 Config:
 ```
-!`cat .planning/config.json 2>/dev/null || echo "No config found"`
+!`cat .vbw-planning/config.json 2>/dev/null || echo "No config found"`
 ```
 
 ## Guard
 
-1. **Not initialized:** If .planning/ directory doesn't exist, STOP: "Run /vbw:init first."
+1. **Not initialized:** If .vbw-planning/ doesn't exist, STOP: "Run /vbw:init first."
 2. **Missing description:** If $ARGUMENTS is empty, STOP: "Usage: /vbw:fix \"description of what to fix\""
 
 ## Steps
 
-### Step 1: Parse the fix description
+### Step 1: Parse fix description
 
-The entire $ARGUMENTS string (minus any flags) is the fix description. No phase number needed -- this operates on the codebase directly.
+The entire $ARGUMENTS string (minus flags) is the fix description.
 
 ### Step 2: Resolve milestone context
 
-Standard milestone resolution:
-- If .planning/ACTIVE exists: read slug, set STATE_PATH to .planning/{slug}/STATE.md
-- If .planning/ACTIVE does not exist: set STATE_PATH to .planning/STATE.md
+If .vbw-planning/ACTIVE exists: use milestone-scoped STATE_PATH.
+Otherwise: use .vbw-planning/STATE.md.
 
-### Step 3: Spawn Dev agent in Turbo mode
+### Step 3: Spawn Dev agent
 
-Use Task tool spawning protocol:
-1. Read `${CLAUDE_PLUGIN_ROOT}/agents/vbw-dev.md`
-2. Extract body after frontmatter
-3. Spawn via Task tool with:
-   - `prompt`: Dev agent body content
-   - `description`: "Quick fix task (Turbo mode). Effort level: low. Task: {fix description}. Instructions: Implement this fix directly. Create one atomic commit with format: fix(quick): {brief description}. No SUMMARY.md needed. No PLAN.md needed. Just implement, verify the fix works, and commit. If the fix touches multiple files, still create a single commit. If the fix is ambiguous or requires architectural decisions, STOP and report back instead of guessing."
+Spawn vbw-dev as a subagent via the Task tool with thin context:
 
-### Step 4: Verify fix was applied
+```
+Quick fix (Turbo mode). Effort: low.
+Task: {fix description}.
+Implement directly. One atomic commit: fix(quick): {brief description}.
+No SUMMARY.md or PLAN.md needed.
+If ambiguous or requires architectural decisions, STOP and report back.
+```
 
-After Dev agent returns:
-1. Check git log for the new commit: `git log --oneline -1`
-2. Verify the commit message starts with "fix(quick):"
-3. If no commit was made (Dev stopped due to ambiguity), report the issue to the user
+### Step 4: Verify and present
 
-### Step 5: Present confirmation
+Check `git log --oneline -1` for the new commit.
 
-If the fix was committed successfully, display:
-
+If committed:
 ```
 ✓ Fix applied
 
   {commit hash} {commit message}
-  Files: {list of changed files from git diff --name-only HEAD~1}
+  Files: {changed files}
 
 ➜ Next: /vbw:status -- View project status
 ```
 
-If the Dev stopped without committing, display:
-
+If Dev stopped without committing:
 ```
 ⚠ Fix could not be applied automatically
 
@@ -78,8 +73,7 @@ If the Dev stopped without committing, display:
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md for all visual formatting:
-- ✓ for success confirmation
-- ⚠ for inability to apply fix
-- ➜ Next Up Block for navigation
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+- ✓ for success, ⚠ for inability to fix
+- Next Up Block for navigation
 - No ANSI color codes

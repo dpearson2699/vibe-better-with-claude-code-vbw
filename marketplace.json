@@ -1,13 +1,13 @@
 {
   "name": "vbw-marketplace",
   "owner": {
-    "name": "VBW Contributors"
+    "name": "Tiago Serôdio - https://github.com/yidakee"
   },
   "plugins": [
     {
       "name": "vbw",
       "source": "./",
-      "description": "Vibe Better with Claude Code -- AI-native development framework",
+      "description": "Vibe Better With Claude Code - You're not an engineer anymore. You're a prompt jockey with commit access. At least do it properly.",
       "version": "1.0.0",
       "category": "productivity",
       "tags": ["development", "lifecycle", "verification", "agents"]

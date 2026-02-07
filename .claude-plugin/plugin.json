@@ -1,9 +1,9 @@
 {
   "name": "vbw",
   "version": "1.0.0",
-  "description": "Vibe Better with Claude Code -- AI-native development framework",
+  "description": "Vibe Better With Claude Code - You're not an engineer anymore. You're a prompt jockey with commit access. At least do it properly.",
   "author": {
-    "name": "VBW Contributors"
+    "name": "Tiago Serôdio - https://github.com/yidakee"
   },
   "license": "MIT"
 }

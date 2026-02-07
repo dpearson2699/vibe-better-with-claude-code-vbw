@@ -36,7 +36,7 @@ The generated CLAUDE.md follows this structure:
 
 ## Learned Patterns
 
-{from .planning/patterns/PATTERNS.md, if exists -- 3-5 most relevant}
+{from .vbw-planning/patterns/PATTERNS.md, if exists -- 3-5 most relevant}
 - {pattern summary}
 
 ## VBW Commands
@@ -53,7 +53,7 @@ Run /vbw:help for all commands.
 - Key Decisions: include only the 5-10 most impactful, prioritize recent decisions over older ones.
 - Learned Patterns: include only the 3-5 most relevant to current work.
 - CLAUDE.md is **regenerated** (not appended) on each update. The file reflects current state, not history.
-- If no `.planning/` directory exists, CLAUDE.md is not generated.
+- If no `.vbw-planning/` directory exists, CLAUDE.md is not generated.
 
 ### Commands that update CLAUDE.md
 
@@ -70,10 +70,10 @@ Patterns capture what worked and what failed after each phase build. They inform
 
 ### Storage
 
-Location: `.planning/patterns/` (project-scoped, persists across milestones per MLST-09)
+Location: `.vbw-planning/patterns/` (project-scoped, persists across milestones per MLST-09)
 
 Files:
-- `.planning/patterns/PATTERNS.md` -- accumulated patterns from all completed phases
+- `.vbw-planning/patterns/PATTERNS.md` -- accumulated patterns from all completed phases
 
 ### Pattern Entry Format
 
@@ -105,13 +105,13 @@ Pattern capture is triggered by `/vbw:build` after all plans in a phase complete
 2. Extracts timing data (duration per plan, total phase time)
 3. Extracts deviation data (count, types, severity)
 4. Identifies completion patterns (task count vs. success rate, file count vs. deviation rate)
-5. Appends a new entry to `.planning/patterns/PATTERNS.md`
+5. Appends a new entry to `.vbw-planning/patterns/PATTERNS.md`
 
 ### Pattern Reading
 
 Pattern reading is done by `/vbw:plan` (via the Lead agent). Before planning, the Lead:
 
-1. Reads `.planning/patterns/PATTERNS.md` if it exists
+1. Reads `.vbw-planning/patterns/PATTERNS.md` if it exists
 2. Considers what decomposition strategies worked in previous phases
 3. Applies learned patterns to plan structure (e.g., fewer tasks per plan if large plans had deviations)
 
@@ -123,8 +123,8 @@ When `/vbw:ship` completes a milestone:
 
 | Artifact | Action | Reason |
 |----------|--------|--------|
-| `.planning/patterns/PATTERNS.md` | PRESERVED | Project-scoped, not milestone-scoped. Patterns apply across milestones. |
-| `.planning/RESUME.md` (or `.planning/{slug}/RESUME.md`) | DELETED | Session state is stale after shipping. |
+| `.vbw-planning/patterns/PATTERNS.md` | PRESERVED | Project-scoped, not milestone-scoped. Patterns apply across milestones. |
+| `.vbw-planning/RESUME.md` (or `.vbw-planning/{slug}/RESUME.md`) | DELETED | Session state is stale after shipping. |
 | `CLAUDE.md` | REGENERATED | Must reflect new state: milestone archived, no active work or next milestone active. |
 
 ### Memory Validation (MEMO-07)

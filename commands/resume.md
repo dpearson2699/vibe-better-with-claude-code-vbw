@@ -12,70 +12,59 @@ Working directory: `!`pwd``
 
 Active milestone:
 ```
-!`cat .planning/ACTIVE 2>/dev/null || echo "No active milestone (single-milestone mode)"`
+!`cat .vbw-planning/ACTIVE 2>/dev/null || echo "No active milestone (single-milestone mode)"`
 ```
 
 ## Guard
 
-1. **Not initialized:** If .planning/ directory doesn't exist, STOP: "Run /vbw:init first."
-2. **No resume file:** Resolve RESUME_PATH (using ACTIVE pointer per Step 1). If RESUME.md does not exist at RESUME_PATH, STOP: "No paused session found. Use /vbw:pause to save your session before taking a break."
+1. **Not initialized:** If .vbw-planning/ doesn't exist, STOP: "Run /vbw:init first."
+2. **No resume file:** If RESUME.md doesn't exist at resolved path, STOP: "No paused session found. Use /vbw:pause to save your session first."
 
 ## Steps
 
-### Step 1: Resolve milestone context
+### Step 1: Resolve paths
 
-Standard milestone resolution to find RESUME_PATH:
-- If .planning/ACTIVE exists: read slug, set RESUME_PATH to .planning/{slug}/RESUME.md, set STATE_PATH to .planning/{slug}/STATE.md, set PHASES_DIR to .planning/{slug}/phases/
-- If .planning/ACTIVE does not exist: set RESUME_PATH to .planning/RESUME.md, set STATE_PATH to .planning/STATE.md, set PHASES_DIR to .planning/phases/
+If .vbw-planning/ACTIVE exists: use milestone-scoped RESUME_PATH, STATE_PATH, PHASES_DIR.
+Otherwise: use .vbw-planning/ defaults.
 
 ### Step 2: Read resume file
 
-Read RESUME_PATH and extract all sections:
-- Position: phase, plan progress, last completed plan, next pending plan
-- Context: phase goal, current status
-- Session notes
-- Resume instructions: specific next command
+Read RESUME_PATH. Extract: position (phase, plan progress, next pending), context (goal, status), session notes, resume instructions.
 
 ### Step 3: Check for state changes
 
-Read STATE.md to check if anything has changed since the pause.
+Read STATE.md. Compare resume file's last completed plan against current SUMMARY.md files in PHASES_DIR. If new completions exist since pause: note "Progress was made since you paused."
 
-Compare the resume file's "last completed plan" against the current state of the phases directory. Use Glob to find SUMMARY.md files in PHASES_DIR:
-- If new SUMMARY.md files exist that were not present at pause time, note: "Progress was made since you paused."
-- If the state matches, proceed normally.
+Agent Teams awareness: previous team sessions are not resumable. Resume creates a NEW team from saved state. Completed tasks are detected via SUMMARY.md + `git log`, and only remaining tasks are assigned.
 
 ### Step 4: Present resume context
-
-Display using brand formatting from @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
 
 ```
 ╔═══════════════════════════════════════════╗
 ║  Session Resumed                          ║
-║  Paused: {date from resume file}          ║
+║  Paused: {date}                           ║
 ╚═══════════════════════════════════════════╝
 
   Phase:    {N} - {name}
   Progress: {completed}/{total} plans
   Status:   {current status}
 
-  {If session notes exist:}
-  Notes: {session notes}
+  {If notes: "Notes: {session notes}"}
 
-  {If progress changed since pause:}
-  ⚠ Progress changed since pause -- review /vbw:status
+  {If progress changed: "⚠ Progress changed since pause -- review /vbw:status"}
 
   Phase Goal:
-    {phase goal from resume file}
+    {goal from resume file}
 
-➜ Continue
+➜ Next Up
   {specific next command from resume instructions}
 ```
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md for all visual formatting:
-- Double-line box for the resume header (phase-level event)
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+- Double-line box for resume header
 - Metrics Block for position and status
 - ⚠ for state-changed warning
-- Next Up Block for continuation command
+- Next Up Block for continuation
 - No ANSI color codes

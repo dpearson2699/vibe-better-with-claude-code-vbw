@@ -12,125 +12,91 @@ Working directory: `!`pwd``
 
 Current state:
 ```
-!`cat .planning/STATE.md 2>/dev/null || echo "No state found"`
+!`cat .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
 ```
 
-Current effort setting:
+Config:
 ```
-!`cat .planning/config.json 2>/dev/null || echo "No config found"`
+!`cat .vbw-planning/config.json 2>/dev/null || echo "No config found"`
 ```
 
-Phase directory contents:
+Phase directories:
 ```
-!`ls .planning/phases/ 2>/dev/null || echo "No phases directory"`
+!`ls .vbw-planning/phases/ 2>/dev/null || echo "No phases directory"`
 ```
 
 ## Guard
 
-1. **Not initialized:** If .planning/ directory doesn't exist, STOP: "Run /vbw:init first."
-2. **No roadmap:** If .planning/ROADMAP.md doesn't exist, STOP: "No roadmap found. Run /vbw:init to create one."
-3. **Missing phase number:** If $ARGUMENTS doesn't include a phase number, STOP: "Usage: /vbw:plan <phase-number> [--effort=profile]"
-4. **Phase not in roadmap:** If specified phase number doesn't exist in ROADMAP.md, STOP: "Phase {N} not found in roadmap."
-5. **Phase already fully planned:** If .planning/phases/{phase-dir}/ contains PLAN.md files AND all have corresponding SUMMARY.md files, warn: "Phase {N} already has completed plans. Run again to re-plan (existing plans will be preserved with .bak extension)."
+1. **Not initialized:** If .vbw-planning/ doesn't exist, STOP: "Run /vbw:init first."
+2. **No roadmap:** If .vbw-planning/ROADMAP.md doesn't exist, STOP: "No roadmap found. Run /vbw:init to create one."
+3. **Missing phase number:** If $ARGUMENTS lacks a phase number, STOP: "Usage: /vbw:plan <phase-number> [--effort=profile]"
+4. **Phase not in roadmap:** If phase {N} doesn't exist in ROADMAP.md, STOP: "Phase {N} not found in roadmap."
+5. **Already planned:** If phase has PLAN.md files with SUMMARY.md files, WARN: "Phase {N} already has completed plans. Re-planning preserves existing plans with .bak extension."
 
 ## Steps
 
 ### Step 1: Parse arguments
 
-Extract phase number and optional --effort flag from $ARGUMENTS.
-- Phase number: required, integer
-- --effort: optional, one of thorough/balanced/fast/turbo
-- If --effort not provided, use value from .planning/config.json
+- **Phase number** (required): integer
+- **--effort** (optional): thorough|balanced|fast|turbo. Falls back to config default.
 
-### Step 2: Determine execution mode
+### Step 2: Turbo mode shortcut
 
-**Turbo mode** (--effort=turbo or config effort=turbo):
-- Do NOT spawn Lead agent. Turbo skips Lead per effort-profiles.md.
-- Read the phase requirements from ROADMAP.md directly.
-- Create a single lightweight PLAN.md with all tasks in one plan.
-- Minimal decomposition: list requirements as tasks, basic verify/done criteria.
-- Write directly to .planning/phases/{phase-dir}/{phase}-01-PLAN.md.
-- Skip to Step 6 (summary).
+If effort = turbo: skip Lead agent. Read phase requirements from ROADMAP.md. Create a single lightweight PLAN.md with all tasks in one plan. Write to phase directory. Skip to Step 5.
 
-**Standard mode** (all other effort levels):
-- Continue to Step 3.
+### Step 3: Spawn Lead agent
 
-### Step 3: Gather phase context
+Spawn vbw-lead as a subagent via the Task tool with thin context:
 
-Read these files to build context for the Lead agent:
-- .planning/ROADMAP.md (phase goal, requirements, success criteria)
-- .planning/REQUIREMENTS.md (full requirement descriptions)
-- .planning/STATE.md (decisions, concerns, blockers)
-- .planning/PROJECT.md (core value, constraints)
-- Any existing CONTEXT.md in the phase directory (from /vbw:discuss)
-- Any existing RESEARCH.md in the phase directory (from /vbw:research)
-- .planning/patterns/PATTERNS.md (if exists) -- learned patterns from prior phase builds
-- Prior phase SUMMARY.md files if this phase depends on completed phases
+```
+Plan phase {N}: {phase-name}.
+Roadmap: .vbw-planning/ROADMAP.md
+Requirements: .vbw-planning/REQUIREMENTS.md
+State: .vbw-planning/STATE.md
+Project: .vbw-planning/PROJECT.md
+Patterns: .vbw-planning/patterns/PATTERNS.md (if exists)
+Effort: {level}
+Output: Write PLAN.md files to .vbw-planning/phases/{phase-dir}/
+```
 
-### Step 4: Spawn Lead agent
+The Lead reads all files itself -- no content embedding in the task description.
 
-Spawn the vbw-lead agent as a subagent using Claude Code's Task tool:
+### Step 4: Validate Lead output
 
-1. Read `${CLAUDE_PLUGIN_ROOT}/agents/vbw-lead.md` using the Read tool
-2. Extract the body content (everything after the closing `---` of the YAML frontmatter)
-3. Use the **Task tool** to spawn the subagent:
-   - `prompt`: The extracted body content of vbw-lead.md (this becomes the subagent's system prompt)
-   - `description`: A task message containing all gathered phase context:
-     - Phase number and name
-     - Phase goal and success criteria (from ROADMAP.md)
-     - All requirements mapped to this phase (from REQUIREMENTS.md)
-     - Current effort profile and what it means for planning depth
-     - Existing context (CONTEXT.md, RESEARCH.md if available)
-     - Prior phase summaries (if this phase has dependencies)
-     - Learned patterns from prior phases (from .planning/patterns/PATTERNS.md if it exists). Use these to calibrate plan decomposition: e.g., if prior phases show 3-task plans outperformed 5-task plans, prefer smaller plans. If certain file groupings caused deviations, avoid those groupings.
-     - Instruction: produce PLAN.md file(s) in .planning/phases/{phase-dir}/
-
-The Lead agent will:
-1. Research the phase requirements
-2. Decompose into plans with 3-5 tasks each
-3. Self-review plans against success criteria
-4. Write PLAN.md files to disk
-
-### Step 5: Validate Lead output
-
-After Lead agent completes, verify:
-- At least one PLAN.md file exists in .planning/phases/{phase-dir}/
-- Each PLAN.md has valid YAML frontmatter (phase, plan, title, wave, depends_on, must_haves)
-- Each PLAN.md has tasks with name, files, action, verify, done
-- Wave assignments are consistent (no circular dependencies)
+Verify:
+- At least one PLAN.md exists in the phase directory
+- Each has valid YAML frontmatter (phase, plan, title, wave, depends_on, must_haves)
+- Each has tasks with name, files, action, verify, done
+- Wave assignments have no circular dependencies
 
 If validation fails, report issues to user.
 
-### Step 5.5: Update CLAUDE.md
+### Step 5: Update state and present summary
 
-If CLAUDE.md exists at the project root, regenerate it following @${CLAUDE_PLUGIN_ROOT}/references/memory-protocol.md. Update the Active Context section to reflect the newly planned phase and the "Next action" to suggest `/vbw:build {N}`.
+Update STATE.md: phase position, plan count, status = Planned.
 
-Use the same regeneration logic as build.md Step 6.5: read PROJECT.md, STATE.md, ACTIVE, Decisions, Skills, Patterns; write CLAUDE.md overwriting previous version.
+Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md`:
 
-If CLAUDE.md does not exist, skip silently.
-
-### Step 6: Update state and present summary
-
-Update .planning/STATE.md:
-- Current position: Phase N, Plan 0 of M, Status: Planned
-- Log the effort profile used
-
-Present planning summary using vbw-brand.md formatting:
-- Double-line box: "Phase {N}: {name} -- Planned"
-- Plan list with wave assignments
-- Task count per plan
-- Effort profile used
-- Next Up block:
 ```
+╔═══════════════════════════════════════════╗
+║  Phase {N}: {name} -- Planned             ║
+╚═══════════════════════════════════════════╝
+
+  Plans:
+    ○ Plan 01: {title}  (wave {W}, {task-count} tasks)
+    ○ Plan 02: {title}  (wave {W}, {task-count} tasks)
+
+  Effort: {profile}
+
 ➜ Next Up
   /vbw:build {N} -- Execute this phase
 ```
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md for all visual formatting:
-- Use the **Phase Banner** template for the planning completion banner (double-line box)
-- Use the **File Checklist** template for validation checks (✓ prefix)
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+- Phase Banner (double-line box) for completion
+- File Checklist (✓ prefix) for validation
 - ○ for plans ready to execute
-- Use the **Next Up Block** template for navigation (➜ header, indented commands with --)
+- Next Up Block for navigation
 - No ANSI color codes
