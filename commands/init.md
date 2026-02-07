@@ -36,6 +36,35 @@ Installed skills:
 
 ## Steps
 
+### Step 0: Agent Teams check
+
+Check if Agent Teams is enabled:
+```
+!`cat ~/.claude/settings.json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('env',{}).get('CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS','0'))" 2>/dev/null || echo "0"`
+```
+
+If the result is NOT `"1"`:
+
+Display:
+```
+⚠ Agent Teams is not enabled
+
+VBW uses Agent Teams for parallel builds (/vbw:build) and codebase mapping (/vbw:map).
+Without it, these commands will fail.
+
+Enable it now? This adds one line to ~/.claude/settings.json:
+  "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+```
+
+Ask the user for permission. If they approve:
+1. Read `~/.claude/settings.json` (create `{}` if it doesn't exist)
+2. Ensure the `env` key exists as an object
+3. Set `env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` to `"1"`
+4. Write the file back
+5. Display "✓ Agent Teams enabled. Restart Claude Code for it to take effect."
+
+If they decline: display "○ Skipped. You can enable it later in ~/.claude/settings.json" and continue.
+
 ### Step 1: Scaffold directory
 
 Read each template from `${CLAUDE_PLUGIN_ROOT}/templates/` and write to .vbw-planning/:
@@ -50,7 +79,7 @@ Read each template from `${CLAUDE_PLUGIN_ROOT}/templates/` and write to .vbw-pla
 
 Create `.vbw-planning/phases/` directory.
 
-Ensure config.json includes `"agent_teams": true`. Note: Agent Teams requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` env var (set in user or project settings.json).
+Ensure config.json includes `"agent_teams": true`.
 
 ### Step 2: Fill PROJECT.md
 
@@ -106,6 +135,36 @@ Follow `${CLAUDE_PLUGIN_ROOT}/references/memory-protocol.md`. Write CLAUDE.md at
 
 Keep under 200 lines.
 
+### Step 5.9: Statusline offer
+
+Check if a statusline is already configured:
+```
+!`cat ~/.claude/settings.json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('statusLine',''))" 2>/dev/null || echo ""`
+```
+
+If the result is empty (no statusline configured):
+
+Display:
+```
+○ VBW includes a custom status line for Claude Code.
+  It shows your phase, milestone, effort profile, branch, context usage,
+  cost, duration, and line diff — updated after every response.
+
+  Install it?
+```
+
+Ask the user for permission. If they approve:
+1. Copy `${CLAUDE_PLUGIN_ROOT}/scripts/vbw-statusline.sh` to `~/.claude/vbw-statusline.sh`
+2. Make it executable (`chmod +x`)
+3. Read `~/.claude/settings.json` (create `{}` if it doesn't exist)
+4. Set `statusLine` to `bash ~/.claude/vbw-statusline.sh`
+5. Write the file back
+6. Display "✓ Statusline installed. Restart Claude Code to activate."
+
+If they decline: display "○ Skipped. Run /vbw:config to install it later." and continue.
+
+If a statusline is already configured: skip silently (don't overwrite other plugins' statuslines).
+
 ### Step 6: Present summary
 
 ```
@@ -121,6 +180,8 @@ Keep under 200 lines.
   ✓ .vbw-planning/config.json
   ✓ .vbw-planning/phases/
   ✓ CLAUDE.md
+  {If statusline installed:}
+  ✓ ~/.claude/vbw-statusline.sh
 
   {If skills discovered:}
   Skills:

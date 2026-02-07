@@ -10,11 +10,63 @@
 
 ## What Is This
 
-VBW is a Claude Code plugin that bolts an actual development lifecycle onto your vibe coding sessions. It gives you 25 slash commands and 6 AI agents that handle planning, building, verifying, and shipping your code -- so what you produce has at least a fighting chance of surviving a code review.
+VBW is a Claude Code plugin that bolts an actual development lifecycle onto your vibe coding sessions. It gives you 25 slash commands and 6 AI agents that handle planning, building, verifying, and shipping your code, so what you produce has at least a fighting chance of surviving a code review.
 
 You describe what you want. VBW breaks it into phases. Agents plan, write, and verify the code. Commits are atomic. Verification is goal-backward. State persists across sessions. It's the entire software development lifecycle, except you replaced the engineering team with a plugin and a prayer.
 
 Think of it as project management for the post-dignity era of software development.
+
+## Features
+
+### Built for Opus 4.6+, not bolted onto it
+
+Most Claude Code plugins were built for the subagent era, one main session spawning helper agents that report back and die. Much like the codebases they produce. VBW is designed from the ground up for the three features that changed the game:
+
+- **Agent Teams for real parallelism.** `/vbw:build` creates a team of Dev teammates that execute tasks concurrently, each in their own context window. `/vbw:map` runs 4 Scout teammates in parallel to analyze your codebase. This isn't "spawn a subagent and wait" -- it's coordinated teamwork with a shared task list and direct inter-agent communication.
+
+- **Native hooks for continuous verification.** 8 hook events run automatically during builds -- validating writes, checking commits, gating quality, blocking access to sensitive files. No more spawning a QA agent after every task. The platform enforces it, not the prompt.
+
+- **Platform-enforced tool permissions.** Each agent has `tools`/`disallowedTools` in their YAML frontmatter. Scout and QA literally cannot write files. Dev can't be tricked into reading your `.env`. It's enforced by Claude Code itself, not by instructions an agent might ignore during compaction.
+
+### Solves Agent Teams limitations out of the box
+
+Agent Teams are [experimental with known limitations](https://code.claude.com/docs/en/agent-teams#limitations). VBW handles them so you don't have to:
+
+- **Session resumption.** Agent Teams teammates don't survive `/resume`. VBW's `/vbw:pause` saves full session state, and `/vbw:resume` creates a fresh team from saved state -- detecting completed tasks via SUMMARY.md and git log, then assigning only remaining work.
+
+- **Task status lag.** Teammates sometimes forget to mark tasks complete. VBW's `TaskCompleted` hook verifies every task closure has a corresponding atomic commit. The `TeammateIdle` hook runs a QA gate before any teammate goes idle.
+
+- **Shutdown coordination.** VBW's team lead handles graceful shutdown sequencing -- no orphaned teammates, no dangling task lists.
+
+- **File conflicts.** Plans decompose work into tasks with explicit file ownership. Dev teammates operate on disjoint file sets by design.
+
+Agent Teams ship with seven known limitations. VBW solves them. The eighth limitation -- that you're using AI to write software -- is between you and God.
+
+### Skills.sh integration
+
+VBW integrates with [Skills.sh](https://skills.sh), the open-source skill registry for AI agents with 20+ supported platforms and thousands of community-contributed skills:
+
+- **Automatic stack detection.** `/vbw:init` scans your project, identifies your tech stack (Next.js, Django, Prisma, Tailwind, etc.), and recommends relevant skills from a curated mapping.
+
+- **Dynamic registry search.** For stacks not covered by curated mappings, VBW falls back to the Skills.sh registry via the `find-skills` meta-skill. Results are cached locally with a 7-day TTL -- no repeated network calls.
+
+- **Skill-hook wiring.** Use `/vbw:config` to wire installed skills to hook events. Run your linter after every file write. Run your test runner after every commit. The hooks call the skills automatically.
+
+- **Zero lock-in.** Skills are standard Claude Code skills. They work with or without VBW. VBW just makes discovering and using them part of your workflow instead of an afterthought.
+
+### What you get versus raw Claude Code
+
+For the "I'll just prompt carefully" crowd.
+
+| Without VBW | With VBW |
+|---|---|
+| One long session, no structure | Phased roadmap with requirements traceability |
+| Manual agent spawning | 6 specialized agents with enforced permissions |
+| Hope the AI remembers context | Persistent state across sessions via `.vbw-planning/` |
+| No verification unless you ask | Continuous QA via hooks + deep verification on demand |
+| Commits whenever, whatever | Atomic commits per task with validation |
+| "It works on my machine" | Goal-backward verification against success criteria |
+| Skills exist somewhere | Stack-aware skill discovery and auto-suggestion |
 
 ## Installation
 
@@ -35,14 +87,14 @@ VBW operates on a simple loop that will feel familiar to anyone who's ever shipp
                     └──────────────┬──────────────┘
                                    │
                                    ▼
-                    ┌──────────────────────────────┐
-                    │  /vbw:init                   │
-                    │  Scaffolds .vbw-planning/ dir    │
-                    │  Detects your stack          │
-                    │  Suggests skills you need    │
-                    │  Creates PROJECT.md,         │
-                    │  REQUIREMENTS.md, ROADMAP.md │
-                    └──────────────┬───────────────┘
+                    ┌───────────────────────────────┐
+                    │  /vbw:init                    │
+                    │  Scaffolds .vbw-planning/ dir │
+                    │  Detects your stack           │
+                    │  Suggests skills you need     │
+                    │  Creates PROJECT.md,          │
+                    │  REQUIREMENTS.md, ROADMAP.md  │
+                    └──────────────┬────────────────┘
                                    │
           ┌────────────────────────┼────────────────────────┐
           │ New project            │                        │ Existing codebase
@@ -249,7 +301,7 @@ Here's when each one shows up to work:
 
 ## Effort Profiles
 
-Not every task deserves the same level of scrutiny. VBW provides four effort profiles that control how much your agents think before they act.
+Not every task deserves the same level of scrutiny. Most of yours don't. VBW provides four effort profiles that control how much your agents think before they act.
 
 | Profile | What It Does | When To Use It |
 |---|---|---|
@@ -289,6 +341,8 @@ When you run `/vbw:init` in your project, it creates:
   milestones/      Archived milestone records
 ```
 
+Your AI-managed project now has more structure than most startups that raised a Series A.
+
 ## Under the Hood
 
 VBW leverages three Opus 4.6 features that make the whole thing work:
@@ -299,9 +353,12 @@ VBW leverages three Opus 4.6 features that make the whole thing work:
 
 **Tool Permissions** -- Each agent has native `tools`/`disallowedTools` in their YAML frontmatter. Scout and QA literally cannot write files. It's enforced by the platform, not by instructions that an agent might ignore.
 
+Three platform features. Zero faith in the developer. As it should be.
+
 ## Requirements
 
 - **Claude Code** with **Opus 4.6+** model
+- **Agent Teams** enabled (`/vbw:init` will offer to set this up for you)
 - A project directory (new or existing)
 - The willingness to let an AI manage your development lifecycle
 
