@@ -196,6 +196,31 @@ Add a `### Skills` section to STATE.md (after the Codebase Profile section if br
 **Stack detected:** {comma-separated list, e.g., "Next.js, React, TypeScript, Tailwind, Vitest"}
 ```
 
+### Step 5.8: Generate CLAUDE.md (MEMO-01)
+
+Follow the CLAUDE.md structure defined in @${CLAUDE_PLUGIN_ROOT}/references/memory-protocol.md.
+
+Generate a CLAUDE.md file at the project root (NOT inside .planning/) with:
+
+1. **Project header:** Project name and core value from Step 2
+2. **Active Context:**
+   - Milestone: "default" (just initialized)
+   - Phase: "1 - {first-phase-name} (Not started)" or "None yet" if no roadmap phases
+   - Next action: "/vbw:plan 1" (or "/vbw:map" if brownfield)
+3. **Key Decisions:** "None yet -- decisions accumulate during planning and building."
+4. **Installed Skills:** From Step 5.7 results (if any skills discovered), otherwise "None detected"
+5. **Learned Patterns:** "No patterns yet -- patterns accumulate after phase builds."
+6. **VBW Commands section:** Static text:
+   ```
+   ## VBW Commands
+
+   This project uses VBW (Vibe Better with Claude Code).
+   Run /vbw:status for current progress.
+   Run /vbw:help for all commands.
+   ```
+
+The generated file must stay under 200 lines (it will be well under at init time).
+
 ### Step 6: Present summary
 
 Display the initialization summary using brand formatting from @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md.
@@ -215,6 +240,7 @@ Show created files with checkmarks:
 - ✓ .planning/STATE.md
 - ✓ .planning/config.json
 - ✓ .planning/phases/
+- ✓ CLAUDE.md (project memory -- auto-loaded each session)
 
 Show project core value and phase overview.
 
