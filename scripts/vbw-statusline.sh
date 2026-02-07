@@ -111,12 +111,11 @@ NOW=$(date +%s)
 VBW_CF="${_CACHE}-sl"
 
 if ! cache_fresh "$VBW_CF" 5; then
-  PH=""; TT=""; ST=""; EF="balanced"; BR=""
+  PH=""; TT=""; EF="balanced"; BR=""
   PD=0; PT=0; PPD=0; QA="--"
   if [ -f ".vbw-planning/STATE.md" ]; then
     PH=$(grep -m1 "^Phase:" .vbw-planning/STATE.md | grep -oE '[0-9]+' | head -1)
     TT=$(grep -m1 "^Phase:" .vbw-planning/STATE.md | grep -oE '[0-9]+' | tail -1)
-    ST=$(grep -m1 "^Status:" .vbw-planning/STATE.md | sed 's/^Status: *//')
   fi
   [ -f ".vbw-planning/config.json" ] && \
     EF=$(jq -r '.effort // "balanced"' .vbw-planning/config.json 2>/dev/null)
@@ -134,10 +133,10 @@ if ! cache_fresh "$VBW_CF" 5; then
     fi
   fi
 
-  printf '%s\n' "${PH:-0}|${TT:-0}|${ST}|${EF}|${BR}|${PD}|${PT}|${PPD}|${QA}" > "$VBW_CF"
+  printf '%s\n' "${PH:-0}|${TT:-0}|${EF}|${BR}|${PD}|${PT}|${PPD}|${QA}" > "$VBW_CF"
 fi
 
-IFS='|' read -r PH TT ST EF BR PD PT PPD QA < "$VBW_CF"
+IFS='|' read -r PH TT EF BR PD PT PPD QA < "$VBW_CF"
 
 # --- Usage limits (cached 60s) ---
 # API: https://api.anthropic.com/api/oauth/usage
@@ -265,59 +264,22 @@ if [ -n "$GH_URL" ]; then
   GH_LINK="\033]8;;${GH_URL}\a${GH_NAME}\033]8;;\a"
 fi
 
-# --- Team status (cached 3s) ---
+# --- Agent activity (cached 3s) ---
+# Detect running agents by counting claude processes for this user
 
-TEAM_CF="${_CACHE}-team"
-TEAM_LINE=""
+AGENT_CF="${_CACHE}-agents"
+AGENT_LINE=""
 
-if ! cache_fresh "$TEAM_CF" 3; then
-  TEAM_DATA=""
-  TEAM_DIR="$HOME/.claude/teams"
-  if [ -d "$TEAM_DIR" ]; then
-    for tcfg in "$TEAM_DIR"/*/config.json; do
-      [ -f "$tcfg" ] || continue
-      TNAME=$(jq -r '.team_name // empty' "$tcfg" 2>/dev/null)
-      [ -z "$TNAME" ] && continue
-
-      MEMBERS=$(jq -r '.members[]?.name // empty' "$tcfg" 2>/dev/null)
-      [ -z "$MEMBERS" ] && continue
-
-      TASK_DIR="$HOME/.claude/tasks/${TNAME}"
-      MEMBER_STATUS=""
-      DONE=0; TOTAL=0
-      if [ -d "$TASK_DIR" ]; then
-        TASK_DATA=$(jq -s '[.[] | {owner: (.owner // ""), status: (.status // "")}]' "$TASK_DIR"/*.json 2>/dev/null)
-        if [ -n "$TASK_DATA" ]; then
-          TOTAL=$(echo "$TASK_DATA" | jq 'length' 2>/dev/null)
-          DONE=$(echo "$TASK_DATA" | jq '[.[] | select(.status == "completed")] | length' 2>/dev/null)
-        fi
-      fi
-
-      while IFS= read -r mname; do
-        [ -z "$mname" ] && continue
-        HAS_ACTIVE="false"
-        HAS_DONE="false"
-        if [ -n "$TASK_DATA" ]; then
-          HAS_ACTIVE=$(echo "$TASK_DATA" | jq --arg n "$mname" '[.[] | select(.owner == $n and .status == "in_progress")] | length > 0' 2>/dev/null)
-          HAS_DONE=$(echo "$TASK_DATA" | jq --arg n "$mname" '[.[] | select(.owner == $n and .status == "completed")] | length > 0' 2>/dev/null)
-        fi
-        if [ "$HAS_ACTIVE" = "true" ]; then
-          MEMBER_STATUS="$MEMBER_STATUS ${D}│${X} $mname ${C}◆${X}"
-        elif [ "$HAS_DONE" = "true" ]; then
-          MEMBER_STATUS="$MEMBER_STATUS ${D}│${X} $mname ${G}✓${X}"
-        else
-          MEMBER_STATUS="$MEMBER_STATUS ${D}│${X} $mname ${D}○${X}"
-        fi
-      done <<< "$MEMBERS"
-
-      TEAM_DATA="Team: ${C}${TNAME}${X}${MEMBER_STATUS} ${D}│${X} Tasks: ${DONE:-0}/${TOTAL:-0}"
-      break
-    done
+if ! cache_fresh "$AGENT_CF" 3; then
+  AGENT_DATA=""
+  AGENT_N=$(( $(pgrep -u "$_UID" -cf "claude" 2>/dev/null || echo 1) - 1 ))
+  if [ "$AGENT_N" -gt 0 ] 2>/dev/null; then
+    AGENT_DATA="${C}◆${X} ${AGENT_N} agent$([ "$AGENT_N" -gt 1 ] && echo s) working"
   fi
-  printf '%s\n' "$TEAM_DATA" > "$TEAM_CF"
+  printf '%s\n' "$AGENT_DATA" > "$AGENT_CF"
 fi
 
-TEAM_LINE=$(cat "$TEAM_CF" 2>/dev/null)
+AGENT_LINE=$(cat "$AGENT_CF" 2>/dev/null)
 
 # --- Context bar (20 chars wide) ---
 
@@ -370,7 +332,7 @@ printf '%b\n' "$L1"
 printf '%b\n' "$L2"
 printf '%b\n' "$L3"
 printf '%b\n' "$L4"
-# Line 5: team status (only if teams active)
-[ -n "$TEAM_LINE" ] && printf '%b\n' "$TEAM_LINE"
+# Line 5: agent activity (only if agents running)
+[ -n "$AGENT_LINE" ] && printf '%b\n' "$AGENT_LINE"
 
 exit 0

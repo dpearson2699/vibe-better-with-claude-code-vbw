@@ -192,11 +192,9 @@ Keep under 200 lines.
 If BROWNFIELD:
 ```
   ⚠ Existing codebase detected ({file-count} source files)
-
-➜ Next Up
-  /vbw:map -- Analyze your codebase (recommended)
-  /vbw:plan -- Skip mapping and plan directly
+  ➜ Auto-launching /vbw:map to analyze your codebase...
 ```
+Then immediately invoke `/vbw:map` by following `@${CLAUDE_PLUGIN_ROOT}/skills/map/SKILL.md`.
 
 If greenfield:
 ```

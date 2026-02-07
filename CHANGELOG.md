@@ -2,6 +2,20 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.0.23] - 2026-02-07
+
+### Added
+
+- Agent activity indicator in statusline Line 5: shows "N agents working" when background agents are active (process-based detection, 3s cache)
+- Brownfield auto-map: `/vbw:init` now auto-triggers `/vbw:map` when existing codebase detected instead of just suggesting it
+
+### Fixed
+
+- Statusline "Branch: Phase complete}" corruption: removed unused `Status` field from STATE.md parsing that broke pipe-delimited cache format
+- Security filter hook errors: fail-open on malformed input, missing jq, or empty stdin instead of crashing
+- Sandbox permission errors in `/vbw:whats-new` and `/vbw:update`: removed `cat ${CLAUDE_PLUGIN_ROOT}/VERSION` from context blocks (plugin root is outside working directory sandbox)
+- Stale version in `/vbw:update` whats-new suggestion: removed version argument entirely
+
 ## [1.0.20] - 2026-02-07
 
 ### Added
