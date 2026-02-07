@@ -139,42 +139,45 @@ Keep under 200 lines.
 
 ### Step 5.9: Statusline setup
 
-Run TWO checks:
+Read `~/.claude/settings.json` and check the `statusLine` field. Also check if `~/.claude/vbw-statusline.sh` exists.
 
-**Check A** — Does the script file exist?
-```bash
-ls ~/.claude/vbw-statusline.sh 2>/dev/null && echo "FILE_EXISTS" || echo "FILE_MISSING"
-```
+**Classify the current statusLine value:**
+- The `statusLine` field may be a **string** (e.g., `"bash ~/.claude/vbw-statusline.sh"`) or an **object** (e.g., `{"type":"command","command":"bash ~/.claude/vbw-statusline.sh"}`). Handle both.
+- **HAS_VBW**: The string value (or the object's `command` field) contains `vbw-statusline`
+- **HAS_OTHER**: A non-empty value that does NOT contain `vbw-statusline`
+- **EMPTY**: The field is missing, null, or empty
 
-**Check B** — What does the statusLine setting contain?
-```bash
-cat ~/.claude/settings.json 2>/dev/null | jq -r '.statusLine // "" | if test("vbw-statusline") then "HAS_VBW" elif . != "" then "HAS_OTHER" else "EMPTY" end' 2>/dev/null || echo "EMPTY"
-```
+**Decision tree:**
 
-**Decision tree based on results:**
+1. If HAS_VBW and `~/.claude/vbw-statusline.sh` exists → **Skip silently.** Already installed.
 
-- If Check A = `FILE_EXISTS` and Check B = `HAS_VBW`: **Skip silently.** VBW statusline is fully installed.
+2. If HAS_VBW but `~/.claude/vbw-statusline.sh` is missing → **Stale setting.** Copy the script without asking:
+   - Copy `${CLAUDE_PLUGIN_ROOT}/scripts/vbw-statusline.sh` to `~/.claude/vbw-statusline.sh`
+   - Run `chmod +x ~/.claude/vbw-statusline.sh`
+   - Display "✓ Statusline script restored. Restart Claude Code to activate."
 
-- If Check A = `FILE_MISSING` and Check B = `HAS_VBW`: **Stale setting.** Copy the script without asking:
-  1. Copy `${CLAUDE_PLUGIN_ROOT}/scripts/vbw-statusline.sh` to `~/.claude/vbw-statusline.sh`
-  2. Run `chmod +x ~/.claude/vbw-statusline.sh`
-  3. Display "✓ Statusline script restored. Restart Claude Code to activate."
+3. If HAS_OTHER → **Offer to replace.** Display:
+   ```
+   ○ A statusline is already configured but it's not VBW's.
+     VBW includes a status line showing phase progress, context usage,
+     cost, duration, and more. Replace the current statusline?
+   ```
+   If approved, proceed to install (step 5 below). If declined, skip.
 
-- If Check B = `HAS_OTHER`: **Skip silently.** Another plugin owns the statusline.
+4. If EMPTY → **Offer to install.** Display:
+   ```
+   ○ VBW includes a custom status line showing phase progress, context usage,
+     cost, duration, and more — updated after every response. Install it?
+   ```
+   If approved, proceed to install (step 5 below). If declined, display "○ Skipped. Run /vbw:config to install it later."
 
-- If Check B = `EMPTY` and Check A = `FILE_MISSING`: **Offer to install.** Display:
-  ```
-  ○ VBW includes a custom status line showing phase progress, context usage,
-    cost, duration, and more — updated after every response. Install it?
-  ```
-  Ask the user. If they approve:
-  1. Copy `${CLAUDE_PLUGIN_ROOT}/scripts/vbw-statusline.sh` to `~/.claude/vbw-statusline.sh`
-  2. Run `chmod +x ~/.claude/vbw-statusline.sh`
-  3. Read `~/.claude/settings.json` (create `{}` if missing)
-  4. Set `statusLine` to `bash ~/.claude/vbw-statusline.sh`
-  5. Write the file back
-  6. Display "✓ Statusline installed. Restart Claude Code to activate."
-  If they decline: display "○ Skipped. Run /vbw:config to install it later."
+5. **Install procedure** (used by cases 3 and 4):
+   - Copy `${CLAUDE_PLUGIN_ROOT}/scripts/vbw-statusline.sh` to `~/.claude/vbw-statusline.sh`
+   - Run `chmod +x ~/.claude/vbw-statusline.sh`
+   - Read `~/.claude/settings.json` (create `{}` if missing)
+   - Set `statusLine` to the object `{"type": "command", "command": "bash ~/.claude/vbw-statusline.sh"}` — the object format with `type` and `command` is **required** by the settings schema; a plain string will fail validation
+   - Write the file back
+   - Display "✓ Statusline installed. Restart Claude Code to activate."
 
 ### Step 6: Present summary
 

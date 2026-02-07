@@ -25,7 +25,7 @@ This loads VBW without installing it. All `/vbw:*` commands will be available. R
 ```
 .claude-plugin/    Plugin manifest (plugin.json)
 agents/            6 agent definitions with native tool permissions
-commands/          25 slash commands (flat .md files)
+skills/            25 slash commands (skills/*/SKILL.md)
 config/            Default settings and stack-to-skill mappings
 hooks/             Plugin hooks (hooks.json)
 scripts/           Hook handler scripts
@@ -36,8 +36,7 @@ assets/            Images and static files
 
 Key conventions:
 
-- **Commands** live in `commands/` as flat `.md` files. The plugin name (`vbw`) auto-prefixes them, so `commands/init.md` becomes `/vbw:init`. Don't duplicate the prefix.
-- **Skills** in `skills/*/SKILL.md` are passive knowledge for agents, not user-invocable commands.
+- **Skills** live in `skills/*/SKILL.md`. The plugin name (`vbw`) auto-prefixes them, so `skills/init/SKILL.md` becomes `/vbw:init`. Don't duplicate the prefix.
 - **Agents** in `agents/` use YAML frontmatter for tool permissions enforced by the platform.
 - **Hooks** in `hooks/hooks.json` reference scripts via `${CLAUDE_PLUGIN_ROOT}/scripts/`.
 

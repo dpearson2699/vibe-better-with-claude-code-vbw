@@ -1,6 +1,6 @@
 # VBW Verification Protocol
 
-Single source of truth for VBW's verification pipeline. Referenced by `${CLAUDE_PLUGIN_ROOT}/agents/vbw-qa.md` and commands (`${CLAUDE_PLUGIN_ROOT}/commands/qa.md`, `${CLAUDE_PLUGIN_ROOT}/commands/build.md`).
+Single source of truth for VBW's verification pipeline. Referenced by `${CLAUDE_PLUGIN_ROOT}/agents/vbw-qa.md` and skills (`${CLAUDE_PLUGIN_ROOT}/skills/qa/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/build/SKILL.md`).
 
 ## 1. Overview
 
@@ -208,7 +208,7 @@ These are protocol instructions embedded in agent definitions -- NOT JavaScript 
 
 ### OnStop / Summary Validation (VRFY-05)
 
-**Where:** Protocol instruction in `${CLAUDE_PLUGIN_ROOT}/commands/build.md`
+**Where:** Protocol instruction in `${CLAUDE_PLUGIN_ROOT}/skills/build/SKILL.md`
 
 **Trigger:** When build completes a plan
 
