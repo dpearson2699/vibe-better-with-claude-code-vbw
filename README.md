@@ -17,8 +17,23 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-v1.0.33+-blue.svg)](https://code.claude.com)
 [![Opus 4.6+](https://img.shields.io/badge/Model-Opus_4.6+-purple.svg)](https://anthropic.com)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Us-5865F2.svg?logo=discord&logoColor=white)](https://discord.gg/EtbG9Y5JCn)
 
 </div>
+
+<br>
+
+## Manifesto
+
+VBW is open source because the best tools are built by the people who use them.
+
+Whether you're a seasoned engineer who wants to push the boundaries of what AI-assisted development can do, or someone who just discovered that a terminal isn't just for airport departures, you belong here. This project exists to make AI coding better for everyone, and "everyone" means exactly that.
+
+**For contributors:** VBW is a living project. The plugin system, the agents, the verification pipeline - all of it is open to improvement. If you've found a better way to plan, build, or verify code with Claude, bring it. File an issue, open a PR, or just show up and share what you've learned. Every contribution makes the next person's experience better.
+
+**For vibe coders:** You don't need to know how VBW works under the hood to get help with your projects. Come to the Discord, share what you're building, ask questions, get unstuck. No gatekeeping, no judgment. We've all stared at a terminal wondering what just happened. The difference is now you don't have to stare alone.
+
+**[Join the Discord](https://discord.gg/EtbG9Y5JCn)** -- whether you want to help build VBW or just want VBW to help you build.
 
 <br>
 
@@ -34,6 +49,7 @@ Think of it as project management for the post-dignity era of software developme
 
 ## Table of Contents
 
+- [Manifesto](#manifesto)
 - [Features](#features)
 - [Installation](#installation)
 - [How It Works](#how-it-works)
@@ -110,6 +126,16 @@ For the "I'll just prompt carefully" crowd.
 | Commits whenever, whatever | Atomic commits per task with validation |
 | "It works on my machine" | Goal-backward verification against success criteria |
 | Skills exist somewhere | Stack-aware skill discovery and auto-suggestion |
+
+<br>
+
+### Real-time dashboard for your expensive new hobby
+
+<img src="assets/statusline.png" width="100%" />
+
+Five lines of cold, hard accountability rendered after every single response. Phase progress so you can see how little you've accomplished. Context window burn rate so you can watch your session die in real time. Usage limits with countdown timers -- because nothing says "I'm a productive developer" like a progress bar showing how fast you're hitting your API ceiling. Cost tracking down to the cent, updating live, so you can calculate exactly how much you're paying per line of code you didn't write. And a clickable GitHub link, in case you want to visit the repo and pretend you understand what's in it.
+
+Most developers use `htop` to monitor their systems. You use a statusline to monitor how much of your Anthropic subscription an AI burned while you watched.
 
 <br>
 
