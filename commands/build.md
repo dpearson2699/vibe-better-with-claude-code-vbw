@@ -147,6 +147,70 @@ After all waves complete (or the single plan completes if `--plan=NN` was used):
 **If `--skip-qa` IS set or effort is turbo:**
 Display: "○ QA verification skipped" (with reason: --skip-qa flag or turbo mode)
 
+### Step 5.5: Capture phase patterns (MEMO-03)
+
+After all plans complete (or the single plan if --plan=NN was used for a full phase), capture patterns for future planning.
+
+Follow the pattern format defined in @${CLAUDE_PLUGIN_ROOT}/references/memory-protocol.md.
+
+1. Create .planning/patterns/ directory if it doesn't exist: `mkdir -p .planning/patterns/`
+
+2. Read all SUMMARY.md files from this phase. For each, extract:
+   - Status (complete/partial/failed)
+   - Duration (from frontmatter or inferred)
+   - Deviation count and types
+   - Task count
+
+3. Compute phase-level metrics:
+   - Total plans and their statuses
+   - Average plan duration
+   - Total execution time
+   - Effort profile used
+   - Total deviations
+
+4. Determine "what worked" patterns:
+   - Plans that completed with 0 deviations
+   - Task sizes that stayed within budget
+   - Wave structures that enabled parallelism
+
+5. Determine "what failed" patterns:
+   - Plans with deviations (and deviation types)
+   - Plans marked partial or failed
+   - Any file conflicts or dependency issues noted in SUMMARYs
+
+6. Append a new entry to .planning/patterns/PATTERNS.md using the format:
+
+   ```
+   ### Phase {N}: {name} ({date})
+
+   **What worked:**
+   - {pattern}
+
+   **What failed:**
+   - {pattern or "No failures"}
+
+   **Timing:**
+   - Plans: {count}, Average: {avg}, Total: {total}
+   - Effort: {profile}
+
+   **Deviations:** {count} ({summary})
+   ```
+
+   If PATTERNS.md doesn't exist yet, create it with a header:
+   ```
+   # VBW Learned Patterns
+
+   Accumulated patterns from phase builds. Read by Lead agent during planning.
+
+   ---
+
+   {first entry}
+   ```
+
+   If PATTERNS.md already exists, append the new entry after a `---` separator.
+
+Note: If --plan=NN was used (single plan execution, not full phase), skip pattern capture -- patterns are only meaningful at the phase level.
+
 ### Step 6: Update state and present summary
 
 **Update .planning/STATE.md:**
@@ -186,6 +250,20 @@ Display: "○ QA verification skipped" (with reason: --skip-qa flag or turbo mod
     /vbw:qa {N} -- Verify this phase (if QA was skipped)
     /vbw:ship -- Complete the milestone (if last phase)
 ```
+
+### Step 6.5: Update CLAUDE.md
+
+If a CLAUDE.md file exists at the project root, regenerate it following @${CLAUDE_PLUGIN_ROOT}/references/memory-protocol.md:
+
+1. Read PROJECT.md for core value
+2. Read STATE.md for current position (the just-updated state)
+3. Read .planning/ACTIVE for milestone context
+4. Read the Decisions section from STATE.md for key decisions (5-10 most recent)
+5. Read STATE.md Skills section for installed skills
+6. Read .planning/patterns/PATTERNS.md for recent patterns (3-5 most relevant)
+7. Write CLAUDE.md at project root, overwriting the previous version
+
+If CLAUDE.md does not exist (e.g., legacy project initialized before Phase 7), skip this step silently.
 
 ## Output Format
 

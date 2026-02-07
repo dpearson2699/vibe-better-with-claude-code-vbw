@@ -64,6 +64,7 @@ Read these files to build context for the Lead agent:
 - .planning/PROJECT.md (core value, constraints)
 - Any existing CONTEXT.md in the phase directory (from /vbw:discuss)
 - Any existing RESEARCH.md in the phase directory (from /vbw:research)
+- .planning/patterns/PATTERNS.md (if exists) -- learned patterns from prior phase builds
 - Prior phase SUMMARY.md files if this phase depends on completed phases
 
 ### Step 4: Spawn Lead agent
@@ -81,6 +82,7 @@ Spawn the vbw-lead agent as a subagent using Claude Code's Task tool:
      - Current effort profile and what it means for planning depth
      - Existing context (CONTEXT.md, RESEARCH.md if available)
      - Prior phase summaries (if this phase has dependencies)
+     - Learned patterns from prior phases (from .planning/patterns/PATTERNS.md if it exists). Use these to calibrate plan decomposition: e.g., if prior phases show 3-task plans outperformed 5-task plans, prefer smaller plans. If certain file groupings caused deviations, avoid those groupings.
      - Instruction: produce PLAN.md file(s) in .planning/phases/{phase-dir}/
 
 The Lead agent will:
@@ -98,6 +100,14 @@ After Lead agent completes, verify:
 - Wave assignments are consistent (no circular dependencies)
 
 If validation fails, report issues to user.
+
+### Step 5.5: Update CLAUDE.md
+
+If CLAUDE.md exists at the project root, regenerate it following @${CLAUDE_PLUGIN_ROOT}/references/memory-protocol.md. Update the Active Context section to reflect the newly planned phase and the "Next action" to suggest `/vbw:build {N}`.
+
+Use the same regeneration logic as build.md Step 6.5: read PROJECT.md, STATE.md, ACTIVE, Decisions, Skills, Patterns; write CLAUDE.md overwriting previous version.
+
+If CLAUDE.md does not exist, skip silently.
 
 ### Step 6: Update state and present summary
 
