@@ -23,8 +23,8 @@ Read `${CLAUDE_PLUGIN_ROOT}/commands/{name}.md` and display: name, description, 
 | Status | Command        | Description                                          |
 |--------|----------------|------------------------------------------------------|
 | ✓      | /vbw:init      | Initialize project with .vbw-planning directory      |
-| ✓      | /vbw:plan      | Plan a phase via Lead agent subagent                 |
-| ✓      | /vbw:build     | Execute phase via Agent Teams with Dev teammates     |
+| ✓      | /vbw:plan [phase]  | Plan a phase via Lead agent (auto-detects phase) |
+| ✓      | /vbw:build [phase] | Execute phase via Agent Teams (auto-detects phase)|
 | ✓      | /vbw:ship      | Archive milestone, tag repo, merge branch            |
 
 ### Monitoring
@@ -32,7 +32,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/commands/{name}.md` and display: name, description, 
 | Status | Command        | Description                                          |
 |--------|----------------|------------------------------------------------------|
 | ✓      | /vbw:status    | Progress dashboard with Agent Teams task view        |
-| ✓      | /vbw:qa        | Deep verification (continuous QA handled by hooks)   |
+| ✓      | /vbw:qa [phase]    | Deep verification (auto-detects phase)           |
 
 ### Quick Actions
 
@@ -54,8 +54,8 @@ Read `${CLAUDE_PLUGIN_ROOT}/commands/{name}.md` and display: name, description, 
 | Status | Command        | Description                                          |
 |--------|----------------|------------------------------------------------------|
 | ✓      | /vbw:map       | Analyze codebase with parallel Scout teammates       |
-| ✓      | /vbw:discuss   | Gather context before planning                       |
-| ✓      | /vbw:assumptions | Surface Claude's assumptions                       |
+| ✓      | /vbw:discuss [phase]   | Gather context before planning (auto-detects phase) |
+| ✓      | /vbw:assumptions [phase] | Surface Claude's assumptions (auto-detects phase) |
 | ✓      | /vbw:research  | Standalone research task                             |
 
 ### Milestones & Phases
@@ -93,9 +93,9 @@ Read `${CLAUDE_PLUGIN_ROOT}/commands/{name}.md` and display: name, description, 
 ➜ Quick Start
   /vbw:init "My project" -- Set up your project
   /vbw:map -- Analyze codebase (brownfield) or skip (greenfield)
-  /vbw:plan 1 -- Plan your first phase
-  /vbw:build 1 -- Execute with Agent Teams
-  /vbw:qa 1 -- Deep verify (hooks already ran continuous checks)
+  /vbw:plan -- Plan the next phase (auto-detects, or specify: /vbw:plan 1)
+  /vbw:build -- Execute with Agent Teams (auto-detects phase)
+  /vbw:qa -- Deep verify (auto-detects phase)
   /vbw:ship -- Archive and tag
 
 Run `/vbw:help <command>` for detailed help on any command.

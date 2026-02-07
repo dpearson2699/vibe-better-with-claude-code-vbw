@@ -166,7 +166,7 @@ VBW operates on a simple loop that will feel familiar to anyone who's ever shipp
                                    │
                                    ▼
                     ┌──────────────────────────────┐
-                    │  /vbw:plan {phase}           │
+                    │  /vbw:plan [phase]           │
                     │  Lead agent: researches,     │
                     │  decomposes into tasks,      │
                     │  self-reviews the plan       │
@@ -175,7 +175,7 @@ VBW operates on a simple loop that will feel familiar to anyone who's ever shipp
                                    │
                                    ▼
                     ┌──────────────────────────────┐
-                    │  /vbw:build {phase}          │
+                    │  /vbw:build [phase]          │
                     │  Agent Team: Dev teammates   │
                     │  Atomic commits per task     │
                     │  Hooks verify continuously   │
@@ -184,7 +184,7 @@ VBW operates on a simple loop that will feel familiar to anyone who's ever shipp
                                    │
                                    ▼
                     ┌──────────────────────────────┐
-                    │  /vbw:qa {phase}             │
+                    │  /vbw:qa [phase]             │
                     │  Three-tier verification     │
                     │  (Quick / Standard / Deep)   │
                     │  Goal-backward methodology   │
@@ -271,9 +271,11 @@ These are the commands you'll use every day. This is the job now.
 | Command | Description |
 | :--- | :--- |
 | `/vbw:init` | Initialize a project. Scaffolds `.vbw-planning/` with PROJECT.md, REQUIREMENTS.md, ROADMAP.md, and STATE.md. Detects your tech stack and suggests Claude Code skills. Works for both new and existing codebases. |
-| `/vbw:plan {phase}` | Plan a phase. The Lead agent researches context, decomposes work into tasks grouped by wave, and self-reviews the plan. Produces PLAN.md files with YAML frontmatter. Accepts `--effort` flag (thorough/balanced/fast/turbo). |
-| `/vbw:build {phase}` | Execute a planned phase. Creates an Agent Team with Dev teammates for parallel execution. Atomic commits per task. Continuous QA via hooks. Produces SUMMARY.md. Resumes from last checkpoint if interrupted. |
+| `/vbw:plan [phase]` | Plan a phase. The Lead agent researches context, decomposes work into tasks grouped by wave, and self-reviews the plan. Produces PLAN.md files with YAML frontmatter. Accepts `--effort` flag (thorough/balanced/fast/turbo). Phase is auto-detected when omitted. |
+| `/vbw:build [phase]` | Execute a planned phase. Creates an Agent Team with Dev teammates for parallel execution. Atomic commits per task. Continuous QA via hooks. Produces SUMMARY.md. Resumes from last checkpoint if interrupted. Phase is auto-detected when omitted. |
 | `/vbw:ship` | Complete a milestone. Runs audit, archives state to `.vbw-planning/milestones/`, tags the git release, merges milestone branch (if any), and updates project docs. The one command that means you actually finished something. |
+
+Phase numbers are optional -- when omitted, VBW auto-detects the next phase based on artifact state.
 
 <br>
 
@@ -282,7 +284,7 @@ These are the commands you'll use every day. This is the job now.
 | Command | Description |
 | :--- | :--- |
 | `/vbw:status` | Progress dashboard showing all phases, completion bars, velocity metrics, and suggested next action. Add `--metrics` for token consumption breakdown per agent. |
-| `/vbw:qa {phase}` | Deep verification on demand. Three tiers (Quick, Standard, Deep) with goal-backward methodology. Continuous QA runs automatically via hooks during builds -- this command is for thorough, on-demand verification. Produces VERIFICATION.md. |
+| `/vbw:qa [phase]` | Deep verification on demand. Three tiers (Quick, Standard, Deep) with goal-backward methodology. Continuous QA runs automatically via hooks during builds -- this command is for thorough, on-demand verification. Produces VERIFICATION.md. Phase is auto-detected when omitted. |
 
 <br>
 
@@ -305,8 +307,8 @@ These are the commands you'll use every day. This is the job now.
 | Command | Description |
 | :--- | :--- |
 | `/vbw:map` | Analyze a codebase with 4 parallel Scout teammates (Tech, Architecture, Quality, Concerns). Produces synthesis documents (INDEX.md, PATTERNS.md). Supports monorepo per-package mapping. Security-enforced via hooks: never reads `.env` or credentials. |
-| `/vbw:discuss {phase}` | Gather context through adaptive questioning before planning. For when you want to think before you type. Revolutionary concept. |
-| `/vbw:assumptions {phase}` | Surface Claude's assumptions about your phase approach. Useful for catching misunderstandings before they become commits. |
+| `/vbw:discuss [phase]` | Gather context through adaptive questioning before planning. For when you want to think before you type. Revolutionary concept. Phase is auto-detected when omitted. |
+| `/vbw:assumptions [phase]` | Surface Claude's assumptions about your phase approach. Useful for catching misunderstandings before they become commits. Phase is auto-detected when omitted. |
 | `/vbw:research` | Standalone research task, decoupled from planning. For when you need answers but aren't ready to commit to a plan. |
 | `/vbw:milestone` | Start a new milestone with isolated state, independent phase numbering, and scoped roadmap. Optional `--branch` flag creates a git branch. For projects that have more than one thing to ship. |
 | `/vbw:switch` | Switch active milestone context and git branch. Checks for uncommitted changes before switching. |
@@ -489,4 +491,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on local development, proj
 
 MIT -- see [LICENSE](LICENSE) for details.
 
-Built by [Tiago Serodio](https://github.com/yidakee).
+Built by [Tiago Serôdio](https://github.com/yidakee).

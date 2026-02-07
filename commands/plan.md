@@ -1,6 +1,6 @@
 ---
 description: Plan a phase by spawning the Lead agent for research, decomposition, and self-review.
-argument-hint: <phase-number> [--effort=thorough|balanced|fast|turbo]
+argument-hint: [phase-number] [--effort=thorough|balanced|fast|turbo]
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebFetch
 ---
 
@@ -25,19 +25,28 @@ Phase directories:
 !`ls .vbw-planning/phases/ 2>/dev/null || echo "No phases directory"`
 ```
 
+## Phase Auto-Detection
+
+If `$ARGUMENTS` does not contain an integer phase number:
+
+1. Read `${CLAUDE_PLUGIN_ROOT}/references/phase-detection.md` for the detection protocol
+2. Resolve the phases directory: if `.vbw-planning/ACTIVE` exists, read its contents to get the milestone slug and use `.vbw-planning/{milestone-slug}/phases/`; otherwise use `.vbw-planning/phases/`
+3. Scan phase directories in numeric order (`01-*`, `02-*`, ...). Find the first phase with NO `*-PLAN.md` files
+4. If found: announce "Auto-detected Phase {N} ({slug}) -- next phase to plan" and proceed with that phase number
+5. If all phases have plans: STOP and tell user "All phases are planned. Specify a phase to re-plan: `/vbw:plan N`"
+
 ## Guard
 
 1. **Not initialized:** If .vbw-planning/ doesn't exist, STOP: "Run /vbw:init first."
 2. **No roadmap:** If .vbw-planning/ROADMAP.md doesn't exist, STOP: "No roadmap found. Run /vbw:init to create one."
-3. **Missing phase number:** If $ARGUMENTS lacks a phase number, STOP: "Usage: /vbw:plan <phase-number> [--effort=profile]"
-4. **Phase not in roadmap:** If phase {N} doesn't exist in ROADMAP.md, STOP: "Phase {N} not found in roadmap."
-5. **Already planned:** If phase has PLAN.md files with SUMMARY.md files, WARN: "Phase {N} already has completed plans. Re-planning preserves existing plans with .bak extension."
+3. **Phase not in roadmap:** If phase {N} doesn't exist in ROADMAP.md, STOP: "Phase {N} not found in roadmap."
+4. **Already planned:** If phase has PLAN.md files with SUMMARY.md files, WARN: "Phase {N} already has completed plans. Re-planning preserves existing plans with .bak extension."
 
 ## Steps
 
 ### Step 1: Parse arguments
 
-- **Phase number** (required): integer
+- **Phase number** (optional — auto-detected if omitted): integer
 - **--effort** (optional): thorough|balanced|fast|turbo. Falls back to config default.
 
 ### Step 2: Turbo mode shortcut

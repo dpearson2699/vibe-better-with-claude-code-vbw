@@ -1,6 +1,6 @@
 ---
 description: Surface Claude's implicit assumptions about a phase before planning begins.
-argument-hint: <phase-number>
+argument-hint: [phase-number]
 allowed-tools: Read, Glob, Grep, Bash
 ---
 
@@ -23,8 +23,21 @@ Codebase signals:
 ## Guard
 
 1. **Not initialized:** If .vbw-planning/ doesn't exist, STOP: "Run /vbw:init first."
-2. **Missing phase number:** STOP: "Usage: /vbw:assumptions <phase-number>"
-3. **Phase not in roadmap:** STOP: "Phase {N} not found."
+
+### Phase Resolution
+
+If `$ARGUMENTS` does not contain an integer phase number:
+
+1. Read `${CLAUDE_PLUGIN_ROOT}/references/phase-detection.md` and follow the **Planning Commands** algorithm:
+   - Resolve the phases directory (check `.vbw-planning/ACTIVE` for milestone context)
+   - Scan phase directories in numeric order (`01-*`, `02-*`, ...)
+   - Find the first phase directory containing NO `*-PLAN.md` files
+2. If found: announce "Auto-detected Phase {N} ({slug}) -- next phase to plan" and proceed using that phase number
+3. If all phases have plans: STOP and tell the user "All phases are planned. Specify a phase to re-analyze: `/vbw:assumptions N`"
+
+If `$ARGUMENTS` contains an explicit phase number, use it directly:
+
+2. **Phase not in roadmap:** STOP: "Phase {N} not found."
 
 ## Purpose
 

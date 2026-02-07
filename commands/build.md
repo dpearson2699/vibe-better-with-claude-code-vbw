@@ -1,6 +1,6 @@
 ---
 description: Execute a planned phase through Agent Teams with parallel Dev teammates.
-argument-hint: <phase-number> [--effort=thorough|balanced|fast|turbo] [--skip-qa] [--plan=NN]
+argument-hint: [phase-number] [--effort=thorough|balanced|fast|turbo] [--skip-qa] [--plan=NN]
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebFetch
 ---
 
@@ -28,7 +28,13 @@ Phase directories:
 ## Guard
 
 1. **Not initialized:** If .vbw-planning/ doesn't exist, STOP: "Run /vbw:init first."
-2. **Missing phase number:** If $ARGUMENTS lacks an integer phase number, STOP: "Usage: /vbw:build <phase-number> [--effort=thorough|balanced|fast|turbo] [--skip-qa] [--plan=NN]"
+
+2. **Auto-detect phase (if omitted):** If `$ARGUMENTS` does not contain an integer phase number (flags like `--effort` are still allowed):
+   1. Read `${CLAUDE_PLUGIN_ROOT}/references/phase-detection.md` and follow the **Resolve Phases Directory** section to determine the correct phases path.
+   2. Scan phase directories in numeric order. For each directory, check for `*-PLAN.md` and `*-SUMMARY.md` files. The first phase where `*-PLAN.md` files exist but at least one plan lacks a corresponding `*-SUMMARY.md` (matched by numeric prefix) is the target.
+   3. If found: announce "Auto-detected Phase {N} ({slug}) -- planned, not yet built" and proceed with that phase number.
+   4. If all planned phases are fully built: STOP and tell the user "All planned phases are built. Specify a phase to rebuild: `/vbw:build N`"
+
 3. **Phase not planned:** If no PLAN.md files in .vbw-planning/phases/{phase-dir}/, STOP: "Phase {N} has no plans. Run /vbw:plan {N} first."
 4. **Phase already complete:** If ALL plans have SUMMARY.md, WARN: "Phase {N} already complete. Re-running creates new commits. Continue?"
 
@@ -36,7 +42,7 @@ Phase directories:
 
 ### Step 1: Parse arguments
 
-- **Phase number** (required): integer matching `.vbw-planning/phases/{NN}-*`
+- **Phase number** (optional; auto-detected if omitted): integer matching `.vbw-planning/phases/{NN}-*`
 - **--effort** (optional): thorough|balanced|fast|turbo. Overrides config for this run only.
 - **--skip-qa** (optional): skip post-build deep verification
 - **--plan=NN** (optional): execute only one plan, ignore wave grouping

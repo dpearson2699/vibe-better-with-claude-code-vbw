@@ -1,6 +1,6 @@
 ---
 description: Run deep verification on completed phase work using the QA agent.
-argument-hint: <phase-number> [--tier=quick|standard|deep] [--effort=thorough|balanced|fast|turbo]
+argument-hint: [phase-number] [--tier=quick|standard|deep] [--effort=thorough|balanced|fast|turbo]
 allowed-tools: Read, Write, Bash, Glob, Grep
 ---
 
@@ -28,7 +28,14 @@ Phase directories:
 ## Guard
 
 1. **Not initialized:** If .vbw-planning/ doesn't exist, STOP: "Run /vbw:init first."
-2. **Missing phase number:** If $ARGUMENTS lacks a phase number, STOP: "Usage: /vbw:qa <phase-number> [--tier=quick|standard|deep]"
+
+2. **Auto-detect phase (if no explicit phase number):** If `$ARGUMENTS` does not contain an integer phase number (flags like `--tier` are still allowed):
+   1. Read `${CLAUDE_PLUGIN_ROOT}/references/phase-detection.md`
+   2. Resolve the phases directory: if `.vbw-planning/ACTIVE` exists, read it for the milestone slug and use `.vbw-planning/{milestone-slug}/phases/`; otherwise use `.vbw-planning/phases/`
+   3. Scan phase directories in numeric order (`01-*`, `02-*`, ...). Find the first phase where `*-SUMMARY.md` files exist but no `*-VERIFICATION.md` exists
+   4. If found: announce "Auto-detected Phase {N} ({slug}) -- built, not yet verified" and proceed with that phase number
+   5. If all built phases are verified: STOP and tell user "All phases verified. Specify a phase to re-verify: `/vbw:qa N`"
+
 3. **Phase not built:** If no SUMMARY.md files in phase directory, STOP: "Phase {N} has no completed plans. Run /vbw:build {N} first."
 
 Note: Continuous verification is handled by hooks (PostToolUse, TaskCompleted, TeammateIdle). This command is for deep, on-demand verification only.
