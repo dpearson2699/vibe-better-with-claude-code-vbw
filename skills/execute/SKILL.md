@@ -84,16 +84,36 @@ Set already-completed plans (those with SUMMARY.md) to `"complete"`, all others 
 
 ### Step 3: Create Agent Team and execute
 
-Create a build team. For each uncompleted plan, create a task in the shared task list with thin context:
+Create a build team. For each uncompleted plan, use TaskCreate to create a task with thin context:
 
 ```
-Execute all tasks in {PLAN_PATH}.
-Effort: {DEV_EFFORT}. Working directory: {pwd}.
-{If resuming: "Resume from Task {N}. Tasks 1-{N-1} already committed."}
-{If autonomous: false: "This plan has checkpoints -- pause for user input."}
+For each uncompleted plan, use TaskCreate:
+
+TaskCreate:
+  subject: "Execute {NN-MM}: {plan-title}"
+  description: |
+    Execute all tasks in {PLAN_PATH}.
+    Effort: {DEV_EFFORT}. Working directory: {pwd}.
+    {If resuming: "Resume from Task {N}. Tasks 1-{N-1} already committed."}
+    {If autonomous: false: "This plan has checkpoints -- pause for user input."}
+  activeForm: "Executing {NN-MM}"
+
+After creating all tasks, wire dependencies using TaskUpdate:
+  - Group tasks by wave number (from plan frontmatter)
+  - For each task in wave N (where N > 1):
+    TaskUpdate(taskId, addBlockedBy: [all task IDs from wave N-1])
+
+Example for 3 plans across 2 waves:
+  Task A (wave 1, plan 04-01) -- no blockedBy
+  Task B (wave 1, plan 04-02) -- no blockedBy
+  Task C (wave 2, plan 04-03) -- blockedBy: [Task A ID, Task B ID]
 ```
 
-Spawn Dev teammates (one per plan within a wave, or one per plan if `--plan=NN`). Use wave ordering: all plans in wave 1 first, wait for completion, then wave 2, etc.
+Spawn Dev teammates and assign tasks. The platform enforces execution ordering via task dependencies:
+- Wave 1 tasks have no blockedBy -- they start immediately when teammates are spawned
+- Wave N tasks are blockedBy all wave N-1 tasks -- the platform holds them until dependencies complete
+- Teammates are spawned for all plans, but wave N teammates will idle until their tasks unblock
+- If `--plan=NN`: create a single task with no dependencies (ignore wave grouping)
 
 **Teammate communication protocol (effort-gated):**
 
@@ -110,10 +130,9 @@ Instruct Dev teammates to use SendMessage for coordination based on the active e
 
 Use targeted `message` (not `broadcast`) for most communication. Reserve `broadcast` only for critical blocking issues affecting all teammates (e.g., a shared dependency is broken and all work should pause).
 
-**Update execution state at wave boundaries and plan completions:**
-- **Wave start:** Update `.vbw-planning/.execution-state.json` — set `"wave"` to current wave number, set plans in this wave to `"running"`.
-- **Plan completion:** Update the plan's status in the JSON to `"complete"` (or `"failed"` if it failed).
-- **Wave boundary:** After all plans in a wave finish, advance `"wave"` to the next wave number before spawning the next wave's agents.
+**Update execution state at task and wave completions:**
+- **Task completion:** When a teammate completes (or fails), update the plan's status in `.vbw-planning/.execution-state.json` to "complete" (or "failed").
+- **Wave transition:** Wave transitions happen automatically -- when all wave N tasks complete, their wave N+1 dependents unblock. Update "wave" in the execution state JSON when you observe the first wave N+1 task starting.
 
 Use `jq` for atomic updates, e.g.: `jq '(.plans[] | select(.id == "03-01")).status = "complete"' .vbw-planning/.execution-state.json > tmp && mv tmp .vbw-planning/.execution-state.json`
 
