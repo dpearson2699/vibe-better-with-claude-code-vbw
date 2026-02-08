@@ -12,12 +12,12 @@ The `effort` field in `config/defaults.json` sets the global default. Per-invoca
 
 ## Profile Matrix
 
-| Profile  | ID      | Model  | Lead | Architect | Dev    | QA     | Scout  | Debugger |
-|----------|---------|--------|------|-----------|--------|--------|--------|----------|
-| Thorough | EFRT-01 | Opus   | max  | max       | high   | high   | high   | high     |
-| Balanced | EFRT-02 | Opus   | high | high      | medium | medium | medium | medium   |
-| Fast     | EFRT-03 | Sonnet | high | medium    | medium | low    | low    | medium   |
-| Turbo    | EFRT-04 | Sonnet | skip | skip      | low    | skip   | skip   | low      |
+| Profile  | ID      | Model  | Lead | Architect | Dev    | QA     | Scout  | Debugger | Plan Approval |
+|----------|---------|--------|------|-----------|--------|--------|--------|----------|---------------|
+| Thorough | EFRT-01 | Opus   | max  | max       | high   | high   | high   | high     | required      |
+| Balanced | EFRT-02 | Opus   | high | high      | medium | medium | medium | medium   | off           |
+| Fast     | EFRT-03 | Sonnet | high | medium    | medium | low    | low    | medium   | off           |
+| Turbo    | EFRT-04 | Sonnet | skip | skip      | low    | skip   | skip   | low      | off           |
 
 ## Profile Details
 
@@ -29,7 +29,7 @@ The `effort` field in `config/defaults.json` sets the global default. Per-invoca
 - **Scout (high):** Broad research across multiple sources. Cross-reference findings between web and codebase. Explore adjacent topics for context. Multiple URLs per finding.
 - **Architect (max):** Comprehensive scope analysis. Detailed success criteria with multiple verification paths. Full requirement mapping with traceability matrix. Explicit dependency justification for every phase ordering decision.
 - **Lead (max):** Exhaustive research across all sources including WebFetch for external docs. Detailed task decomposition with comprehensive action descriptions. Thorough self-review checking all eight criteria (coverage, DAG, file conflicts, completeness, feasibility, context refs, concerns, skills). Full goal-backward must_haves derivation for every plan.
-- **Dev (high):** Careful implementation with thorough inline verification. Complete error handling and edge case exploration. Comprehensive commit messages with detailed change descriptions. Run all verify checks plus supplementary validation.
+- **Dev (high):** Spawned with `plan_mode_required` -- proposes implementation approach in read-only plan mode, waits for lead approval before writing code. Once approved: careful implementation with thorough inline verification. Complete error handling and edge case exploration. Comprehensive commit messages with detailed change descriptions. Run all verify checks plus supplementary validation.
 - **QA (high):** Deep verification tier (30+ checks). Full anti-pattern scan. Requirement-to-artifact traceability mapping. Cross-file consistency checks. Detailed convention verification. All skill-augmented checks if quality skills installed.
 - **Debugger (high):** Exhaustive hypothesis testing -- check all 3 hypotheses even if the first seems confirmed. Full regression test suite after fix. Detailed investigation report with complete timeline.
 
@@ -104,3 +104,21 @@ Map abstract effort levels to the `effort` parameter values that Claude Code acc
 | skip   | Agent is not spawned at all                         |
 
 When spawning a subagent, the orchestrating command sets the effort parameter based on the active profile and the agent's column value from the profile matrix above.
+
+## Plan Approval Gate (EFRT-07)
+
+At Thorough effort, Dev teammates are spawned with `plan_mode_required`. This activates a platform-enforced review gate:
+
+1. Dev receives its task and reads the PLAN.md
+2. Dev proposes its implementation approach (read-only mode -- cannot write files)
+3. Lead reviews the proposed approach
+4. Lead approves (Dev exits plan mode, begins implementation) or rejects with feedback (Dev revises approach)
+
+This is **platform-enforced**: the Dev literally cannot make file changes until the lead approves. This is strictly stronger than instruction-enforced constraints (per the two-tier enforcement framework from the v1.1 audit).
+
+| Effort Level | Plan Approval | Rationale |
+|-------------|---------------|-----------|
+| Thorough    | required      | Correctness over speed; review gate catches misinterpretation before code is written |
+| Balanced    | off           | Standard execution; review gate would slow iteration without proportional quality gain |
+| Fast        | off           | Speed priority; review gate contradicts purpose |
+| Turbo       | off           | No lead agent at Turbo; plan approval requires a lead to approve |

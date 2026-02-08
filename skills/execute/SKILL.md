@@ -49,12 +49,12 @@ Phase directories:
 
 Map effort to agent levels per `${CLAUDE_PLUGIN_ROOT}/references/effort-profiles.md`:
 
-| Profile  | DEV_EFFORT | QA_EFFORT |
-|----------|------------|-----------|
-| Thorough | high       | high      |
-| Balanced | medium     | medium    |
-| Fast     | medium     | low       |
-| Turbo    | low        | skip      |
+| Profile  | DEV_EFFORT | QA_EFFORT | PLAN_APPROVAL |
+|----------|------------|-----------|---------------|
+| Thorough | high       | high      | required      |
+| Balanced | medium     | medium    | off           |
+| Fast     | medium     | low       | off           |
+| Turbo    | low        | skip      | off           |
 
 ### Step 2: Load plans and detect resume state
 
@@ -114,6 +114,17 @@ Spawn Dev teammates and assign tasks. The platform enforces execution ordering v
 - Wave N tasks are blockedBy all wave N-1 tasks -- the platform holds them until dependencies complete
 - Teammates are spawned for all plans, but wave N teammates will idle until their tasks unblock
 - If `--plan=NN`: create a single task with no dependencies (ignore wave grouping)
+
+**Plan approval gate (effort-gated):**
+When PLAN_APPROVAL is `required` (Thorough effort only):
+- Spawn Dev teammates with `plan_mode_required` set
+- Each Dev enters read-only plan mode: it reads the PLAN.md, proposes its implementation approach, and waits for lead approval before writing any code
+- The lead reviews each Dev's proposed approach and approves (plan_approval_response with approve: true) or rejects with feedback (approve: false with content describing what to change)
+- This adds a platform-enforced review gate -- the Dev literally cannot make changes until approved
+
+When PLAN_APPROVAL is `off` (Balanced, Fast, Turbo):
+- Spawn Dev teammates without plan_mode_required
+- Devs begin implementation immediately upon receiving their task (existing behavior)
 
 **Teammate communication protocol (effort-gated):**
 
