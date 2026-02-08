@@ -2,6 +2,12 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.0.51] - 2026-02-08
+
+### Changed
+
+- Updated statusline screenshot in `assets/statusline.png`
+
 ## [1.0.50] - 2026-02-08
 
 ### Added
