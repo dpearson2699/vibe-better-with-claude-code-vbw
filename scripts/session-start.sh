@@ -58,6 +58,34 @@ if [ -d "$CACHE_DIR" ]; then
   fi
 fi
 
+# --- Auto-sync stale marketplace checkout ---
+# The marketplace is a git clone that can fall behind the cached plugin.
+# If stale, pull it silently so the next /vbw:update works correctly.
+MKT_DIR="$HOME/.claude/plugins/marketplaces/vbw-marketplace"
+if [ -d "$MKT_DIR/.git" ] && [ -d "$CACHE_DIR" ]; then
+  MKT_VER=$(jq -r '.version // "0"' "$MKT_DIR/.claude-plugin/plugin.json" 2>/dev/null)
+  CACHE_VER=$(jq -r '.version // "0"' "$(ls -d "$CACHE_DIR"/*/.claude-plugin/plugin.json 2>/dev/null | sort -V | tail -1)" 2>/dev/null)
+  if [ "$MKT_VER" != "$CACHE_VER" ] && [ -n "$CACHE_VER" ] && [ "$CACHE_VER" != "0" ]; then
+    (cd "$MKT_DIR" && git fetch origin --quiet 2>/dev/null && git reset --hard origin/main --quiet 2>/dev/null) &
+  fi
+fi
+
+# --- Sync commands to ~/.claude/commands/vbw/ for /vbw:* autocomplete prefix ---
+# Plugin commands/ may not show the namespace prefix in all environments.
+# Global commands in a subdirectory (e.g. ~/.claude/commands/vbw/) reliably
+# get the subdirectory name as prefix, matching the pattern GSD uses.
+VBW_CACHE_CMD=$(ls -d "$HOME"/.claude/plugins/cache/vbw-marketplace/vbw/*/commands 2>/dev/null | sort -V | tail -1)
+VBW_GLOBAL_CMD="$HOME/.claude/commands/vbw"
+if [ -d "$VBW_CACHE_CMD" ]; then
+  SRC_COUNT=$(ls "$VBW_CACHE_CMD"/*.md 2>/dev/null | wc -l | tr -d ' ')
+  DEST_COUNT=$(ls "$VBW_GLOBAL_CMD"/*.md 2>/dev/null | wc -l | tr -d ' ')
+  if [ ! -d "$VBW_GLOBAL_CMD" ] || [ "${SRC_COUNT:-0}" -ne "${DEST_COUNT:-0}" ]; then
+    mkdir -p "$VBW_GLOBAL_CMD"
+    rm -f "$VBW_GLOBAL_CMD"/*.md 2>/dev/null
+    cp "$VBW_CACHE_CMD"/*.md "$VBW_GLOBAL_CMD/" 2>/dev/null
+  fi
+fi
+
 # --- Project state ---
 
 if [ ! -d "$PLANNING_DIR" ]; then

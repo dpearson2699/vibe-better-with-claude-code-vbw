@@ -2,6 +2,19 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.0.49] - 2026-02-08
+
+### Fixed
+
+- `/vbw:*` prefix missing in autocomplete — root cause: marketplace checkout stuck at v1.0.9 (pre-migration `skills/` structure) while plugin cache had v1.0.48 (`commands/`). Claude Code read commands from the stale marketplace, not the cache
+- `/vbw:update` now always runs `marketplace update` before `plugin update` to prevent marketplace staleness
+- `session-start.sh` auto-syncs stale marketplace checkout when version mismatch detected
+
+### Added
+
+- Belt-and-suspenders: `session-start.sh` copies commands to `~/.claude/commands/vbw/` (global commands subdirectory pattern, same as GSD) — guarantees `/vbw:*` prefix regardless of plugin system behavior
+- `/vbw:uninstall` now cleans up `~/.claude/commands/vbw/` directory
+
 ## [1.0.47] - 2026-02-08
 
 ### Changed

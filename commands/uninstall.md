@@ -40,7 +40,17 @@ Project files (.vbw-planning/, CLAUDE.md) are handled separately.
 
 Ask the user to confirm they want to proceed.
 
-### Step 2: Clean statusLine from settings.json
+### Step 2: Remove global commands directory
+
+If `~/.claude/commands/vbw/` exists:
+1. `rm -rf ~/.claude/commands/vbw/`
+2. Display "✓ Global commands removed (~/.claude/commands/vbw/)"
+
+If the `~/.claude/commands/` directory is now empty after removal, remove it too.
+
+If the directory doesn't exist, skip silently.
+
+### Step 3: Clean statusLine from settings.json
 
 Read `~/.claude/settings.json`. Check if the `statusLine` field exists and its `command` value (or string value) contains `vbw-statusline`.
 
@@ -53,7 +63,7 @@ If it doesn't contain `vbw-statusline`, skip: "○ Statusline is not VBW's — s
 
 If `statusLine` doesn't exist, skip silently.
 
-### Step 3: Clean Agent Teams env var
+### Step 4: Clean Agent Teams env var
 
 Check if `env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` exists in `~/.claude/settings.json`.
 
@@ -68,7 +78,7 @@ If user approves: remove `env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` from setting
 
 If user declines: display "○ Agent Teams setting kept"
 
-### Step 4: Project data
+### Step 5: Project data
 
 If `.vbw-planning/` exists, ask:
 ```
@@ -84,7 +94,7 @@ If user chooses keep: display "○ .vbw-planning/ preserved"
 
 If `.vbw-planning/` doesn't exist, skip silently.
 
-### Step 5: CLAUDE.md cleanup
+### Step 6: CLAUDE.md cleanup
 
 If `CLAUDE.md` exists at project root, ask:
 ```

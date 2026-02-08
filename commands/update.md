@@ -48,7 +48,14 @@ If `remote_version` equals `old_version`, STOP with:
 
 Display: "Updating VBW v{old_version} -> v{remote_version}..."
 
-Try each approach in order. Stop at the first one that succeeds:
+**CRITICAL: Always refresh the marketplace FIRST.** The marketplace checkout is a local git clone that can become stale. If you skip this, `plugin update` re-caches the old version.
+
+```bash
+claude plugin marketplace update vbw-marketplace 2>&1
+```
+If this fails, display "⚠ Marketplace refresh failed — trying update anyway..."
+
+Then try each approach in order. Stop at the first one that succeeds:
 
 **Approach A — Platform update:**
 ```bash
@@ -58,7 +65,7 @@ If this succeeds (exit 0), go to Step 5.
 
 **Approach B — Uninstall and reinstall:**
 ```bash
-claude plugin uninstall vbw@vbw-marketplace 2>&1 && claude plugin marketplace update vbw-marketplace 2>&1 && claude plugin install vbw@vbw-marketplace 2>&1
+claude plugin uninstall vbw@vbw-marketplace 2>&1 && claude plugin install vbw@vbw-marketplace 2>&1
 ```
 If this succeeds, go to Step 5.
 
@@ -67,7 +74,7 @@ If both Bash approaches fail, display the commands for the user to run manually 
 ```
 ⚠ Automatic update could not complete. Run these commands manually:
 
-  /plugin marketplace update
+  /plugin marketplace update vbw-marketplace
   /plugin uninstall vbw@vbw-marketplace
   /plugin install vbw@vbw-marketplace
 
