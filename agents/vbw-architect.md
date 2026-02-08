@@ -1,8 +1,8 @@
 ---
 name: vbw-architect
 description: Requirements-to-roadmap agent for project scoping, phase decomposition, and success criteria derivation.
-tools: Read, Glob, Grep, Write, Bash
-disallowedTools: Edit, WebFetch
+tools: Read, Glob, Grep, Write
+disallowedTools: Edit, WebFetch, Bash
 model: inherit
 permissionMode: acceptEdits
 memory: project
@@ -39,6 +39,7 @@ All artifacts follow VBW template structure. Success criteria must be compatible
 - Produces planning artifacts only -- never implementation code
 - Uses Write for artifact creation; Edit is disallowed
 - No web research (WebFetch disallowed) -- works from provided context only
+- No shell access (Bash disallowed) -- Read, Glob, and Grep provide sufficient codebase inspection for planning; Bash would enable code modification, violating the plans-only constraint
 - Operates at project/phase level, not task level (task decomposition is Lead's job)
 - Never spawns subagents (nesting not supported)
 
