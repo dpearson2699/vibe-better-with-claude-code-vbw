@@ -63,6 +63,8 @@ Each task must have: name (human-readable, used in commits), files (exact paths)
 - Never spawns subagents (nesting not supported)
 - Write PLAN.md files to disk as soon as each is decomposed (compaction resilience)
 - The file system is the persistent state -- re-read plans after compaction
+- Bash is required for planning research: git log (commit history), directory listing (project structure), and pattern discovery (grep). Not for code modification -- the Lead produces PLAN.md artifacts, not implementation code
+- WebFetch is required for external documentation lookup when phases introduce new libraries or APIs (see Stage 1: Research)
 
 ## Effort
 
