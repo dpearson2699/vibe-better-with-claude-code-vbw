@@ -108,14 +108,31 @@ Create `.vbw-planning/phases/` directory.
 
 Ensure config.json includes `"agent_teams": true`.
 
-### Step 2: Brownfield detection summary
+### Step 2: Brownfield detection and codebase mapping
+
+**2a. Brownfield detection:**
 
 If BROWNFIELD=true:
 1. Count source files by extension (Glob)
 2. Check for test files, CI/CD, Docker, monorepo indicators
 3. Add Codebase Profile section to STATE.md
 
+**2b. Codebase mapping (brownfield only):**
+
+If BROWNFIELD=true, immediately launch `/vbw:map` by following `@${CLAUDE_PLUGIN_ROOT}/commands/map.md`.
+
+This produces `.vbw-planning/codebase/` with STACK.md, DEPENDENCIES.md, ARCHITECTURE.md, STRUCTURE.md, CONVENTIONS.md, TESTING.md, CONCERNS.md, INDEX.md, and PATTERNS.md — giving a deep understanding of the existing codebase before skill discovery.
+
+Display:
+```
+  ✓ Codebase mapped ({file-count} source files)
+```
+
+Wait for map to complete before proceeding to Step 3.
+
 ### Step 3: Skill discovery
+
+Skill discovery now runs AFTER codebase mapping (for brownfield projects), so `detect-stack.sh` results are supplemented by the deep analysis in `.vbw-planning/codebase/STACK.md`.
 
 **3a. Run detect-stack.sh** to get stack detection, installed skills, and suggestions in one call:
 
@@ -126,6 +143,10 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-stack.sh "$(pwd)"
 This returns JSON with: `detected_stack[]`, `installed.global[]`, `installed.project[]`, `recommended_skills[]`, `suggestions[]`, `find_skills_available`.
 
 Display the detected stack from `detected_stack[]` and installed skills from `installed.global[]` and `installed.project[]`.
+
+**3a+. Augment with map data (brownfield only):**
+
+If BROWNFIELD=true and `.vbw-planning/codebase/STACK.md` exists, read it to extract additional stack components that `detect-stack.sh` may have missed (e.g., frameworks detected through code analysis rather than manifest files). Merge these into `detected_stack[]` for use in dynamic registry search (3d).
 
 **3b. Display curated suggestions** from `suggestions[]` in the JSON result. For each suggestion, show the install command: `npx skills add <skill-name> -g -y`.
 
@@ -147,7 +168,7 @@ If declined: display "○ Skipped. Run /vbw:skills later to search the registry.
 
 **3d. Dynamic registry search** — if find-skills is available (either was already installed or just installed in 3c):
 
-- If `detected_stack[]` is non-empty: for each detected stack item, run `npx skills find "<stack-item>"` and collect results. Deduplicate against already-installed skills.
+- If `detected_stack[]` is non-empty (including any augmented items from 3a+): for each detected stack item, run `npx skills find "<stack-item>"` and collect results. Deduplicate against already-installed skills.
 - If `detected_stack[]` is empty: run a general search based on the project type (e.g., if there are .sh files, search "shell scripting"; if .md files dominate, search "documentation").
 - Display registry results with `(registry)` attribution.
 
@@ -171,21 +192,18 @@ If declined: display "○ Skipped. Run /vbw:skills later to search the registry.
   {include next line only if statusline was installed during Step 0b}
   ✓ Statusline (restart to activate)
 
+  {include Codebase block only if BROWNFIELD}
+  ✓ Codebase mapped ({document-count} documents)
+
   {include Skills block only if skills were discovered in Step 3}
   Skills:
     Installed: {count} ({names})
-    Stack:     {detected}
+    Stack:     {detected, including map-augmented items}
   {✓ Skills.sh registry (available) — if find-skills is installed}
   {○ Skills.sh registry (skipped) — if find-skills was declined or unavailable}
 ```
 
-If BROWNFIELD:
-```
-  ⚠ Existing codebase detected ({file-count} source files)
-  ➜ Auto-launching /vbw:map to analyze your codebase...
-```
-Then immediately invoke `/vbw:map` by following `@${CLAUDE_PLUGIN_ROOT}/commands/map.md`.
-After map completes, auto-launch `/vbw:new` by following `@${CLAUDE_PLUGIN_ROOT}/commands/new.md`.
+Then auto-launch `/vbw:new` by following `@${CLAUDE_PLUGIN_ROOT}/commands/new.md`.
 
 If greenfield:
 ```

@@ -2,6 +2,14 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.0.58] - 2026-02-08
+
+### Changed
+
+- **Init reordering: map before skills** — for brownfield projects, `/vbw:init` now runs codebase mapping (Step 2) before skill discovery (Step 3). Previously, skills were suggested blind, then map ran at the end. Now map output (`STACK.md`) augments `detect-stack.sh` results, so skill suggestions are based on actual codebase analysis rather than just manifest file detection.
+- **New Step 3a+: map-augmented stack detection** — after `detect-stack.sh` runs, init reads `.vbw-planning/codebase/STACK.md` to extract additional stack components found through deep code analysis (e.g., frameworks detected in imports, not just in `package.json`). These are merged into `detected_stack[]` for registry search.
+- **README flow chart and tutorial updated** — brownfield path now shows map → skills → new sequence. Command table and tutorial text reflect that skill discovery is informed by map data.
+
 ## [1.0.56] - 2026-02-08
 
 ### Changed
