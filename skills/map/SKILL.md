@@ -91,6 +91,18 @@ Security enforcement is handled by the PreToolUse hook -- no inline exclusion li
 
 Wait for all teammates to complete. Verify all 7 documents exist.
 
+**Scout communication protocol (effort-gated):**
+
+Instruct Scout teammates to use SendMessage for cross-cutting discovery sharing based on the active effort level. Note: `/vbw:map` does not accept an `--effort` flag -- effort is inherited from the global config. If effort is not determinable, default to Balanced behavior.
+
+- At **Thorough** or **Balanced** effort:
+  - **Cross-cutting findings:** If a Scout discovers something relevant to another Scout's domain (e.g., Tech Stack scout finds an architectural pattern that Architecture scout should know about, Architecture scout finds a dependency concern that Tech Stack scout should cross-reference), message the relevant Scout directly.
+- At **Thorough** effort only, additionally:
+  - **Contradictions:** If a Scout's findings contradict another Scout's area (e.g., Quality scout finds conventions that conflict with what Architecture scout documented), message that Scout to flag the discrepancy for the INDEX.md Validation Notes section.
+- At **Fast** effort: instruct Scouts to report blockers only via SendMessage (e.g., if a Scout cannot access expected files or encounters an empty project area that prevents mapping).
+
+Use targeted `message` (not `broadcast`). Scout domains are independent; most findings stay within domain.
+
 ### Step 4: Synthesize INDEX.md and PATTERNS.md
 
 After all teammates complete, read all 7 mapping documents and produce:
@@ -100,6 +112,17 @@ After all teammates complete, read all 7 mapping documents and produce:
 **PATTERNS.md:** Recurring patterns extracted across documents: architectural, naming, quality, concern, and dependency patterns.
 
 ### Step 5: Create META.md and present summary
+
+**Shutdown and cleanup:**
+
+After all Scout teammates have completed their tasks:
+
+1. Send a shutdown request to each teammate.
+2. Wait for each teammate to respond with shutdown approval.
+3. If a teammate rejects shutdown (still finishing work), wait for it to complete and re-request.
+4. Once ALL teammates have shut down, run TeamDelete to clean up the team and its shared task list.
+
+This prevents orphaned teammates and dangling task lists. Do not proceed to META.md creation until TeamDelete has succeeded.
 
 Write META.md with: mapped_at timestamp, git_hash, file_count, document list, mode, monorepo flag.
 
