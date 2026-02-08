@@ -10,22 +10,23 @@ Thanks for considering a contribution. VBW is a Claude Code plugin, so the conve
 
 ## Local Development
 
-Clone the repo and load it as a local plugin:
+Clone the repo, install the git hooks, and load it as a local plugin:
 
 ```bash
 git clone https://github.com/yidakee/vibe-better-with-claude-code-vbw.git
 cd vibe-better-with-claude-code-vbw
+ln -sf ../../scripts/pre-push-hook.sh .git/hooks/pre-push
 claude --plugin-dir .
 ```
 
-This loads VBW without installing it. All `/vbw:*` commands will be available. Restart Claude Code to pick up changes.
+The pre-push hook is required — it prevents pushing without a version bump (see Version Management below). All `/vbw:*` commands will be available. Restart Claude Code to pick up changes.
 
 ## Project Structure
 
 ```
 .claude-plugin/    Plugin manifest (plugin.json)
 agents/            6 agent definitions with native tool permissions
-commands/          28 slash commands (commands/*.md)
+commands/          29 slash commands (commands/*.md)
 config/            Default settings and stack-to-skill mappings
 hooks/             Plugin hooks (hooks.json)
 scripts/           Hook handler scripts
@@ -98,7 +99,29 @@ scripts/bump-version.sh --verify
 
 This exits `0` if all versions match and `1` with a diff report if they diverge. Useful in CI or as a pre-commit check.
 
-**Always run `scripts/bump-version.sh` before committing version-sensitive changes.**
+### Push Workflow
+
+A git pre-push hook enforces that every push includes a version bump. Without it, users' caches go stale silently (session-start.sh uses version comparison to detect updates).
+
+```bash
+# 1. Work freely, commit as needed
+git commit -m "feat(commands): add new feature"
+git commit -m "fix(hooks): handle edge case"
+
+# 2. Bump once before pushing
+bash scripts/bump-version.sh
+git add VERSION .claude-plugin/plugin.json .claude-plugin/marketplace.json marketplace.json
+git commit -m "chore: bump version to X.Y.Z"
+git push
+```
+
+If you forget, the hook blocks the push and tells you what to do. Use `git push --no-verify` to bypass in rare cases (e.g. docs-only changes to non-plugin files).
+
+**Install the hook after cloning:**
+
+```bash
+ln -sf ../../scripts/pre-push-hook.sh .git/hooks/pre-push
+```
 
 ## Code Style
 
