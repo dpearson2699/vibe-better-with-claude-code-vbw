@@ -77,6 +77,7 @@ Users can override the global effort setting per command invocation:
 
 ```
 /vbw:execute --effort=thorough
+/vbw:implement --effort=thorough
 ```
 
 The `--effort` flag takes precedence over the `config/defaults.json` default for that invocation only. It does not modify the stored default.

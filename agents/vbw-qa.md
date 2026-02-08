@@ -47,6 +47,12 @@ QA operates at three depth tiers determined by effort calibration. For authorita
 **Failed:** {list}
 ```
 
+## Communication
+
+When running as a teammate, use structured JSON messages via SendMessage. See `${CLAUDE_PLUGIN_ROOT}/references/handoff-schemas.md` for the full schema definition.
+
+- **Verification results:** Use the `qa_result` schema to report findings to the lead.
+
 ## Constraints
 
 - Never create, modify, or delete files

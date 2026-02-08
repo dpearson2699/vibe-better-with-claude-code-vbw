@@ -33,4 +33,32 @@ if ! echo "$MSG" | grep -qE "^($VALID_TYPES)\(.+\): .+"; then
   }'
 fi
 
+# Version bump warning (VBW plugin development only)
+if [ -f ".claude-plugin/plugin.json" ]; then
+  PLUGIN_NAME=$(jq -r '.name // ""' .claude-plugin/plugin.json 2>/dev/null)
+  if [ "$PLUGIN_NAME" = "vbw" ]; then
+    STAGED=$(git diff --cached --name-only 2>/dev/null)
+    if [ -n "$STAGED" ]; then
+      HAS_NON_VERSION=false
+      HAS_VERSION=false
+      for f in $STAGED; do
+        case "$f" in
+          VERSION|.claude-plugin/*|marketplace.json) ;;
+          *) HAS_NON_VERSION=true ;;
+        esac
+        if [ "$f" = "VERSION" ]; then
+          HAS_VERSION=true
+        fi
+      done
+      if [ "$HAS_NON_VERSION" = true ] && [ "$HAS_VERSION" = false ]; then
+        jq -n '{
+          "hookSpecificOutput": {
+            "additionalContext": "VERSION file not staged. Run scripts/bump-version.sh before committing."
+          }
+        }'
+      fi
+    fi
+  fi
+fi
+
 exit 0

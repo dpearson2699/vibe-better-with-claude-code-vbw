@@ -67,7 +67,7 @@ This step has two paths based on effort level and ambiguity classification.
    - The bug report
    - ONLY this teammate's assigned hypothesis (not the others -- prevent cross-contamination)
    - Working directory
-   - Instruction: "Investigate ONLY this hypothesis. Use SendMessage to report your findings to the lead when done. Include: evidence found (for/against), confidence level (high/medium/low), and recommended fix if confirmed."
+   - Instruction: "Investigate ONLY this hypothesis. Use SendMessage to report findings using the `debugger_report` schema (see `${CLAUDE_PLUGIN_ROOT}/references/handoff-schemas.md`). Your message must be a JSON object with type, hypothesis, evidence_for, evidence_against, confidence, and recommended_fix fields."
 
 4. Spawn 3 vbw-debugger teammates, assign one task each.
 

@@ -62,30 +62,34 @@ Create an Agent Team with 4 Scout teammates. Use TaskCreate to create a task for
 
 **Scout 1 -- Tech Stack:**
 ```
-Analyze tech stack and dependencies. Send structured findings to the lead via SendMessage with domain summary for STACK.md and DEPENDENCIES.md.
+Analyze tech stack and dependencies. Send findings to the lead via SendMessage using the scout_findings schema (type: "scout_findings", domain: "tech-stack"). Include documents for STACK.md and DEPENDENCIES.md.
 Mode: {MAPPING_MODE}. {If incremental: "Changed files: {list}"}
 {If monorepo: "Packages: {list}"}
+Schema reference: ${CLAUDE_PLUGIN_ROOT}/references/handoff-schemas.md
 ```
 
 **Scout 2 -- Architecture:**
 ```
-Analyze architecture and project structure. Send structured findings to the lead via SendMessage with domain summary for ARCHITECTURE.md and STRUCTURE.md.
+Analyze architecture and project structure. Send findings to the lead via SendMessage using the scout_findings schema (type: "scout_findings", domain: "architecture"). Include documents for ARCHITECTURE.md and STRUCTURE.md.
 Mode: {MAPPING_MODE}. {If incremental: "Changed files: {list}"}
 {If monorepo: "Packages: {list}"}
+Schema reference: ${CLAUDE_PLUGIN_ROOT}/references/handoff-schemas.md
 ```
 
 **Scout 3 -- Quality:**
 ```
-Analyze quality signals, conventions, and testing. Send structured findings to the lead via SendMessage with domain summary for CONVENTIONS.md and TESTING.md.
+Analyze quality signals, conventions, and testing. Send findings to the lead via SendMessage using the scout_findings schema (type: "scout_findings", domain: "quality"). Include documents for CONVENTIONS.md and TESTING.md.
 Mode: {MAPPING_MODE}. {If incremental: "Changed files: {list}"}
 {If monorepo: "Packages: {list}"}
+Schema reference: ${CLAUDE_PLUGIN_ROOT}/references/handoff-schemas.md
 ```
 
 **Scout 4 -- Concerns:**
 ```
-Analyze concerns, technical debt, and risks. Send structured findings to the lead via SendMessage with domain summary for CONCERNS.md.
+Analyze concerns, technical debt, and risks. Send findings to the lead via SendMessage using the scout_findings schema (type: "scout_findings", domain: "concerns"). Include documents for CONCERNS.md.
 Mode: {MAPPING_MODE}. {If incremental: "Changed files: {list}"}
 {If monorepo: "Packages: {list}"}
+Schema reference: ${CLAUDE_PLUGIN_ROOT}/references/handoff-schemas.md
 ```
 
 Security enforcement is handled by the PreToolUse hook -- no inline exclusion lists needed.
@@ -111,7 +115,7 @@ Use targeted `message` (not `broadcast`). Scout domains are independent; most fi
 
 ### Step 3.5: Write mapping documents from Scout reports
 
-After receiving all Scout findings via SendMessage, write the 7 individual mapping documents to `.vbw-planning/codebase/`:
+After receiving all Scout findings via SendMessage, parse each message as JSON (`scout_findings` schema). If parsing fails, fall back to treating the content as plain markdown. Write the 7 individual mapping documents to `.vbw-planning/codebase/`:
 
 - **STACK.md** and **DEPENDENCIES.md** -- from Scout 1 (Tech Stack) findings
 - **ARCHITECTURE.md** and **STRUCTURE.md** -- from Scout 2 (Architecture) findings

@@ -27,6 +27,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/skills/{name}/SKILL.md` and display: name, descripti
 | ✓      | /vbw:new [desc]    | Define project — name, requirements, roadmap     |
 | ✓      | /vbw:plan [phase]  | Plan a phase via Lead agent (auto-detects phase) |
 | ✓      | /vbw:execute [phase] | Execute phase via Agent Teams (auto-detects phase)|
+| ✓      | /vbw:implement [phase] | Plan and execute a phase in one command (auto-detects phase) |
 | ✓      | /vbw:ship      | Archive milestone, tag repo, merge branch            |
 
 ### Monitoring
@@ -97,10 +98,11 @@ Read `${CLAUDE_PLUGIN_ROOT}/skills/{name}/SKILL.md` and display: name, descripti
   /vbw:init -- Set up environment and scaffold .vbw-planning
   /vbw:new "My project" -- Define project, requirements, roadmap
   /vbw:map -- Analyze codebase (brownfield) or skip (greenfield)
-  /vbw:plan -- Plan the next phase (auto-detects phase)
-  /vbw:execute -- Execute with Agent Teams (auto-detects phase)
+  /vbw:implement -- Plan and execute in one step (auto-detects phase)
   /vbw:qa -- Deep verify (auto-detects phase)
   /vbw:ship -- Archive and tag
+
+  Or use /vbw:plan + /vbw:execute separately for more control.
 
 Run `/vbw:help <command>` for detailed help on any command.
 

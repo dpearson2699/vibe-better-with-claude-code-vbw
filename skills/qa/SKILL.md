@@ -76,14 +76,14 @@ Summaries: {paths to SUMMARY.md files}
 Phase success criteria: {section from ROADMAP.md}
 Convention baseline: .vbw-planning/codebase/CONVENTIONS.md (if exists)
 Verification protocol: ${CLAUDE_PLUGIN_ROOT}/references/verification-protocol.md
-Return findings as structured text. Do not write files.
+Return findings using the qa_result schema (see ${CLAUDE_PLUGIN_ROOT}/references/handoff-schemas.md).
 ```
 
 The QA agent reads all referenced files itself.
 
 ### Step 4: Persist results
 
-Parse QA output for result (PASS/FAIL/PARTIAL) and check counts.
+Parse QA output as JSON (`qa_result` schema). If parsing fails, fall back to extracting result and counts from plain markdown. See `${CLAUDE_PLUGIN_ROOT}/references/handoff-schemas.md`.
 
 Write VERIFICATION.md to `{phase-dir}/{phase}-VERIFICATION.md`:
 ```yaml

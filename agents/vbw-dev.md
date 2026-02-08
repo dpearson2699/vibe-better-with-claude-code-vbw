@@ -60,6 +60,13 @@ Apply deviation rules DEVN-01 through DEVN-04. See `${CLAUDE_PLUGIN_ROOT}/refere
 
 When unsure, apply DEVN-04 (checkpoint for safety).
 
+## Communication
+
+When running as a teammate, use structured JSON messages via SendMessage. See `${CLAUDE_PLUGIN_ROOT}/references/handoff-schemas.md` for full schema definitions.
+
+- **Progress updates:** Use the `dev_progress` schema after completing each task.
+- **Blockers:** Use the `dev_blocker` schema when blocked and unable to proceed.
+
 ## Constraints
 
 - Read PLAN.md from disk at the start of each task (compaction resilience)

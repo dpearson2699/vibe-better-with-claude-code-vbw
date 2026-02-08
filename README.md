@@ -17,7 +17,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-v1.0.33+-blue.svg)](https://code.claude.com)
 [![Opus 4.6+](https://img.shields.io/badge/Model-Opus_4.6+-purple.svg)](https://anthropic.com)
-[![Discord](https://img.shields.io/badge/Discord-Join%20Us-5865F2.svg?logo=discord&logoColor=white)](https://discord.gg/EtbG9Y5JCn)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Us-5865F2.svg?logo=discord&logoColor=white)](https://discord.gg/zh6pV53SaP)
 
 </div>
 
@@ -33,7 +33,7 @@ Whether you're a seasoned engineer who wants to push the boundaries of what AI-a
 
 **For vibe coders:** You don't need to know how VBW works under the hood to get help with your projects. Come to the Discord, share what you're building, ask questions, get unstuck. No gatekeeping, no judgment. We've all stared at a terminal wondering what just happened. The difference is now you don't have to stare alone.
 
-**[Join the Discord](https://discord.gg/EtbG9Y5JCn)** -- whether you want to help build VBW or just want VBW to help you build.
+**[Join the Discord](https://discord.gg/zh6pV53SaP)** -- whether you want to help build VBW or just want VBW to help you build.
 
 <br>
 
@@ -41,7 +41,7 @@ Whether you're a seasoned engineer who wants to push the boundaries of what AI-a
 
 > **Platform:** macOS and Linux only. Windows is not supported natively — all hooks, scripts, and context blocks require bash. If you're on Windows, run Claude Code inside [WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
 
-VBW is a Claude Code plugin that bolts an actual development lifecycle onto your vibe coding sessions. It gives you 27 slash commands and 6 AI agents that handle planning, building, verifying, and shipping your code, so what you produce has at least a fighting chance of surviving a code review.
+VBW is a Claude Code plugin that bolts an actual development lifecycle onto your vibe coding sessions. It gives you 28 slash commands and 6 AI agents that handle planning, building, verifying, and shipping your code, so what you produce has at least a fighting chance of surviving a code review.
 
 You describe what you want. VBW breaks it into phases. Agents plan, write, and verify the code. Commits are atomic. Verification is goal-backward. State persists across sessions. It's the entire software development lifecycle, except you replaced the engineering team with a plugin and a prayer.
 
@@ -319,7 +319,7 @@ Again, VBW knows which phase to build next. An Agent Team of Dev teammates execu
 
 At any point, check where you stand. Shows phase progress, completion bars, velocity metrics, and suggests what to do next. Add `--metrics` for a token consumption breakdown per agent. Think of it as the project dashboard you never bothered to set up manually.
 
-Repeat `/vbw:plan` and `/vbw:execute` for each phase until your roadmap is complete.
+Repeat `/vbw:plan` and `/vbw:execute` for each phase until your roadmap is complete. Or use `/vbw:implement` to plan and execute in one step.
 
 ```
 /vbw:ship
@@ -360,6 +360,7 @@ These are the commands you'll use every day. This is the job now.
 | `/vbw:new [desc]` | Define your project. Asks for name, requirements, creates a phased roadmap, initializes state, and generates CLAUDE.md. Auto-launches `/vbw:map` for existing codebases. |
 | `/vbw:plan [phase]` | Plan a phase. The Lead agent researches context, decomposes work into tasks grouped by wave, and self-reviews the plan. Produces PLAN.md files with YAML frontmatter. Accepts `--effort` flag (thorough/balanced/fast/turbo). Phase is auto-detected when omitted. |
 | `/vbw:execute [phase]` | Execute a planned phase. Creates an Agent Team with Dev teammates for parallel execution. Atomic commits per task. Continuous QA via hooks. Produces SUMMARY.md. Resumes from last checkpoint if interrupted. Phase is auto-detected when omitted. |
+| `/vbw:implement [phase]` | Plan and execute in one command. Auto-detects whether a phase needs planning, execution, or both. Skips the intermediate "Planned" state. Shortcut for `/vbw:plan` then `/vbw:execute`. |
 | `/vbw:ship` | Complete a milestone. Runs audit, archives state to `.vbw-planning/milestones/`, tags the git release, merges milestone branch (if any), and updates project docs. The one command that means you actually finished something. |
 
 Phase numbers are optional -- when omitted, VBW auto-detects the next phase based on artifact state.
@@ -520,7 +521,7 @@ Not every task deserves the same level of scrutiny. Most of yours don't. VBW pro
 ```
 .claude-plugin/    Plugin manifest (plugin.json)
 agents/            6 agent definitions with native tool permissions
-skills/            27 slash commands (skills/*/SKILL.md)
+skills/            28 slash commands (skills/*/SKILL.md)
 config/            Default settings and stack-to-skill mappings
 hooks/             Plugin hooks for continuous verification
 scripts/           Hook handler scripts (security, validation, QA gates)

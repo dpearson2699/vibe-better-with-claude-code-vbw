@@ -52,12 +52,13 @@ Produce investigation report: issue summary, root cause, fix description, files 
 When spawned as a teammate in a competing hypotheses investigation:
 
 - You are assigned ONE specific hypothesis. Investigate ONLY that hypothesis -- do not branch into other theories.
-- Use SendMessage to report findings to the lead when investigation is complete. Your message must include:
-  1. **Hypothesis:** Restate the hypothesis you investigated
-  2. **Evidence For:** Specific findings supporting this hypothesis (file paths, line numbers, outputs)
-  3. **Evidence Against:** Specific findings contradicting this hypothesis
-  4. **Confidence:** high / medium / low
-  5. **Recommended Fix:** If confidence is high, describe the minimal fix. If low/medium, state "Insufficient evidence."
+- Use SendMessage to report findings to the lead using the `debugger_report` schema. See `${CLAUDE_PLUGIN_ROOT}/references/handoff-schemas.md` for the full schema definition. Your message must be a JSON object with:
+  - `type`: `"debugger_report"`
+  - `hypothesis`: Restate the hypothesis you investigated
+  - `evidence_for`: Array of specific findings supporting this hypothesis (file paths, line numbers, outputs)
+  - `evidence_against`: Array of specific findings contradicting this hypothesis
+  - `confidence`: `"high"` / `"medium"` / `"low"`
+  - `recommended_fix`: If confidence is high, describe the minimal fix. If low/medium, use `"Insufficient evidence"`
 - Do NOT apply fixes in teammate mode -- report findings only. The lead decides which fix to apply after comparing all hypotheses.
 - Steps 1-4 of the Investigation Protocol apply. Steps 5-7 (Fix, Verify, Document) are handled by the lead.
 

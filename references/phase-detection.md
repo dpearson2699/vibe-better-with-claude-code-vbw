@@ -1,6 +1,6 @@
 # VBW Phase Auto-Detection Protocol
 
-Single source of truth for detecting the target phase when the user omits the phase number from a command. Referenced by `${CLAUDE_PLUGIN_ROOT}/skills/plan/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/execute/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/qa/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/discuss/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/assumptions/SKILL.md`.
+Single source of truth for detecting the target phase when the user omits the phase number from a command. Referenced by `${CLAUDE_PLUGIN_ROOT}/skills/plan/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/execute/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/qa/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/discuss/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/assumptions/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/implement/SKILL.md`.
 
 ## Overview
 
@@ -53,6 +53,21 @@ All directory scanning below uses the resolved phases directory.
 4. If found: use that phase
 5. If all built phases are verified: report "All phases verified. Specify a phase to re-verify: `/vbw:qa N`" and STOP
 
+### Implement Command (`/vbw:implement`)
+
+**Goal:** Find the next phase that needs either planning or execution (or both).
+
+**Algorithm (dual-condition):**
+1. List phase directories in numeric order
+2. For each directory, check for `*-PLAN.md` and `*-SUMMARY.md` files
+3. Two match conditions (first match wins):
+   - **Needs plan + execute:** Directory contains NO `*-PLAN.md` files
+   - **Needs execute only:** Directory contains `*-PLAN.md` files but at least one plan lacks a corresponding `*-SUMMARY.md`
+4. If found: use that phase, noting which condition matched
+5. If all phases are fully built: report "All phases are implemented. Specify a phase: `/vbw:implement N`" and STOP
+
+**Matching logic:** Same as Build Command -- Plan file `NN-PLAN.md` corresponds to summary file `NN-SUMMARY.md` (same numeric prefix).
+
 ## Announcement
 
 Always announce the auto-detected phase before proceeding. Format:
@@ -64,6 +79,7 @@ Auto-detected Phase {N} ({slug}) -- {reason}
 Reasons by command type:
 - Planning: "next phase to plan"
 - Build: "planned, not yet built"
+- Implement: "needs plan + execute" or "planned, needs execute"
 - QA: "built, not yet verified"
 
 Then continue with the rest of the command as if the user had typed that phase number.

@@ -151,15 +151,15 @@ When PLAN_APPROVAL is `off` (Balanced, Fast, Turbo):
 
 **Teammate communication protocol (effort-gated):**
 
-Instruct Dev teammates to use SendMessage for coordination based on the active effort level:
+Instruct Dev teammates to use SendMessage with structured JSON schemas for coordination. Schema reference: `${CLAUDE_PLUGIN_ROOT}/references/handoff-schemas.md`.
 
 - At **Thorough** or **Balanced** effort:
-  - **Blockers:** If a task is blocked by a dependency not yet available (e.g., a prior wave's output hasn't landed), message the lead with the blocker description so the lead can prioritize or reassign.
-  - **Cross-cutting findings:** If implementing a task reveals something that affects another teammate's work (e.g., a shared interface changed, a dependency version conflict, a schema migration ordering issue), message the affected teammate directly.
+  - **Blockers:** Use the `dev_blocker` schema when blocked by a dependency not yet available. The lead can prioritize or reassign.
+  - **Cross-cutting findings:** If implementing a task reveals something that affects another teammate's work (e.g., a shared interface changed, a dependency version conflict), message the affected teammate directly with a plain-text description.
 - At **Thorough** effort only, additionally:
-  - **Progress updates:** After completing each task, message the lead with a brief status update (task name, commit hash, any concerns).
+  - **Progress updates:** Use the `dev_progress` schema after completing each task (task name, commit hash, any concerns).
   - **Design debates:** If a task's approach has architectural implications that could affect other plans, message the lead to discuss before implementing.
-- At **Fast** effort: instruct teammates to report blockers only via SendMessage. No cross-cutting findings, progress updates, or design debates.
+- At **Fast** effort: instruct teammates to report blockers only using the `dev_blocker` schema. No cross-cutting findings, progress updates, or design debates.
 - At **Turbo** effort: no Agent Team exists, so no messaging directives apply.
 
 Use targeted `message` (not `broadcast`) for most communication. Reserve `broadcast` only for critical blocking issues affecting all teammates (e.g., a shared dependency is broken and all work should pause).
