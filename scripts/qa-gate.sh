@@ -7,12 +7,12 @@
 INPUT=$(cat 2>/dev/null) || exit 0
 
 # Structural Check 1: SUMMARY.md existence
-# Check if any *-SUMMARY.md in .planning/phases/*/ was modified within last 2 hours
+# Check if any *-SUMMARY.md in .vbw-planning/phases/*/ was modified within last 2 hours
 RECENT_SUMMARY=false
 NOW=$(date +%s 2>/dev/null) || exit 0
 TWO_HOURS=7200
 
-for summary_file in .planning/phases/*/*-SUMMARY.md; do
+for summary_file in .vbw-planning/phases/*/*-SUMMARY.md; do
   [ -f "$summary_file" ] || continue
 
   # Get file modification time (macOS vs Linux)

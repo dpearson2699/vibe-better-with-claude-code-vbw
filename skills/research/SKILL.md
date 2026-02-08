@@ -61,7 +61,7 @@ If yes: write to .vbw-planning/phases/{phase-dir}/RESEARCH.md or .vbw-planning/R
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Single-line box for finding sections
 - ✓ high confidence, ○ medium, ⚠ low
 - Next Up Block

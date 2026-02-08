@@ -115,7 +115,7 @@ Regenerate CLAUDE.md if it exists (update Active Context, remove shipped milesto
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Ship Confirmation template (double-line box)
 - Metrics Block for statistics
 - Next Up Block for navigation

@@ -106,7 +106,7 @@ Run `/vbw:help <command>` for detailed help on any command.
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Double-line box for help header
 - ✓ for available commands
 - ➜ for Getting Started steps

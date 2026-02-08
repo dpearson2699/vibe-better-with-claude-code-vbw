@@ -49,7 +49,7 @@ If no matching entries:
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Double-line box for header
 - ✓ for up-to-date
 - Next Up Block

@@ -71,7 +71,7 @@ Edit ROADMAP.md:
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Phase Banner (double-line box)
 - Metrics Block for position/goal
 - File Checklist (✓ prefix)

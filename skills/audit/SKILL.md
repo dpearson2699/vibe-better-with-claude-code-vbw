@@ -78,7 +78,7 @@ If `--fix` present and issues found, suggest commands:
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Double-line box for audit header
 - ✓ PASS, ⚠ WARN, ✗ FAIL
 - Metrics Block for check results

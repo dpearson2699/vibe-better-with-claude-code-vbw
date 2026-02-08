@@ -13,28 +13,9 @@ if [ -z "$FILE_PATH" ]; then
 fi
 
 # Sensitive file patterns
-BLOCKED_PATTERNS=(
-  '\.env$'
-  '\.env\.'
-  '\.pem$'
-  '\.key$'
-  '\.cert$'
-  '\.p12$'
-  '\.pfx$'
-  'credentials\.json$'
-  'secrets\.json$'
-  'service-account.*\.json$'
-  'node_modules/'
-  '\.git/'
-  'dist/'
-  'build/'
-)
-
-for pattern in "${BLOCKED_PATTERNS[@]}"; do
-  if echo "$FILE_PATH" | grep -qE "$pattern"; then
-    echo "Blocked: sensitive file ($FILE_PATH matches $pattern)" >&2
-    exit 2
-  fi
-done
+if echo "$FILE_PATH" | grep -qE '\.env$|\.env\.|\.pem$|\.key$|\.cert$|\.p12$|\.pfx$|credentials\.json$|secrets\.json$|service-account.*\.json$|node_modules/|\.git/|dist/|build/'; then
+  echo "Blocked: sensitive file ($FILE_PATH)" >&2
+  exit 2
+fi
 
 exit 0

@@ -18,7 +18,7 @@ Active milestone:
 
 Current state:
 ```
-!`cat .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
+!`head -40 .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
 ```
 
 ## Guard
@@ -97,7 +97,7 @@ Update Session Continuity section: last session date, stopped-at description, re
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Double-line box for pause confirmation
 - Metrics Block for position
 - Next Up Block for resume hint

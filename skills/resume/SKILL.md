@@ -70,7 +70,7 @@ If PROJECT.md contains the template placeholder `{project-description}`, the pro
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Double-line box for resume header
 - Metrics Block for position and status
 - ⚠ for state-changed warning

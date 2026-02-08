@@ -87,7 +87,7 @@ For each phase from last down to position:
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Phase Banner (double-line box) for insertion banner
 - Metrics Block for renumbering info
 - File Checklist (✓ prefix) for changes

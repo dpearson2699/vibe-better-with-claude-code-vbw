@@ -123,7 +123,7 @@ Display:
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Phase Banner (double-line box) for header and completion
 - File Checklist (✓ prefix) for completed cleanup steps
 - ○ for skipped items

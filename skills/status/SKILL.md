@@ -13,12 +13,12 @@ Working directory: `!`pwd``
 
 Current state:
 ```
-!`cat .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
+!`head -40 .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
 ```
 
 Roadmap:
 ```
-!`cat .vbw-planning/ROADMAP.md 2>/dev/null || echo "No roadmap found"`
+!`head -50 .vbw-planning/ROADMAP.md 2>/dev/null || echo "No roadmap found"`
 ```
 
 Config:
@@ -166,7 +166,7 @@ Label estimates clearly as "~estimated".
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Status Dashboard template (double-line header box)
 - Progress bars: 10 chars, █ filled, ░ empty
 - Symbols: ✓ complete, ◆ in-progress, ○ pending

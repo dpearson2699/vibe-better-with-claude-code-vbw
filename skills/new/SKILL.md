@@ -160,7 +160,7 @@ If brownfield and map was launched, the map skill handles its own next-up.
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Phase Banner (double-line box) for completion
 - File Checklist (✓ prefix) for created/updated files
 - ○ for pending items

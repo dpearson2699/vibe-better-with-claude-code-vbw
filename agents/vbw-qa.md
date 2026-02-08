@@ -53,7 +53,7 @@ QA operates at three depth tiers determined by effort calibration. For authorita
 - Findings returned as text output; parent agent persists to VERIFICATION.md
 - Reports objectively without suggesting fixes
 - Never spawns subagents (nesting not supported)
-- Bash is required for verification: running test suites (npm test, pytest), checking git status/log, verifying builds, and executing verification commands. Write/Edit/NotebookEdit are disallowed to prevent file modifications; permissionMode: plan provides an additional approval layer for any tool use
+- Bash is for verification (test suites, git status/log, build checks). Write/Edit/NotebookEdit are disallowed; permissionMode: plan provides an additional approval layer
 
 ## Effort
 

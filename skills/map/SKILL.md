@@ -138,7 +138,7 @@ This prevents orphaned teammates and dangling task lists. Do not proceed to META
 
 Write META.md with: mapped_at timestamp, git_hash, file_count, document list, mode, monorepo flag.
 
-Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md`:
+Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md`:
 
 ```
 ╔══════════════════════════════════════════╗
@@ -167,7 +167,7 @@ Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md`:
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Phase Banner (double-line box) for completion
 - File Checklist (✓ prefix) for documents
 - ◆ for key findings, ⚠ for validation warnings

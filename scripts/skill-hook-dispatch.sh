@@ -12,13 +12,13 @@ INPUT=$(cat 2>/dev/null) || exit 0
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // ""' 2>/dev/null) || exit 0
 [ -z "$TOOL_NAME" ] && exit 0
 
-# Find config.json in .planning/ relative to project root
-# Walk up from $PWD looking for .planning/config.json
+# Find config.json in .vbw-planning/ relative to project root
+# Walk up from $PWD looking for .vbw-planning/config.json
 find_config() {
   local dir="$PWD"
   while [ "$dir" != "/" ]; do
-    if [ -f "$dir/.planning/config.json" ]; then
-      echo "$dir/.planning/config.json"
+    if [ -f "$dir/.vbw-planning/config.json" ]; then
+      echo "$dir/.vbw-planning/config.json"
       return 0
     fi
     dir=$(dirname "$dir")

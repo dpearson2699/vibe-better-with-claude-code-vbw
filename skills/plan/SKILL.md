@@ -13,7 +13,7 @@ Working directory: `!`pwd``
 
 Current state:
 ```
-!`cat .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
+!`head -40 .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
 ```
 
 Config:
@@ -103,7 +103,7 @@ If validation fails, report issues to user.
 
 Update STATE.md: phase position, plan count, status = Planned.
 
-Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md`:
+Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md`:
 
 ```
 ╔═══════════════════════════════════════════╗
@@ -122,7 +122,7 @@ Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md`:
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Phase Banner (double-line box) for completion
 - File Checklist (✓ prefix) for validation
 - ○ for plans ready to execute

@@ -10,8 +10,14 @@ if ! echo "$COMMAND" | grep -q "git commit"; then
   exit 0
 fi
 
-# Extract commit message from -m flag
-MSG=$(echo "$COMMAND" | grep -oP '(?<=-m\s["\x27]).*?(?=["\x27])' || echo "$COMMAND" | grep -oP '(?<=-m\s)\S+')
+# Extract commit message from -m flag (POSIX-compatible, no GNU-only flags)
+# Heredoc-style commits can't be parsed from a single line — skip validation
+if echo "$COMMAND" | grep -q 'cat <<'; then
+  exit 0
+fi
+MSG=$(echo "$COMMAND" | sed -n 's/.*-m[[:space:]]*"\([^"]*\)".*/\1/p')
+[ -z "$MSG" ] && MSG=$(echo "$COMMAND" | sed -n "s/.*-m[[:space:]]*'\\([^']*\\)'.*/\\1/p")
+[ -z "$MSG" ] && MSG=$(echo "$COMMAND" | sed -n 's/.*-m[[:space:]]*\([^[:space:]]*\).*/\1/p')
 
 if [ -z "$MSG" ]; then
   exit 0

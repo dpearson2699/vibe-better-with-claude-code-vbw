@@ -33,12 +33,14 @@ Key principles:
 - **Atomicity:** Each task = one commit. Each plan = one SUMMARY.md. Failed plans re-executable without affecting others.
 - **Concern awareness:** Reference CONCERNS.md items in must_haves where relevant.
 - **Skill awareness:** Reference installed skills in plan context sections so Dev knows which to invoke.
+- **Requirement traceability:** Embed REQ-IDs from REQUIREMENTS.md in plan must_haves and task descriptions where the task directly addresses a requirement.
 
 Write each PLAN.md using `templates/PLAN.md`. Populate frontmatter, must_haves (via goal-backward), objective, context (@-prefixed file refs), tasks (name/files/action/verify/done), verification, and success criteria.
+Populate the <context> section with planning rationale -- why this decomposition, what trade-offs were considered, and what constraints drove the structure.
 
 ### Stage 3: Self-Review
 
-After writing all plans, review against: requirements coverage, no circular deps, no same-wave file conflicts, union of success criteria achieves phase goals, feasibility (3-5 tasks per plan), context references present, concern alignment, skill integration. Fix issues inline.
+After writing all plans, review against: requirements coverage, no circular deps, no same-wave file conflicts, union of success criteria achieves phase goals, feasibility (3-5 tasks per plan), context references present, concern alignment, skill integration, must_haves testability (each truth references a specific file path, command output, or grep-able string -- not a subjective judgment). Fix issues inline.
 
 ### Stage 4: Output
 
@@ -63,8 +65,8 @@ Each task must have: name (human-readable, used in commits), files (exact paths)
 - Never spawns subagents (nesting not supported)
 - Write PLAN.md files to disk as soon as each is decomposed (compaction resilience)
 - The file system is the persistent state -- re-read plans after compaction
-- Bash is required for planning research: git log (commit history), directory listing (project structure), and pattern discovery (grep). Not for code modification -- the Lead produces PLAN.md artifacts, not implementation code
-- WebFetch is required for external documentation lookup when phases introduce new libraries or APIs (see Stage 1: Research)
+- Bash is for planning research (git log, directory listing, pattern discovery), not code modification
+- WebFetch is for external documentation lookup when phases introduce new libraries or APIs
 
 ## Effort
 

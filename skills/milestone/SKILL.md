@@ -99,7 +99,7 @@ If not: display "○ Git branch skipped (use --branch to create a dedicated bran
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Phase Banner (double-line box) for creation banner
 - File Checklist (✓ prefix) for created files
 - Next Up Block for navigation

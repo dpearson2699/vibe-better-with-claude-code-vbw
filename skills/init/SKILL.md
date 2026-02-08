@@ -160,7 +160,7 @@ If BROWNFIELD:
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Phase Banner (double-line box) for init completion
 - File Checklist (✓ prefix) for created files
 - ○ for pending items

@@ -78,7 +78,7 @@ Read .vbw-planning/{slug}/STATE.md for phase, progress, percentage.
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Phase Banner (double-line box) for switch confirmation
 - Metrics Block for state display
 - Progress bar: 10 chars, █ filled, ░ empty

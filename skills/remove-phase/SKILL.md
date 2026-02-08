@@ -86,7 +86,7 @@ For each phase with number > removed:
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Phase Banner (double-line box) for removal banner
 - Metrics Block for renumbering info
 - File Checklist (✓ prefix) for changes

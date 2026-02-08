@@ -13,7 +13,7 @@ Working directory: `!`pwd``
 
 Current state:
 ```
-!`cat .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
+!`head -40 .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
 ```
 
 Config:
@@ -74,7 +74,7 @@ If Dev stopped without committing:
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - ✓ for success, ⚠ for inability to fix
 - Next Up Block for navigation
 - No ANSI color codes

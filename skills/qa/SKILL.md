@@ -13,7 +13,7 @@ Working directory: `!`pwd``
 
 Current state:
 ```
-!`cat .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
+!`head -40 .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
 ```
 
 Config:
@@ -102,7 +102,7 @@ Body: QA output text.
 
 ### Step 5: Present summary
 
-Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md`:
+Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md`:
 
 ```
 ┌──────────────────────────────────────────┐
@@ -123,7 +123,7 @@ Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md`:
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Single-line box for verification banner
 - Metrics Block for tier/result/checks
 - Semantic symbols: ✓ PASS, ✗ FAIL, ◆ PARTIAL

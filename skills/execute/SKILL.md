@@ -14,7 +14,7 @@ Working directory: `!`pwd``
 
 Current state:
 ```
-!`cat .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
+!`head -40 .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
 ```
 
 Config:
@@ -204,7 +204,7 @@ This prevents orphaned teammates and dangling task lists. Do not proceed to stat
 **Update STATE.md:** phase position, plan completion counts, effort used.
 **Update ROADMAP.md:** mark completed plans.
 
-Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md`:
+Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md`:
 
 ```
 ╔═══════════════════════════════════════════════╗
@@ -231,7 +231,7 @@ Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md`:
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Phase Banner (double-line box) for completion
 - Execution Progress symbols: ◆ running, ✓ complete, ✗ failed, ○ skipped
 - Metrics Block for stats

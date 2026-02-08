@@ -13,7 +13,7 @@ Working directory: `!`pwd``
 
 Current state:
 ```
-!`cat .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
+!`head -40 .vbw-planning/STATE.md 2>/dev/null || echo "No state found"`
 ```
 
 Recent commits:
@@ -114,7 +114,7 @@ If you apply a fix, commit with: fix({scope}): {description}.
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - Single-line box for investigation banner
 - Metrics Block for issue/root cause/fix
 - Next Up Block for navigation

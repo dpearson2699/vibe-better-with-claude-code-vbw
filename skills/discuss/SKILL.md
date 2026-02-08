@@ -13,7 +13,7 @@ Working directory: `!`pwd``
 
 Roadmap:
 ```
-!`cat .vbw-planning/ROADMAP.md 2>/dev/null || echo "No roadmap found"`
+!`head -50 .vbw-planning/ROADMAP.md 2>/dev/null || echo "No roadmap found"`
 ```
 
 ## Guard
@@ -93,7 +93,7 @@ Show summary. Ask for corrections.
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand.md:
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
 - ✓ for captured answers
 - Next Up Block
 - No ANSI color codes
