@@ -72,11 +72,7 @@ Group by status: confirmed, corrected, expanded.
 
 This command does NOT write files. For persistence: "Run /vbw:discuss {N} to capture preferences as CONTEXT.md."
 
-```
-➜ Next Up
-  /vbw:discuss {N} -- Persist preferences as CONTEXT.md
-  /vbw:plan {N} -- Plan with assumptions clarified
-```
+Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh assumptions` and display the output.
 
 ## Output Format
 

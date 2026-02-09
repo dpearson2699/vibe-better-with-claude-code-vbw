@@ -128,9 +128,7 @@ If --verbose: also prepare per-phase breakdown with per-plan durations.
 ```
 
 **Next Up:**
-```
-➜ Next: /vbw:{command} -- {description}
-```
+Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh status` and display the output.
 
 ## Output Format
 

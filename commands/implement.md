@@ -230,11 +230,8 @@ All phases implemented.
   Completed phases:
     {list each phase with its plan count and status}
 
-Next steps:
-  /vbw:archive -- Archive this work and start fresh
-  /vbw:add-phase {name} -- Add more phases to continue building
-  /vbw:qa -- Run verification on completed phases
 ```
+Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh implement` and display the output.
 
 Do NOT auto-archive. Let the user decide their next action.
 
@@ -272,11 +269,8 @@ Phase {N}: {name} -- Implemented
 
   QA:         {PASS|PARTIAL|FAIL|skipped}
 
-Next Up
-  /vbw:implement -- Continue to next phase
-  /vbw:qa {N} -- Verify this phase (if QA skipped)
-  /vbw:archive -- Complete the work (if last phase)
 ```
+Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh implement {qa-result}` and display the output. Pass the QA result (pass/fail/partial/skipped) as the second argument.
 
 ### After State 5 (Completion)
 

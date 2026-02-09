@@ -52,17 +52,16 @@ If committed:
   {commit hash} {commit message}
   Files: {changed files}
 
-➜ Next: /vbw:status -- View project status
 ```
+Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh fix` and display the output.
 
 If Dev stopped without committing:
 ```
 ⚠ Fix could not be applied automatically
 
   {reason from Dev agent}
-
-➜ Try: /vbw:debug "{issue}" -- Investigate further
 ```
+Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh debug` and display the output.
 
 ## Output Format
 

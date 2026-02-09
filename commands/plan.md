@@ -92,10 +92,8 @@ Announce scoping complete and re-evaluate. Since phases now exist, announce read
 ```
 Scoping complete. {N} phases created.
 
-Next Up
-  /vbw:plan -- Plan the first phase
-  /vbw:implement -- Plan and execute the first phase
 ```
+Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh plan` and display the output.
 
 STOP here. Do NOT auto-continue to phase planning. The scoping flow is complete -- the user decides the next action.
 
@@ -197,10 +195,8 @@ Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md`:
 
   Effort: {profile}
 
-➜ Next Up
-  /vbw:execute {N} -- Execute this phase
-  /vbw:implement {N} -- Plan and execute (if using implement workflow)
 ```
+Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh plan` and display the output.
 
 ## Output Format
 

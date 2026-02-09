@@ -256,11 +256,8 @@ Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md`:
 
   QA:         {PASS|PARTIAL|FAIL|skipped}
 
-➜ Next Up
-  /vbw:plan {N+1} -- Plan the next phase
-  /vbw:qa {N} -- Verify this phase (if QA skipped)
-  /vbw:archive -- Archive completed work (if last phase)
 ```
+Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh execute {qa-result}` and display the output. Pass the QA result (pass/fail/partial/skipped) as the second argument.
 
 ## Output Format
 

@@ -108,11 +108,8 @@ Regenerate CLAUDE.md if it exists (update Active Context, remove shipped milesto
     CLAUDE.md updated
     Session resume cleared
 
-Next Up
-  /vbw:implement -- Start new work
-  /vbw:plan -- Scope and plan new phases
-  /vbw:status -- View project overview
 ```
+Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh archive` and display the output.
 
 ## Output Format
 

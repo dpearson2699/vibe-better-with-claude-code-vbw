@@ -265,11 +265,7 @@ Keep under 200 lines. Add `✓ CLAUDE.md` to the summary output.
 
 Then auto-launch `/vbw:implement` by reading `${CLAUDE_PLUGIN_ROOT}/commands/implement.md` and following it.
 
-If greenfield:
-```
-➜ Next Up
-  /vbw:implement -- Define your project and start building
-```
+If greenfield, run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh init` and display the output.
 
 ## Output Format
 

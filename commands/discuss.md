@@ -86,10 +86,7 @@ Write to `.vbw-planning/phases/{phase-dir}/{phase}-CONTEXT.md`:
 
 Show summary. Ask for corrections.
 
-```
-➜ Next Up
-  /vbw:plan {N} -- Plan this phase with your context locked in
-```
+Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh discuss` and display the output.
 
 ## Output Format
 

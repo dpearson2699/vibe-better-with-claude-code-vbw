@@ -100,14 +100,8 @@ If `.vbw-planning/.execution-state.json` exists:
   {If RESUME.md exists and has session notes:}
   Session Notes: {notes from RESUME.md}
 
-➜ Next Up
-  {If build completed: "/vbw:qa {N} -- Verify the completed build"}
-  {If build interrupted: "/vbw:execute {N} -- Resume the interrupted build"}
-  {If current phase has no plans: "/vbw:implement -- Plan and execute next phase"}
-  {If current phase planned but not started: "/vbw:execute {N} -- Execute the planned phase"}
-  {If all phases complete: "/vbw:archive -- Close out completed work"}
-  {Otherwise: "/vbw:implement -- Continue where you left off"}
 ```
+Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh resume` and display the output.
 
 ## Output Format
 

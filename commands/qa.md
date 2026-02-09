@@ -116,10 +116,8 @@ Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md`:
 
   Report:   {path to VERIFICATION.md}
 
-➜ Next Up
-  /vbw:execute {N+1} -- Build next phase (if PASS)
-  /vbw:fix "{issue}" -- Fix a failing check (if FAIL/PARTIAL)
 ```
+Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh qa {result}` and display the output. Pass the QA result (pass/fail/partial) as the second argument.
 
 ## Output Format
 

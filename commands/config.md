@@ -68,10 +68,8 @@ If nothing changed, display: "✓ No changes made."
 
 Then show:
 ```
-➜ Next Up
-  /vbw:config <setting> <value> -- Change other settings directly
-  /vbw:status -- View project state
 ```
+Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh config` and display the output.
 
 ### With arguments: Modify a setting
 
