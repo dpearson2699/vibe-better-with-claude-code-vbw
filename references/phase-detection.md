@@ -6,6 +6,8 @@ Single source of truth for detecting the target phase when the user omits the ph
 
 When `$ARGUMENTS` contains no explicit phase number, commands use this protocol to infer the correct phase from the current planning state. Detection logic varies by command type because each command targets a different stage of the phase lifecycle.
 
+Note: `/vbw:implement` has additional state detection that precedes phase scanning (see its State Detection section). The algorithms below are used once the command has determined that phase-level detection is needed.
+
 ## Resolve Phases Directory
 
 Before scanning, determine the correct phases path:
@@ -55,7 +57,9 @@ All directory scanning below uses the resolved phases directory.
 
 ### Implement Command (`/vbw:implement`)
 
-**Goal:** Find the next phase that needs either planning or execution (or both).
+> **v2 State Machine:** As of v2, `/vbw:implement` uses a state machine that checks for project existence, phase existence, and completion status BEFORE reaching phase detection. The algorithm below only runs for States 3-4 (phases exist but need planning or execution). States 1 (no project), 2 (no phases), and 5 (all done) are detected by the state machine and never reach this algorithm. See `commands/implement.md` State Detection section for the full routing logic.
+
+**Goal:** Find the next phase that needs either planning or execution (or both). Used by States 3-4 of the implement state machine.
 
 **Algorithm (dual-condition):**
 1. List phase directories in numeric order
