@@ -62,3 +62,78 @@ Evaluate project state in this order. The FIRST matching condition determines th
 For conditions 3-5, resolve the phases directory first:
 - If `.vbw-planning/ACTIVE` exists, read its contents for the milestone slug and use `.vbw-planning/{slug}/phases/`
 - Otherwise use `.vbw-planning/phases/`
+
+## State 1: Bootstrap (No Project Defined)
+
+> Triggered when `.vbw-planning/PROJECT.md` does not exist or contains template placeholder.
+
+### Critical Rules
+
+**NEVER FABRICATE CONTENT.** These rules are non-negotiable:
+
+1. **Only use what the user explicitly states.** Do not infer, embellish, or generate requirements, phases, or roadmap content that the user did not articulate.
+2. **If the user's answer does not match the question, STOP.** Acknowledge their request, explain that bootstrap is paused, and handle what they actually asked for.
+3. **No silent assumptions.** If the user's answers leave gaps, ask a follow-up question. Do not fill gaps with your own assumptions.
+4. **Phases come from the user, not from you.** Propose phases based strictly on the requirements the user provided.
+5. **Write files directly after gathering answers.** Do NOT prompt for per-file confirmation.
+
+### Constraints
+
+**Do NOT explore or scan the codebase.** Codebase analysis is `/vbw:map`'s job. If a codebase map exists at `.vbw-planning/codebase/`, use it. Do not go looking for more.
+
+### Brownfield Detection
+
+Check if the project already has source files:
+- **Git repo:** Run `git ls-files --error-unmatch . 2>/dev/null | head -5`. If it returns any files, BROWNFIELD=true.
+- **No git / not initialized:** Use Glob to check for any files (`**/*.*`) excluding `.vbw-planning/`, `.claude/`, `node_modules/`, and `.git/`. If matches exist, BROWNFIELD=true.
+
+### Bootstrap Steps
+
+**Step B1: Fill PROJECT.md**
+
+If $ARGUMENTS provided (excluding flags), use as project description. Otherwise ask:
+- "What is the name of your project?"
+- "Describe your project's core purpose in 1-2 sentences."
+
+Write PROJECT.md immediately.
+
+**Step B2: Gather requirements**
+
+Ask 3-5 focused questions:
+1. Must-have features for first release?
+2. Primary users/audience?
+3. Technical constraints (language, framework, hosting)?
+4. Integrations or external services?
+5. What is out of scope?
+
+Populate REQUIREMENTS.md with REQ-ID format. Use ONLY what the user stated. Write REQUIREMENTS.md immediately.
+
+**Step B3: Create roadmap**
+
+Suggest 3-5 phases based on requirements. If `.vbw-planning/codebase/` exists, read INDEX.md, PATTERNS.md, ARCHITECTURE.md, CONCERNS.md and factor findings into the roadmap.
+
+Each phase: name, goal, mapped requirements, success criteria. Write ROADMAP.md immediately. Create phase directories in `.vbw-planning/phases/`.
+
+**Step B4: Initialize state**
+
+Update STATE.md: project name, Phase 1 position, today's date, empty decisions, 0% progress.
+
+**Step B5: Brownfield codebase summary**
+
+If BROWNFIELD=true AND `.vbw-planning/codebase/` does NOT exist:
+1. Count source files by extension (Glob)
+2. Check for test files, CI/CD, Docker, monorepo indicators
+3. Add Codebase Profile section to STATE.md
+
+**Step B6: Generate CLAUDE.md**
+
+Follow `${CLAUDE_PLUGIN_ROOT}/references/memory-protocol.md`. Write CLAUDE.md at project root.
+
+**Step B7: Transition**
+
+After bootstrap completes, announce:
+```
+Bootstrap complete. Transitioning to scoping...
+```
+
+Re-evaluate state. The project now has PROJECT.md but may have no phases (if the roadmap created phases, skip to State 3-4). Route to the next matching state.
