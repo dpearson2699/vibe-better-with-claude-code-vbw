@@ -5,6 +5,7 @@ set -u
 
 INPUT=$(cat)
 AGENT_NAME=$(echo "$INPUT" | jq -r '.agent_name // .agentName // ""')
+MATCHER=$(echo "$INPUT" | jq -r '.matcher // "auto"')
 
 case "$AGENT_NAME" in
   *scout*)
@@ -26,13 +27,20 @@ case "$AGENT_NAME" in
     PRIORITIES="Preserve reproduction steps, hypotheses, evidence gathered, diagnosis"
     ;;
   *)
-    PRIORITIES="Preserve task context and key decisions"
+    PRIORITIES="Preserve active command being executed, user's original request, current phase/plan context, file modification paths, any pending user decisions. Discard: tool output details, reference file contents (re-read from disk), previous command results"
     ;;
 esac
 
+# Add compact trigger context
+if [ "$MATCHER" = "manual" ]; then
+  PRIORITIES="$PRIORITIES. User requested compaction."
+else
+  PRIORITIES="$PRIORITIES. This is an automatic compaction at context limit."
+fi
+
 jq -n --arg ctx "$PRIORITIES" '{
   "hookSpecificOutput": {
-    "additionalContext": ("Compaction priorities: " + $ctx + ". Re-read assigned files from disk after compaction.")
+    "additionalContext": ("Compaction priorities: " + $ctx + " Re-read assigned files from disk after compaction.")
   }
 }'
 
