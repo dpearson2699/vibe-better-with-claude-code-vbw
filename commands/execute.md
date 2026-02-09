@@ -250,7 +250,7 @@ Display using `${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md`:
 ➜ Next Up
   /vbw:plan {N+1} -- Plan the next phase
   /vbw:qa {N} -- Verify this phase (if QA skipped)
-  /vbw:ship -- Complete the milestone (if last phase)
+  /vbw:archive -- Archive completed work (if last phase)
 ```
 
 ## Output Format
