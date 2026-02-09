@@ -2,6 +2,14 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **`/vbw:release` command** — bump version, finalize changelog, commit, and push in one step. Runs `bump-version.sh` across all 4 version files, renames `[Unreleased]` to the new version in CHANGELOG.md, commits, and pushes. Supports `--dry-run`, `--no-push`, `--major`, `--minor`.
+
+---
+
 ## [1.0.70] - 2026-02-09
 
 ### Added
