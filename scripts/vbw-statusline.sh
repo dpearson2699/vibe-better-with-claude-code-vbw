@@ -60,6 +60,43 @@ progress_bar() {
   printf '%b%s%b' "$color" "$bar" "$X"
 }
 
+# Format token count: 1500000 -> "1.5M", 15000 -> "15.0K", 500 -> "500"
+fmt_tok() {
+  local v=$1
+  if [ "$v" -ge 1000000 ]; then
+    printf "%d.%dM" $((v / 1000000)) $(( (v % 1000000) / 100000 ))
+  elif [ "$v" -ge 1000 ]; then
+    printf "%d.%dK" $((v / 1000)) $(( (v % 1000) / 100 ))
+  else
+    printf "%d" "$v"
+  fi
+}
+
+# Format cost: 0.53 -> "$0.53", 12.40 -> "$12.4", 150.00 -> "$150"
+fmt_cost() {
+  local whole="${1%%.*}" frac="${1#*.}"
+  local cents="${frac:0:2}"
+  cents=$((10#${cents:-0}))
+  whole=$((10#${whole:-0}))
+  local total_cents=$(( whole * 100 + cents ))
+  if [ "$total_cents" -ge 10000 ]; then printf "\$%d" "$whole"
+  elif [ "$total_cents" -ge 1000 ]; then printf "\$%d.%d" "$whole" $((cents / 10))
+  else printf "\$%d.%02d" "$whole" "$cents"
+  fi
+}
+
+# Format duration from ms: 125000 -> "2m 5s", 3700000 -> "1h 1m"
+fmt_dur() {
+  local s=$(($1 / 1000))
+  if [ "$s" -ge 3600 ]; then
+    printf "%dh %dm" $((s / 3600)) $(( (s % 3600) / 60 ))
+  elif [ "$s" -ge 60 ]; then
+    printf "%dm %ds" $((s / 60)) $((s % 60))
+  else
+    printf "%ds" "$s"
+  fi
+}
+
 # --- Session data: single jq call ---
 
 IFS='|' read -r PCT REM IN_TOK OUT_TOK CACHE_W CACHE_R CTX_SIZE \
@@ -92,40 +129,16 @@ NOW=$(date +%s)
 # Used tokens = input + cache_write + cache_read (per official docs)
 CTX_USED=$((IN_TOK + CACHE_W + CACHE_R))
 
-# --- Batch format all values in a single awk call ---
-IFS='|' read -r CTX_USED_FMT CTX_SIZE_FMT IN_TOK_FMT OUT_TOK_FMT \
-               CACHE_W_FMT CACHE_R_FMT COST_FMT DUR_FMT API_DUR_FMT <<< \
-  "$(awk -v ctx_used="$CTX_USED" -v ctx_size="$CTX_SIZE" \
-        -v in_tok="$IN_TOK" -v out_tok="$OUT_TOK" \
-        -v cache_w="$CACHE_W" -v cache_r="$CACHE_R" \
-        -v cost="$COST" -v dur_ms="$DUR_MS" -v api_ms="$API_MS" \
-  'BEGIN {
-    # tok formatter
-    split(ctx_used " " ctx_size " " in_tok " " out_tok " " cache_w " " cache_r, tok_vals)
-    for (i = 1; i <= 6; i++) {
-      v = tok_vals[i] + 0
-      if (v >= 1000000)      tok_out[i] = sprintf("%.1fM", v/1000000)
-      else if (v >= 1000)    tok_out[i] = sprintf("%.1fK", v/1000)
-      else                   tok_out[i] = sprintf("%d", v)
-    }
-    # cost formatter
-    c = cost + 0
-    if (c >= 100)       cost_fmt = sprintf("$%.0f", c)
-    else if (c >= 10)   cost_fmt = sprintf("$%.1f", c)
-    else                cost_fmt = sprintf("$%.2f", c)
-    # dur formatter
-    s = int(dur_ms / 1000)
-    if (s >= 3600) { h=int(s/3600); m=int((s%3600)/60); dur_fmt = sprintf("%dh %dm", h, m) }
-    else if (s >= 60) { m=int(s/60); r=s%60; dur_fmt = sprintf("%dm %ds", m, r) }
-    else dur_fmt = sprintf("%ds", s)
-    # api dur formatter
-    s2 = int(api_ms / 1000)
-    if (s2 >= 3600) { h=int(s2/3600); m=int((s2%3600)/60); api_fmt = sprintf("%dh %dm", h, m) }
-    else if (s2 >= 60) { m=int(s2/60); r=s2%60; api_fmt = sprintf("%dm %ds", m, r) }
-    else api_fmt = sprintf("%ds", s2)
-
-    printf "%s|%s|%s|%s|%s|%s|%s|%s|%s", tok_out[1], tok_out[2], tok_out[3], tok_out[4], tok_out[5], tok_out[6], cost_fmt, dur_fmt, api_fmt
-  }')"
+# --- Format all values with shell builtins ---
+CTX_USED_FMT=$(fmt_tok "$CTX_USED")
+CTX_SIZE_FMT=$(fmt_tok "$CTX_SIZE")
+IN_TOK_FMT=$(fmt_tok "$IN_TOK")
+OUT_TOK_FMT=$(fmt_tok "$OUT_TOK")
+CACHE_W_FMT=$(fmt_tok "$CACHE_W")
+CACHE_R_FMT=$(fmt_tok "$CACHE_R")
+COST_FMT=$(fmt_cost "$COST")
+DUR_FMT=$(fmt_dur "$DUR_MS")
+API_DUR_FMT=$(fmt_dur "$API_MS")
 
 # --- VBW state (cached 5s) ---
 
@@ -286,8 +299,8 @@ if [ "$USAGE_DATA" != "noauth" ]; then
     # Extra usage (monthly spend) — only show if enabled
     if [ "${EXTRA_ENABLED:-0}" = "1" ] && [ "${EXTRA_PCT:--1}" -ge 0 ] 2>/dev/null; then
       # Credits are in cents — divide by 100 for dollars
-      EXTRA_USED_D=$(awk "BEGIN { printf \"%.2f\", ${EXTRA_USED_C:-0} / 100 }")
-      EXTRA_LIMIT_D=$(awk "BEGIN { printf \"%.2f\", ${EXTRA_LIMIT_C:-0} / 100 }")
+      EXTRA_USED_D="$((EXTRA_USED_C / 100)).$( printf '%02d' $((EXTRA_USED_C % 100)) )"
+      EXTRA_LIMIT_D="$((EXTRA_LIMIT_C / 100)).$( printf '%02d' $((EXTRA_LIMIT_C % 100)) )"
       USAGE_LINE="$USAGE_LINE ${D}│${X} Extra: $(progress_bar "${EXTRA_PCT}" 20) ${EXTRA_PCT}% \$${EXTRA_USED_D}/\$${EXTRA_LIMIT_D}"
     fi
   else
