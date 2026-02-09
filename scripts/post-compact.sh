@@ -5,6 +5,9 @@ set -u
 
 INPUT=$(cat)
 
+# Clean up cost tracking files (stale after compaction)
+rm -f .vbw-planning/.cost-ledger.json .vbw-planning/.active-agent 2>/dev/null
+
 # Try to identify agent role from input context
 ROLE=""
 for pattern in vbw-lead vbw-dev vbw-qa vbw-scout vbw-debugger vbw-architect; do
