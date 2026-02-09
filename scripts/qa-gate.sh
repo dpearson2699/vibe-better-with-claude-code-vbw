@@ -32,6 +32,7 @@ done
 # Check if recent commits (last 10, within 2 hours) match GSD conventional format
 FORMAT_MATCH=false
 RECENT_COMMITS=$(git log --oneline -10 --format="%ct %s" 2>/dev/null) || exit 0
+[ -z "$RECENT_COMMITS" ] && exit 0
 
 while IFS= read -r line; do
   [ -z "$line" ] && continue
