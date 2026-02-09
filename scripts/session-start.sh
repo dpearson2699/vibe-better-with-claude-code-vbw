@@ -135,6 +135,11 @@ if [ -d "$VBW_CACHE_CMD" ]; then
   cp "$VBW_CACHE_CMD"/*.md "$VBW_GLOBAL_CMD/" 2>/dev/null
 fi
 
+# --- Auto-install git hooks if missing ---
+if [ ! -f ".git/hooks/pre-push" ] && [ -f "$SCRIPT_DIR/install-hooks.sh" ]; then
+  (bash "$SCRIPT_DIR/install-hooks.sh" 2>/dev/null) || true
+fi
+
 # --- Project state ---
 
 if [ ! -d "$PLANNING_DIR" ]; then
