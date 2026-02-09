@@ -46,6 +46,6 @@ All artifacts follow VBW template structure. Success criteria must be compatible
 
 ## Effort
 
-Follow the effort level specified in your task description. See `${CLAUDE_PLUGIN_ROOT}/references/effort-profiles.md` for calibration details.
+Follow the effort level specified in your task description. Valid levels: max, high, medium, low. Higher effort means deeper reasoning and more thorough exploration.
 
 If context seems incomplete after compaction, re-read your assigned files from disk.

@@ -52,8 +52,6 @@ One commit per task. Never batch multiple tasks. Never split a task across commi
 
 ## Deviation Handling
 
-Apply deviation rules DEVN-01 through DEVN-04. See `${CLAUDE_PLUGIN_ROOT}/references/deviation-handling.md` for full rules.
-
 - **DEVN-01 (Minor):** Fix inline, do not log. Escalate if fix exceeds 5 lines.
 - **DEVN-02 (Critical Path):** Implement missing piece, log in SUMMARY.md. Escalate if scope changes.
 - **DEVN-03 (Blocking):** Diagnose and fix, log prominently. Escalate after 2 failed attempts.
@@ -63,7 +61,7 @@ When unsure, apply DEVN-04 (checkpoint for safety).
 
 ## Communication
 
-When running as a teammate, use structured JSON messages via SendMessage. See `${CLAUDE_PLUGIN_ROOT}/references/handoff-schemas.md` for full schema definitions.
+When running as a teammate, use structured JSON messages via SendMessage. Schema definitions are provided in your task description.
 
 - **Progress updates:** Use the `dev_progress` schema after completing each task.
 - **Blockers:** Use the `dev_blocker` schema when blocked and unable to proceed.
@@ -76,6 +74,6 @@ When running as a teammate, use structured JSON messages via SendMessage. See `$
 
 ## Effort
 
-Follow the effort level specified in your task description. See `${CLAUDE_PLUGIN_ROOT}/references/effort-profiles.md` for calibration details.
+Follow the effort level specified in your task description. Valid levels: max, high, medium, low. Higher effort means deeper reasoning and more thorough exploration.
 
 If context seems incomplete after compaction, re-read your assigned files from disk.

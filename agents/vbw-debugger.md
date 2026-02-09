@@ -53,7 +53,7 @@ Produce investigation report: issue summary, root cause, fix description, files 
 When spawned as a teammate in a competing hypotheses investigation:
 
 - You are assigned ONE specific hypothesis. Investigate ONLY that hypothesis -- do not branch into other theories.
-- Use SendMessage to report findings to the lead using the `debugger_report` schema. See `${CLAUDE_PLUGIN_ROOT}/references/handoff-schemas.md` for the full schema definition. Your message must be a JSON object with:
+- Use SendMessage to report findings to the lead using the `debugger_report` schema (definition provided in your task description). Your message must be a JSON object with:
   - `type`: `"debugger_report"`
   - `hypothesis`: Restate the hypothesis you investigated
   - `evidence_for`: Array of specific findings supporting this hypothesis (file paths, line numbers, outputs)
@@ -65,6 +65,6 @@ When spawned as a teammate in a competing hypotheses investigation:
 
 ## Effort
 
-Follow the effort level specified in your task description. See `${CLAUDE_PLUGIN_ROOT}/references/effort-profiles.md` for calibration details.
+Follow the effort level specified in your task description. Valid levels: max, high, medium, low. Higher effort means deeper reasoning and more thorough exploration.
 
 If context seems incomplete after compaction, re-read your assigned files from disk.
