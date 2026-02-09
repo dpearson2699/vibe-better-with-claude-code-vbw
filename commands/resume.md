@@ -38,6 +38,23 @@ Read STATE.md. Compare resume file's last completed plan against current SUMMARY
 
 Agent Teams awareness: previous team sessions are not resumable. Resume creates a NEW team from saved state. Completed tasks are detected via SUMMARY.md + `git log`, and only remaining tasks are assigned.
 
+### Step 3.5: Reconcile execution state
+
+Detect stale execution-state and reconcile with actual SUMMARY.md files.
+
+If `.vbw-planning/.execution-state.json` exists:
+1. Read the execution state JSON
+2. For each plan with status "running" or "pending":
+   - Check if a corresponding SUMMARY.md exists in the phase directory (match by plan ID in filename)
+   - If SUMMARY.md exists: the plan completed after the pause. Note it as "completed since pause"
+3. If any plans were reconciled, display: "Build progress updated: {N} plan(s) completed since pause"
+4. If execution state status is "running" but ALL plans now have SUMMARY.md files:
+   - The build completed after the pause. Display: "Build completed since pause"
+   - Suggest running `/vbw:qa` instead of `/vbw:execute`
+5. If execution state status is "running" and some plans are still incomplete:
+   - Display: "Build was interrupted. {N} of {T} plans complete."
+   - Suggest: `/vbw:execute {phase}` to resume the build
+
 ### Step 4: Check for unfilled templates
 
 If PROJECT.md contains the template placeholder `{project-description}`, the project was initialized but never defined. In this case, suggest `/vbw:new` as the next action instead of the resume file's instructions.
@@ -60,11 +77,19 @@ If PROJECT.md contains the template placeholder `{project-description}`, the pro
 
   {If templates unfilled: "⚠ Project not yet defined -- templates still contain placeholders"}
 
+  {If build was interrupted:}
+  ⚠ Build interrupted at wave {W}/{T} ({done}/{total} plans complete)
+
+  {If build completed since pause:}
+  ✓ Build completed since pause ({total} plans done)
+
   Phase Goal:
     {goal from resume file}
 
 ➜ Next Up
   {If templates unfilled: "/vbw:new -- Define your project (name, requirements, roadmap)"}
+  {If build completed since pause: "/vbw:qa {N} -- Verify the completed build"}
+  {If build was interrupted: "/vbw:execute {N} -- Resume the interrupted build"}
   {Otherwise: specific next command from resume instructions}
 ```
 
