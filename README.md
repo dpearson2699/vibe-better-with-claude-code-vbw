@@ -231,13 +231,10 @@ VBW operates on a simple loop that will feel familiar to anyone who's ever shipp
      └──────────┬────────────┘               │  ⚠ Codebase detected  │
                 │                            │  Auto-chains:         │
                 │                            │    → /vbw:map         │
-                ▼                            │    → Skills (informed │
-     ┌───────────────────────┐               │      by map data)     │
-     │  /vbw:new             │               │    → /vbw:new         │
-     │  Define project       │               └──────────┬────────────┘
-     │  Requirements,        │                          │
-     │  roadmap, CLAUDE.md   │                          │
-     └──────────┬────────────┘                          │
+                │                            │    → Skills (informed │
+                │                            │      by map data)     │
+                │                            │    → /vbw:implement   │
+                │                            └──────────┬────────────┘
                 │                                       │
                 └───────────────────┬───────────────────┘
                                     │
@@ -295,12 +292,11 @@ VBW operates on a simple loop that will feel familiar to anyone who's ever shipp
                       │                            │
                       ▼                            ▼
            ┌──────────────────┐        ┌──────────────────┐
-           │ Loop back to     │        │ /vbw:ship        │
-           │ /vbw:implement   │        │ Audits milestone │
+           │ Loop back to     │        │ /vbw:archive     │
+           │ /vbw:implement   │        │ Audits completion│
            │ for next phase   │        │ Archives state   │
            └──────────────────┘        │ Tags the release │
-                                       │ You actually     │
-                                       │ shipped something│
+                                       │ Work archived    │
                                        └──────────────────┘
 ```
 
