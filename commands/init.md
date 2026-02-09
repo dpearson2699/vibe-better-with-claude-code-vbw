@@ -175,6 +175,45 @@ Display:
 
 **3d. Write Skills section to STATE.md** — using the format from `${CLAUDE_PLUGIN_ROOT}/references/skill-discovery.md` (SKIL-05).
 
+### Step 3.5: Generate bootstrap CLAUDE.md
+
+Write a CLAUDE.md at the project root. This is auto-loaded by Claude Code into every session, so it ensures VBW conventions are enforced from the very first interaction — even before `/vbw:new` defines the project.
+
+`/vbw:new` will later regenerate CLAUDE.md with project-specific content. This bootstrap version establishes behavioral rules only.
+
+Write the following to `CLAUDE.md` (adjust installed skills list from Step 3d):
+
+```markdown
+# VBW-Managed Project
+
+This project uses VBW (Vibe Better with Claude Code) for structured development.
+
+## VBW Rules
+
+- **Always use VBW commands** for project work. Do not manually edit files in `.vbw-planning/`.
+- **Commit format:** `{type}({scope}): {description}` — types: feat, fix, test, refactor, perf, docs, style, chore.
+- **One commit per task.** Each task in a plan gets exactly one atomic commit.
+- **Never commit secrets.** Do not stage .env, .pem, .key, credentials, or token files.
+- **Plan before building.** Use /vbw:plan before /vbw:execute. Plans are the source of truth.
+- **Do not fabricate content.** Only use what the user explicitly states in project-defining flows.
+
+## State
+
+- Planning directory: `.vbw-planning/`
+- Project not yet defined — run /vbw:new to set up project identity and roadmap.
+
+## Installed Skills
+
+{list installed skills from STATE.md Skills section, or "None" if empty}
+
+## Commands
+
+Run /vbw:status for current progress.
+Run /vbw:help for all available commands.
+```
+
+Keep under 200 lines. Add `✓ CLAUDE.md` to the summary output.
+
 ### Step 4: Present summary
 
 ```
@@ -188,6 +227,7 @@ Display:
   ✓ .vbw-planning/STATE.md        (template)
   ✓ .vbw-planning/config.json
   ✓ .vbw-planning/phases/
+  ✓ CLAUDE.md                  (bootstrap)
   {include next line only if statusline was installed during Step 0b}
   ✓ Statusline (restart to activate)
 
