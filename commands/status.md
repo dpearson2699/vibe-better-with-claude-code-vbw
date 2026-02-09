@@ -58,6 +58,8 @@ Otherwise: use .vbw-planning/ defaults.
 
 If an Agent Teams build is active, read the shared task list for live teammate status.
 
+**From cost ledger:** If `.vbw-planning/.cost-ledger.json` exists, read it with jq. Extract per-agent cost entries (agent name and cents). Compute total cents. Only proceed with economy display if total > 0.
+
 ### Step 4: Compute phase progress
 
 For each phase in roadmap:
@@ -126,6 +128,25 @@ If --verbose: also prepare per-phase breakdown with per-plan durations.
     Average duration: {time}
     Total time:       {time}
 ```
+
+**Economy** (if `.vbw-planning/.cost-ledger.json` exists AND total cost > $0.00):
+
+Guard: Only display this section when `.vbw-planning/.cost-ledger.json` exists AND the total cost exceeds $0.00. When the file doesn't exist or total is zero, skip the entire Economy section silently.
+
+Read `.vbw-planning/.cost-ledger.json` with jq. For each agent entry, extract the agent name and cost in cents. Sort agents by cost descending. Compute total cost and each agent's percentage of total.
+
+```
+  Economy:
+    Total cost:   ${total}
+    Per agent:
+      Dev          $0.82   70%
+      Lead         $0.15   13%
+      QA           $0.12   10%
+      Other        $0.08    7%
+    Cache hit rate: {percent}%
+```
+
+Format: Show dollar amount and percentage for each agent, sorted by cost descending. Use the same plain-text style as the Velocity section (no ANSI codes). Include cache hit rate from the ledger if available.
 
 **Next Up:**
 Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh status` and display the output.
