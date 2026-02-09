@@ -43,7 +43,6 @@ Active milestone:
 ### Step 1: Parse arguments
 
 - **--verbose**: Show per-plan detail within each phase
-- **--metrics**: Show token consumption breakdown and compaction history
 
 ### Step 2: Resolve milestone context
 
@@ -80,16 +79,7 @@ If --verbose: also prepare per-phase breakdown with per-plan durations.
 4. If all complete: `/vbw:archive`
 5. If no plans anywhere: `/vbw:plan`
 
-### Step 7: Metrics (--metrics only)
-
-Read SUMMARY.md frontmatter for tokens_consumed and compaction_count. Compute:
-- Per-phase token totals and compaction counts
-- Agent type estimates: Dev (from SUMMARYs), QA (~estimated from tier), Lead (~estimated from plan count)
-- Cost estimate
-
-Label estimates clearly as "~estimated".
-
-### Step 8: Display dashboard
+### Step 7: Display dashboard
 
 **Header:**
 ```
@@ -140,25 +130,6 @@ Label estimates clearly as "~estimated".
 **Next Up:**
 ```
 ➜ Next: /vbw:{command} -- {description}
-```
-
-**Metrics view** (if --metrics):
-```
-  Token Consumption:
-    Total:     {tokens}
-    By Agent:
-      Dev:     {tokens} ({%})
-      QA:      ~{tokens} ({%}) (estimated)
-      Lead:    ~{tokens} ({%}) (estimated)
-    By Phase:
-      Phase 1: {tokens} ({plans} plans, {avg}/plan)
-
-  Compaction Events:
-    Total:     {count} across {phases} phases
-    {Phase N, Plan M: count compaction(s)}
-
-  Cost Estimate:
-    ~${amount} (based on Opus pricing)
 ```
 
 ## Output Format

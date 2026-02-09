@@ -214,7 +214,7 @@ These are protocol instructions embedded in agent definitions -- NOT JavaScript 
 
 **Behavior:**
 - Verify the SUMMARY.md exists for the completed plan
-- Verify SUMMARY.md has required frontmatter fields: `phase`, `plan`, `duration`, `completed`
+- Verify SUMMARY.md has required frontmatter fields: `phase`, `plan`, `status`, `completed`
 - Verify SUMMARY.md has the standard sections: Accomplishments, Task Commits, Files Created/Modified, Deviations from Plan
 - If validation fails, the build command reports the issue rather than silently continuing
 

@@ -4,21 +4,13 @@ phase: {phase-id}
 plan: {plan-number}
 title: {plan-title}
 status: {complete|partial|failed}
+completed: {YYYY-MM-DD}
+tasks_completed: {N}
+tasks_total: {N}
+commit_hashes:
+  - {hash}
 deviations:
   - "{deviation-description}"
-duration: {time-string}
-completed: {YYYY-MM-DD}
-subsystem: {category}
-tags:
-  - {tech-keyword}
-dependency_graph:
-  requires: [{prior-phases}]
-  provides: [{what-was-delivered}]
-tech_stack:
-  added: [{new-libraries}]
-key_files:
-  created: [{file-paths}]
-  modified: [{file-paths}]
 ---
 
 # Phase {X} Plan {Y}: {Title} Summary

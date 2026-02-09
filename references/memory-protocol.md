@@ -102,8 +102,7 @@ Each phase produces one entry appended to PATTERNS.md:
 Pattern capture is triggered by `/vbw:execute` after all plans in a phase complete. The build command:
 
 1. Reads all SUMMARY.md files from the completed phase
-2. Extracts timing data (duration per plan, total phase time)
-3. Extracts deviation data (count, types, severity)
+2. Extracts deviation data (count, types, severity)
 4. Identifies completion patterns (task count vs. success rate, file count vs. deviation rate)
 5. Appends a new entry to `.vbw-planning/patterns/PATTERNS.md`
 
