@@ -190,7 +190,7 @@ Double-line celebration box for milestone completion.
   Requirements: {satisfied}/{total}
 ```
 
-**Usage:** Final output of /vbw:ship after all phases pass.
+**Usage:** Final output of /vbw:archive after all phases pass.
 Metrics below the box use Metrics Block formatting.
 
 ### 7. Next Up Block (VIZL-09)
@@ -211,7 +211,7 @@ each on its own line with a brief description after `--`.
 Suggest 1-3 commands based on context:
 - After init: `/vbw:map` or `/vbw:plan`
 - After plan: `/vbw:execute {N}`
-- After build: `/vbw:plan {N+1}` or `/vbw:ship`
+- After build: `/vbw:plan {N+1}` or `/vbw:archive`
 - After map: `/vbw:plan {N}`
 
 ### 8. File Checklist
