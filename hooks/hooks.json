@@ -138,6 +138,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'f=$(ls -1 \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/post-compact.sh 2>/dev/null | (sort -V 2>/dev/null || sort -t. -k1,1n -k2,2n -k3,3n) | tail -1) && [ -f \"$f\" ] && exec bash \"$f\"'",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PreCompact": [
@@ -147,17 +157,6 @@
             "type": "command",
             "command": "bash -c 'f=$(ls -1 \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/compaction-instructions.sh 2>/dev/null | (sort -V 2>/dev/null || sort -t. -k1,1n -k2,2n -k3,3n) | tail -1) && [ -f \"$f\" ] && exec bash \"$f\"'",
             "timeout": 10
-          }
-        ]
-      }
-    ],
-    "PostCompact": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'f=$(ls -1 \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/post-compact.sh 2>/dev/null | (sort -V 2>/dev/null || sort -t. -k1,1n -k2,2n -k3,3n) | tail -1) && [ -f \"$f\" ] && exec bash \"$f\"'",
-            "timeout": 5
           }
         ]
       }
@@ -184,7 +183,7 @@
         ]
       }
     ],
-    "NotificationReceived": [
+    "Notification": [
       {
         "hooks": [
           {

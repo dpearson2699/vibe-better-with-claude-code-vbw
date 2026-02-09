@@ -1,6 +1,6 @@
 #!/bin/bash
 set -u
-# NotificationReceived hook: Log notification metadata
+# Notification hook: Log notification metadata
 # Non-blocking, fail-open (always exit 0)
 
 PLANNING_DIR=".vbw-planning"
