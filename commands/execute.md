@@ -168,7 +168,7 @@ Use targeted `message` (not `broadcast`) for most communication. Reserve `broadc
 - **Task completion:** When a teammate completes (or fails), update the plan's status in `.vbw-planning/.execution-state.json` to "complete" (or "failed").
 - **Wave transition:** Wave transitions happen automatically -- when all wave N tasks complete, their wave N+1 dependents unblock. Update "wave" in the execution state JSON when you observe the first wave N+1 task starting.
 
-Use `jq` for atomic updates, e.g.: `jq '(.plans[] | select(.id == "03-01")).status = "complete"' .vbw-planning/.execution-state.json > tmp && mv tmp .vbw-planning/.execution-state.json`
+Use `jq` for atomic updates, e.g.: `jq '(.plans[] | select(.id == "03-01")).status = "complete"' .vbw-planning/.execution-state.json > .vbw-planning/.execution-state.json.tmp && mv .vbw-planning/.execution-state.json.tmp .vbw-planning/.execution-state.json`
 
 Hooks handle continuous verification:
 - PostToolUse validates SUMMARY.md structure on write
