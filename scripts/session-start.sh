@@ -4,7 +4,7 @@ set -u
 
 # --- Dependency check ---
 if ! command -v jq &>/dev/null; then
-  echo '{"hookSpecificOutput":{"additionalContext":"VBW: jq not found. Install with: brew install jq (macOS) or apt install jq (Linux). VBW hooks will be non-functional."}}'
+  echo '{"hookSpecificOutput":{"additionalContext":"VBW: jq not found. Install: brew install jq (macOS) / apt install jq (Linux). All 17 VBW quality gates are disabled until jq is installed -- no commit validation, no security filtering, no file guarding."}}'
   exit 0
 fi
 
