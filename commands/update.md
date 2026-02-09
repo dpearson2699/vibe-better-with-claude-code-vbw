@@ -48,10 +48,11 @@ Store result as `remote_version`. If curl fails, STOP with:
 ⚠ Could not reach GitHub to check for updates. Try again later.
 ```
 
-If `remote_version` equals `old_version`, STOP with:
+If `remote_version` equals `old_version`, display:
 ```
-✓ VBW is already up to date (v{old_version}).
+✓ VBW is already at the latest version (v{old_version}). Refreshing cache...
 ```
+Then continue to Step 4 to force a clean cache refresh. This ensures the user always gets a pristine copy from the marketplace, which fixes corrupted caches or stale hook schemas without requiring a version bump.
 
 ### Step 4: Nuclear cache wipe
 
@@ -66,7 +67,8 @@ This removes `~/.claude/plugins/cache/vbw-marketplace/vbw/`, `~/.claude/commands
 
 ### Step 5: Perform update
 
-Display: "Updating VBW v{old_version} -> v{remote_version}..."
+If `remote_version` equals `old_version`, display: "Refreshing VBW v{old_version} cache..."
+Otherwise, display: "Updating VBW v{old_version} -> v{remote_version}..."
 
 **CRITICAL: Always refresh the marketplace FIRST.** The marketplace checkout is a local git clone that can become stale. If you skip this, `plugin update` re-caches the old version.
 
@@ -158,6 +160,18 @@ If `NEW_CACHED` does not equal `remote_version`, display:
 
 **IMPORTANT:** Do NOT re-read `${CLAUDE_PLUGIN_ROOT}/VERSION` — it still points to the old version for this session. Use `remote_version` from Step 3 instead.
 
+If `remote_version` equals `old_version` (cache refresh):
+```
+╔═══════════════════════════════════════════╗
+║  VBW Cache Refreshed                      ║
+╚═══════════════════════════════════════════╝
+
+  ✓ Cache refreshed (v{old_version}).
+
+  Restart Claude Code to load the refreshed cache.
+```
+
+Otherwise (version upgrade):
 ```
 ╔═══════════════════════════════════════════╗
 ║  VBW Updated                              ║
