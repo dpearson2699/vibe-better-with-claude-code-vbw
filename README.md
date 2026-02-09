@@ -317,16 +317,10 @@ VBW operates on a simple loop that will feel familiar to anyone who's ever shipp
 VBW sets up your environment (Agent Teams, statusline) and scaffolds a `.vbw-planning/` directory with template files. It detects your tech stack and suggests relevant Claude Code skills.
 
 ```
-/vbw:new Build me a million dollar SaaS, make no mistakes.
-```
-
-VBW asks about your project, gathers requirements, and creates a phased roadmap. Now you have structure. Your parents would be proud.
-
-```
 /vbw:implement
 ```
 
-VBW auto-detects the next phase and handles everything -- planning and execution in one step. The Lead agent plans, Dev teammates build in parallel with per-plan dependency wiring, and hooks verify continuously. You get `PLAN.md` + `SUMMARY.md` without switching commands.
+VBW auto-detects project state and does the right thing. Fresh project? It runs bootstrap -- asks about your project, gathers requirements, and creates a phased roadmap. Phases ready? It handles planning and execution in one step. The Lead agent plans, Dev teammates build in parallel with per-plan dependency wiring, and hooks verify continuously. You get `PLAN.md` + `SUMMARY.md` without switching commands.
 
 Want more control? Use `/vbw:plan` and `/vbw:execute` separately instead.
 
@@ -339,10 +333,10 @@ At any point, check where you stand. Shows phase progress, completion bars, velo
 Repeat `/vbw:implement` for each phase until your roadmap is complete.
 
 ```
-/vbw:ship
+/vbw:archive
 ```
 
-Archives the milestone, tags the release, updates project docs. You shipped. With actual verification. Your future self won't want to set the codebase on fire. Probably.
+Archives the completed work, tags the release, updates project docs. You shipped. With actual verification. Your future self won't want to set the codebase on fire. Probably.
 
 > You can always be explicit with `/vbw:plan 3`, `/vbw:execute 2`, etc. Useful for re-running a phase, skipping ahead, or when working across multiple terminals.
 
@@ -354,9 +348,9 @@ Archives the milestone, tags the release, updates project docs. You shipped. Wit
 /vbw:init
 ```
 
-VBW detects the existing codebase and auto-chains everything: `/vbw:map` launches 4 Scout teammates to analyze your code across tech stack, architecture, quality, and concerns. Then skill discovery runs informed by the map data — so skill suggestions are based on what's actually in your codebase, not just which manifest files exist. Finally `/vbw:new` runs automatically with full codebase awareness. One command, four workflows, zero manual sequencing. Think of it as a full-body scan followed by a treatment plan. Results may be upsetting.
+VBW detects the existing codebase and auto-chains everything: `/vbw:map` launches 4 Scout teammates to analyze your code across tech stack, architecture, quality, and concerns. Then skill discovery runs informed by the map data — so skill suggestions are based on what's actually in your codebase, not just which manifest files exist. Finally `/vbw:implement` runs automatically with full codebase awareness. One command, four workflows, zero manual sequencing. Think of it as a full-body scan followed by a treatment plan. Results may be upsetting.
 
-Then proceed with `/vbw:implement` (or `/vbw:plan` + `/vbw:execute` separately), `/vbw:qa`, `/vbw:ship` as above.
+Then proceed with `/vbw:implement` (or `/vbw:plan` + `/vbw:execute` separately), `/vbw:qa`, `/vbw:archive` as above.
 
 <br>
 
