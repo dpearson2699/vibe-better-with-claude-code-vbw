@@ -1,5 +1,6 @@
 ---
 name: add-phase
+disable-model-invocation: true
 description: Add a new phase to the end of the active milestone's roadmap.
 argument-hint: <phase-name> [--goal="phase goal description"]
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep

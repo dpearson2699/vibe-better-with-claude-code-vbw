@@ -1,5 +1,6 @@
 ---
 name: map
+disable-model-invocation: true
 description: Analyze existing codebase with adaptive Scout teammates to produce structured mapping documents.
 argument-hint: [--incremental] [--package=name] [--tier=solo|duo|quad]
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebFetch

@@ -1,5 +1,6 @@
 ---
 name: resume
+disable-model-invocation: true
 description: Restore project context from .vbw-planning/ state.
 argument-hint:
 allowed-tools: Read, Bash, Glob

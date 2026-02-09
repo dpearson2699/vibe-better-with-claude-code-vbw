@@ -1,5 +1,6 @@
 ---
 name: insert-phase
+disable-model-invocation: true
 description: Insert an urgent phase between existing phases, renumbering subsequent phases.
 argument-hint: <position> <phase-name> [--goal="phase goal description"]
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep

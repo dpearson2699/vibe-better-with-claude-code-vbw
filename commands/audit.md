@@ -1,5 +1,6 @@
 ---
 name: audit
+disable-model-invocation: true
 description: Audit completion readiness -- checks completion, execution, and verification status.
 argument-hint: [--fix]
 allowed-tools: Read, Glob, Grep, Bash

@@ -1,5 +1,6 @@
 ---
 name: config
+disable-model-invocation: true
 description: View and modify VBW configuration including effort profile, verification tier, and skill-hook wiring.
 argument-hint: [setting value]
 allowed-tools: Read, Write, Edit, Bash, Glob

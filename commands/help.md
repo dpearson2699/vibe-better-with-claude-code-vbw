@@ -1,5 +1,6 @@
 ---
 name: help
+disable-model-invocation: true
 description: Display all available VBW commands with descriptions and usage examples.
 argument-hint: [command-name]
 allowed-tools: Read, Glob
