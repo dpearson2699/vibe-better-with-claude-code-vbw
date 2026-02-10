@@ -24,46 +24,25 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 
 | Decision | Date | Rationale |
 |----------|------|-----------|
-| Ship current feature set as v1 | 2026-02-09 | All core workflows functional |
-| Target solo developers | 2026-02-09 | Primary Claude Code user base |
 | 3-phase roadmap: failures → polish → docs | 2026-02-09 | Risk-ordered, concerns-first |
 | `/vbw:implement` as single primary command | 2026-02-09 | Users confused by command overlap |
 | Milestones become internal concept | 2026-02-09 | Solo devs don't need the abstraction |
 | `/vbw:ship` → `/vbw:archive` | 2026-02-09 | Clearer verb for wrapping up work |
 | Remove `/vbw:new`, `/vbw:milestone`, `/vbw:switch` | 2026-02-09 | Absorbed into implement/plan |
 | Performance optimization: 3 phases | 2026-02-09 | Context diet → script offloading → agent cost controls |
-| Every optimization must have measured impact | 2026-02-09 | No changes for the sake of changes |
 | Three-layer GSD isolation | 2026-02-10 | CLAUDE.md + project CLAUDE.md + PreToolUse hard block |
 | Two marker files (.active-agent + .vbw-session) | 2026-02-10 | Avoids conflict with cost attribution; separate concerns |
 | GSD detection before consent prompt | 2026-02-10 | No noise for non-GSD users |
 
 ## Installed Skills
 
-- audit-website (global)
-- bash-pro (global)
-- find-skills (global)
-- frontend-design (global)
-- plugin-settings (global)
-- plugin-structure (global)
-- posix-shell-pro (global)
-- remotion-best-practices (global)
-- seo-audit (global)
-- skill-development (global)
-- vercel-react-best-practices (global)
-- web-design-guidelines (global)
-- agent-sdk-development (global)
+13 global skills installed (run /vbw:skills to list).
 
 ## Learned Patterns
 
-- Plan 03-03 (validation) found zero discrepancies — Plans 01+02 across all phases were implemented accurately
-- Hook count grew from 17 to 18 during Phase 1 (frontmatter validation added)
-- Version sync enforcement at push time prevents mismatched releases
 - `disable-model-invocation: true` is the highest-impact token optimization for plugins
 - Scout→haiku, QA→sonnet gives 40-60% cost reduction without quality loss
-- Pre-computing state via scripts (phase-detect.sh) saves ~800 tokens per /vbw:implement
-- SessionStart `additionalContext` injection eliminates redundant STATE.md reads
 - Two-marker isolation: `.active-agent` for subagents, `.vbw-session` for commands — avoids false-positive blocking after subagent stop
-- `UserPromptSubmit` hook is the right place for command-level markers (fires before tool calls)
 
 ## Compact Instructions
 
@@ -78,18 +57,36 @@ When compacting context, follow these priorities:
 - Any error messages or test failures being debugged
 
 **Safe to discard:**
-- Tool output details (file contents already read, grep results already processed)
+- Tool output details already processed (file contents, grep results, git diffs)
 - Planning exploration that led to the current plan (keep only the final plan)
-- Verbose git diff output (keep only the summary of what changed)
-- Reference file contents that can be re-read from disk (ROADMAP.md, REQUIREMENTS.md, shared-patterns.md)
-- Previous phase summaries (already written to disk as SUMMARY.md files)
+- Reference file contents and phase summaries already written to disk
 
 **After compaction:** Re-read your assigned plan file and STATE.md from disk to restore working context.
 
 ## State
 
 - Planning directory: `.vbw-planning/`
-- Codebase map: `.vbw-planning/codebase/` (9 documents)
+- Codebase map: `.vbw-planning/codebase/`
+
+## Project Conventions
+
+These conventions are enforced during planning and verified during QA.
+
+- Commands are kebab-case .md files in commands/ [file-structure]
+- Agents named vbw-{role}.md in agents/ [naming]
+- Scripts are kebab-case .sh files in scripts/ [naming]
+- Phase directories follow {NN}-{slug}/ pattern [naming]
+- Plan files named {NN}-{MM}-PLAN.md, summaries {NN}-{MM}-SUMMARY.md [naming]
+- Commits follow {type}({scope}): {desc} format, one commit per task [style]
+- Stage files individually with git add, never git add . or git add -A [style]
+- Shell scripts use set -u minimum, set -euo pipefail for critical scripts [style]
+- Use jq for all JSON parsing, never grep/sed on JSON [tooling]
+- YAML frontmatter description must be single-line (multi-line breaks discovery) [style]
+- No prettier-ignore comment before YAML frontmatter, use .prettierignore instead [style]
+- All hooks route through hook-wrapper.sh for graceful degradation (DXP-01) [patterns]
+- Zero-dependency design: no package.json, npm, or build step [patterns]
+- All scripts target bash, not POSIX sh [tooling]
+- Plugin cache resolution via ls | sort -V | tail -1, never glob expansion [patterns]
 
 ## Commands
 
