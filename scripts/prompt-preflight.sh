@@ -18,6 +18,18 @@ if [ -z "$PROMPT" ]; then
   exit 0
 fi
 
+# GSD Isolation: manage .vbw-session marker
+# When isolation is enabled (.gsd-isolation exists), create the marker for VBW commands
+# and remove it for non-VBW prompts. This allows security-filter.sh to distinguish
+# VBW command execution from GSD command execution.
+if [ -f "$PLANNING_DIR/.gsd-isolation" ]; then
+  if echo "$PROMPT" | grep -qi '^/vbw:'; then
+    echo "session" > "$PLANNING_DIR/.vbw-session"
+  else
+    rm -f "$PLANNING_DIR/.vbw-session"
+  fi
+fi
+
 WARNING=""
 
 # Check: /vbw:execute when no PLAN.md exists in current phase
