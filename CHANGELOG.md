@@ -2,6 +2,14 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.10.6] - 2026-02-10
+
+### Fixed
+
+- **`hooks`** -- `state-updater.sh` now updates ROADMAP.md progress table and phase checkboxes when PLAN.md or SUMMARY.md files are written. Previously only STATE.md was updated, leaving ROADMAP.md permanently stale after bootstrap.
+
+---
+
 ## [1.10.5] - 2026-02-10
 
 ### Added
