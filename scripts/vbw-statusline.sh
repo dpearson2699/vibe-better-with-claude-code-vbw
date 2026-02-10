@@ -331,7 +331,6 @@ elif [ "$FETCH_OK" = "fail" ]; then
 else
   USAGE_LINE="${D}Limits: N/A (using API key)${X}"
 fi
-USAGE_LINE="$USAGE_LINE ${D}│${X} Prompt Cache: ${CACHE_COLOR}${CACHE_HIT_PCT}% hit${X} ${CACHE_W_FMT} write ${CACHE_R_FMT} read"
 
 # --- GitHub link (OSC 8 clickable) ---
 GH_LINK=""
@@ -393,6 +392,7 @@ fi
 
 L2="Context: ${BC}${CTX_BAR}${X} ${BC}${PCT}%${X} ${CTX_USED_FMT}/${CTX_SIZE_FMT}"
 L2="$L2 ${D}│${X} Tokens: ${IN_TOK_FMT} in  ${OUT_TOK_FMT} out"
+L2="$L2 ${D}│${X} Prompt Cache: ${CACHE_COLOR}${CACHE_HIT_PCT}% hit${X} ${CACHE_W_FMT} write ${CACHE_R_FMT} read"
 
 L3="$USAGE_LINE"
 L4="Model: ${D}${MODEL}${X} ${D}│${X} Time: ${DUR_FMT} (API: ${API_DUR_FMT})"

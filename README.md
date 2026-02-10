@@ -104,6 +104,7 @@ Think of it as project management for the post-dignity era of software developme
 - [The Agents](#the-agents)
 - [Effort Profiles](#effort-profiles)
 - [Autonomy Levels](#autonomy-levels)
+- [What You Get Versus Raw Claude Code](#what-you-get-versus-raw-claude-code)
 - [Project Structure](#project-structure)
 - [Under the Hood](#under-the-hood)
 - [Requirements](#requirements)
@@ -155,32 +156,6 @@ VBW integrates with [Skills.sh](https://skills.sh), the open-source skill regist
 - **Automatic stack detection.** `/vbw:init` scans your project during setup, identifies your tech stack (Next.js, Django, Prisma, Tailwind, etc.), and recommends relevant skills from a curated mapping.
 
 - **On-demand skill discovery.** Run `/vbw:skills` anytime to detect your stack, browse curated suggestions, search the Skills.sh registry, and install skills in one step. Use `--search <query>` for direct registry lookups.
-
-<br>
-
-### What you get versus raw Claude Code
-
-For the "I'll just prompt carefully" crowd.
-
-| Without VBW | With VBW |
-| :--- | :--- |
-| One long session, no structure | Phased roadmap with requirements traceability |
-| Manual agent spawning | 6 specialized agents with enforced permissions |
-| Hope the AI remembers context | Persistent state across sessions via `.vbw-planning/` |
-| No verification unless you ask | Continuous QA via 20 hooks + deep verification on demand |
-| Commits whenever, whatever | Atomic commits per task with validation |
-| "It works on my machine" | Goal-backward verification against success criteria |
-| Agents talk in free-form text | Structured JSON handoff schemas between agents |
-| Skills exist somewhere | Stack-aware skill discovery and auto-suggestion |
-| Generic "what now?" after every command | Context-aware next-action suggestions with plan IDs, phase names, staleness % |
-| Technical output only | Plain-language "What happened" summary after builds (toggleable) |
-| Implicit cross-phase dependencies | Explicit `cross_phase_deps` in plans, validated before execution |
-| Raw agent names in cost tracking | Workflow categories (Build/Plan/Verify) with efficiency insights |
-| Hook failure blocks your session | Universal hook wrapper -- errors logged, session always continues |
-| Install plugin, stare at blank screen | Branded welcome with single call to action on first run |
-| Memorize flags for each command | Consistent argument hints on all 29 commands with discoverable flags |
-| Change 3-4 settings to switch work mode | Work profiles: one command to switch between prototype, production, and yolo modes |
-| Conventions live as free text in CLAUDE.md | Structured conventions auto-detected from codebase, conflict-checked, QA-verified |
 
 <br>
 
@@ -618,6 +593,36 @@ Autonomy interacts with effort profiles. At `cautious`, plan approval expands to
 | "Already complete" warning | Confirm | Confirm | Skip | Skip |
 | Plan approval (Thorough) | Required | Required | Off | Off |
 | Plan approval (Balanced) | Required | Off | Off | Off |
+
+<br>
+
+---
+
+<br>
+
+## What You Get Versus Raw Claude Code
+
+For the "I'll just prompt carefully" crowd.
+
+| Without VBW | With VBW |
+| :--- | :--- |
+| One long session, no structure | Phased roadmap with requirements traceability |
+| Manual agent spawning | 6 specialized agents with enforced permissions |
+| Hope the AI remembers context | Persistent state across sessions via `.vbw-planning/` |
+| No verification unless you ask | Continuous QA via 20 hooks + deep verification on demand |
+| Commits whenever, whatever | Atomic commits per task with validation |
+| "It works on my machine" | Goal-backward verification against success criteria |
+| Agents talk in free-form text | Structured JSON handoff schemas between agents |
+| Skills exist somewhere | Stack-aware skill discovery and auto-suggestion |
+| Generic "what now?" after every command | Context-aware next-action suggestions with plan IDs, phase names, staleness % |
+| Technical output only | Plain-language "What happened" summary after builds (toggleable) |
+| Implicit cross-phase dependencies | Explicit `cross_phase_deps` in plans, validated before execution |
+| Raw agent names in cost tracking | Workflow categories (Build/Plan/Verify) with efficiency insights |
+| Hook failure blocks your session | Universal hook wrapper -- errors logged, session always continues |
+| Install plugin, stare at blank screen | Branded welcome with single call to action on first run |
+| Memorize flags for each command | Consistent argument hints on all 29 commands with discoverable flags |
+| Change 3-4 settings to switch work mode | Work profiles: one command to switch between prototype, production, and yolo modes |
+| Conventions live as free text in CLAUDE.md | Structured conventions auto-detected from codebase, conflict-checked, QA-verified |
 
 <br>
 
