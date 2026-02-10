@@ -6,9 +6,10 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 
 ## Active Context
 
-**Work:** No active work — all milestones complete
-**Last completed:** GSD Isolation (archived 2026-02-10, tag: milestone/gsd-isolation)
-**Next action:** /vbw:implement to start new work
+**Work:** Intelligent Discovery Questions (3 phases)
+**Phase:** 1 of 3 — Discovery Protocol & Config
+**Status:** Ready for planning
+**Next action:** /vbw:implement to plan and build Phase 1
 
 ## VBW Rules
 
@@ -24,49 +25,15 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 
 | Decision | Date | Rationale |
 |----------|------|-----------|
-| 3-phase roadmap: failures → polish → docs | 2026-02-09 | Risk-ordered, concerns-first |
-| `/vbw:implement` as single primary command | 2026-02-09 | Users confused by command overlap |
-| Milestones become internal concept | 2026-02-09 | Solo devs don't need the abstraction |
-| `/vbw:ship` → `/vbw:archive` | 2026-02-09 | Clearer verb for wrapping up work |
-| Remove `/vbw:new`, `/vbw:milestone`, `/vbw:switch` | 2026-02-09 | Absorbed into implement/plan |
-| Performance optimization: 3 phases | 2026-02-09 | Context diet → script offloading → agent cost controls |
-| Three-layer GSD isolation | 2026-02-10 | CLAUDE.md + project CLAUDE.md + PreToolUse hard block |
-| Two marker files (.active-agent + .vbw-session) | 2026-02-10 | Avoids conflict with cost attribution; separate concerns |
-| GSD detection before consent prompt | 2026-02-10 | No noise for non-GSD users |
+| Discovery questions always run (deep at bootstrap, light at phases) | 2026-02-10 | Users need guidance at every stage, not just first time |
+| Profile controls question depth | 2026-02-10 | yolo=skip, prototype=1-2, default=3-5, production=thorough |
+| Mixed format: scenarios then checklists | 2026-02-10 | Broad scenarios surface unknowns, checklists catch specifics |
+| Per-project memory only | 2026-02-10 | Get basics right first, cross-project learning deferred |
+| 3-phase roadmap: protocol → bootstrap → phase-level | 2026-02-10 | Foundation first, then wire into each integration point |
 
 ## Installed Skills
 
 13 global skills installed (run /vbw:skills to list).
-
-## Learned Patterns
-
-- `disable-model-invocation: true` is the highest-impact token optimization for plugins
-- Scout→haiku, QA→sonnet gives 40-60% cost reduction without quality loss
-- Two-marker isolation: `.active-agent` for subagents, `.vbw-session` for commands — avoids false-positive blocking after subagent stop
-
-## Compact Instructions
-
-When compacting context, follow these priorities:
-
-**Always preserve:**
-- Active plan file content (current task number, remaining tasks, file paths)
-- Commit hashes and messages from this session's work
-- Deviation decisions and their rationale
-- Current phase number, name, and status
-- File paths that were modified (exact paths, not summaries)
-- Any error messages or test failures being debugged
-
-**Safe to discard:**
-- Tool output details already processed (file contents, grep results, git diffs)
-- Planning exploration that led to the current plan (keep only the final plan)
-- Reference file contents and phase summaries already written to disk
-
-**After compaction:** Re-read your assigned plan file and STATE.md from disk to restore working context.
-
-## State
-
-- Planning directory: `.vbw-planning/`
-- Codebase map: `.vbw-planning/codebase/`
 
 ## Project Conventions
 
@@ -92,3 +59,9 @@ These conventions are enforced during planning and verified during QA.
 
 Run /vbw:status for current progress.
 Run /vbw:help for all available commands.
+
+## Plugin Isolation
+
+- GSD agents and commands MUST NOT read, write, glob, grep, or reference any files in `.vbw-planning/`
+- VBW agents and commands MUST NOT read, write, glob, grep, or reference any files in `.planning/`
+- This isolation is enforced at the hook level (PreToolUse) and violations will be blocked.

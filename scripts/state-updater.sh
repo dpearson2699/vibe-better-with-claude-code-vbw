@@ -25,12 +25,73 @@ update_state_md() {
     mv "$tmp" "$state_md" 2>/dev/null || rm -f "$tmp" 2>/dev/null
 }
 
+slug_to_name() {
+  echo "$1" | sed 's/^[0-9]*-//' | tr '-' ' ' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1'
+}
+
+advance_phase() {
+  local phase_dir="$1"
+  local state_md=".vbw-planning/STATE.md"
+
+  [ -f "$state_md" ] || return 0
+
+  # Check if triggering phase is complete
+  local plan_count summary_count
+  plan_count=$(ls -1 "$phase_dir"/*-PLAN.md 2>/dev/null | wc -l | tr -d ' ')
+  summary_count=$(ls -1 "$phase_dir"/*-SUMMARY.md 2>/dev/null | wc -l | tr -d ' ')
+  [ "$plan_count" -gt 0 ] && [ "$summary_count" -eq "$plan_count" ] || return 0
+
+  # Scan all phase dirs to find next incomplete
+  local phases_dir total next_num next_name all_done
+  phases_dir=$(dirname "$phase_dir")
+  total=$(ls -d "$phases_dir"/*/ 2>/dev/null | wc -l | tr -d ' ')
+  next_num=""
+  next_name=""
+  all_done=true
+
+  for dir in $(ls -d "$phases_dir"/*/ 2>/dev/null | sort); do
+    local dirname p s
+    dirname=$(basename "$dir")
+    p=$(ls -1 "$dir"*-PLAN.md 2>/dev/null | wc -l | tr -d ' ')
+    s=$(ls -1 "$dir"*-SUMMARY.md 2>/dev/null | wc -l | tr -d ' ')
+
+    if [ "$p" -eq 0 ] || [ "$s" -lt "$p" ]; then
+      if [ -z "$next_num" ]; then
+        next_num=$(echo "$dirname" | sed 's/^\([0-9]*\).*/\1/' | sed 's/^0*//')
+        [ -z "$next_num" ] && next_num=0
+        next_name=$(slug_to_name "$dirname")
+      fi
+      all_done=false
+      break
+    fi
+  done
+
+  [ "$total" -eq 0 ] && return 0
+
+  local tmp="${state_md}.tmp.$$"
+  if [ "$all_done" = true ]; then
+    sed "s/^Status: .*/Status: complete/" "$state_md" > "$tmp" 2>/dev/null && \
+      mv "$tmp" "$state_md" 2>/dev/null || rm -f "$tmp" 2>/dev/null
+  elif [ -n "$next_num" ]; then
+    sed "s/^Phase: .*/Phase: ${next_num} of ${total} (${next_name})/" "$state_md" | \
+      sed "s/^Status: .*/Status: ready/" > "$tmp" 2>/dev/null && \
+      mv "$tmp" "$state_md" 2>/dev/null || rm -f "$tmp" 2>/dev/null
+  fi
+}
+
 INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // ""' 2>/dev/null)
 
-# PLAN.md trigger: update plan count in STATE.md
+# PLAN.md trigger: update plan count + activate status
 if echo "$FILE_PATH" | grep -qE 'phases/[^/]+/[0-9]+-[0-9]+-PLAN\.md$'; then
   update_state_md "$(dirname "$FILE_PATH")"
+  # Status: ready → active when a plan is written
+  _sm=".vbw-planning/STATE.md"
+  if [ -f "$_sm" ] && grep -q '^Status: ready' "$_sm" 2>/dev/null; then
+    _tmp="${_sm}.tmp.$$"
+    sed 's/^Status: ready/Status: active/' "$_sm" > "$_tmp" 2>/dev/null && \
+      mv "$_tmp" "$_sm" 2>/dev/null || rm -f "$_tmp" 2>/dev/null
+  fi
 fi
 
 # SUMMARY.md trigger: update execution state + progress
@@ -83,5 +144,6 @@ jq --arg phase "$PHASE" --arg plan "$PLAN" --arg status "$STATUS" '
 ' "$STATE_FILE" > "$TEMP_FILE" 2>/dev/null && mv "$TEMP_FILE" "$STATE_FILE" 2>/dev/null
 
 update_state_md "$(dirname "$FILE_PATH")"
+advance_phase "$(dirname "$FILE_PATH")"
 
 exit 0
