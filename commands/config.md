@@ -65,6 +65,7 @@ Stored in config.json `skill_hooks`:
 | verification_tier | string | quick/standard/deep | standard |
 | skill_suggestions | boolean | true/false | true |
 | auto_install_skills | boolean | true/false | false |
+| discovery_questions | boolean | true/false | true |
 | visual_format | string | unicode/ascii | unicode |
 | max_tasks_per_plan | number | 1-7 | 5 |
 | agent_teams | boolean | true/false | true |
