@@ -10,135 +10,69 @@ allowed-tools: Read, Write, Edit, Bash, Glob
 
 ## Context
 
-Current configuration:
+Config:
 ```
 !`cat .vbw-planning/config.json 2>/dev/null || echo "No config found -- run /vbw:init first"`
 ```
 
 ## Guard
 
-Follow the Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md` (check for `.vbw-planning/config.json` specifically).
+Follow Initialization Guard in `${CLAUDE_PLUGIN_ROOT}/references/shared-patterns.md` (check `.vbw-planning/config.json`).
 
 ## Behavior
 
 ### No arguments: Interactive configuration
 
-Read .vbw-planning/config.json. Display current settings as a summary table, then use AskUserQuestion to let the user pick what to change.
+**Step 1:** Display current settings in single-line box table (setting, value, description) + skill-hook mappings.
 
-**Step 1: Display current settings**
+**Step 2:** AskUserQuestion with up to 4 commonly changed settings (mark current values):
+- Effort: thorough | balanced | fast | turbo
+- Autonomy: cautious | standard | confident | pure-vibe
+- Verification: quick | standard | deep
+- Max tasks per plan: 3 | 5 | 7
 
-```
-┌──────────────────────────────────────────┐
-│  VBW Configuration                       │
-└──────────────────────────────────────────┘
+**Step 3:** Apply changes to config.json. Display ✓ per changed setting with ➜. No changes: "✓ No changes made."
 
-  Setting              Value        Description
-  effort               balanced     Agent effort and cost/quality tradeoff
-  autonomy             standard     Confirmation gates and phase looping
-  auto_commit          true         Auto-commit after task completion
-  verification_tier    standard     Default QA verification depth
-  skill_suggestions    true         Suggest skills during init
-  auto_install_skills  false        Auto-install without asking
-  visual_format        unicode      Output formatting style
-  max_tasks_per_plan   5            Max tasks per plan
-  agent_teams          true         Use Agent Teams for parallel builds
-  branch_per_milestone false        Auto-create git branch per milestone
-  plain_summary        true         Show plain-language "What happened" after builds
-  active_profile       default      Current work profile (or "custom" if manually tweaked)
+**Step 4: Profile drift detection** — if effort/autonomy/verification_tier changed:
+- Compare against active profile's expected values
+- If mismatch: AskUserQuestion "Settings no longer match '{profile}'. Save as new profile?" → "Save" (route to /vbw:profile save) or "No" (set active_profile to "custom")
+- Skip if no profile-tracked settings changed or already "custom"
 
-  Skill-Hook Mappings:
-    {skill-name} -> {hook-event} on {matcher}
-    (or "None configured")
-```
+Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh config` and display.
 
-**Step 2: Ask what to change**
+### With arguments: `<setting> <value>`
 
-Use AskUserQuestion with up to 4 of the most commonly changed settings. Each question shows the current value and available options:
-
-- **Effort profile**: "Which effort profile?" with options: thorough, balanced, fast, turbo (mark current as selected)
-- **Autonomy level**: "How much oversight?" with options: cautious, standard, confident, pure-vibe (mark current as selected)
-- **Verification tier**: "Default verification tier?" with options: quick, standard, deep
-- **Max tasks per plan**: "Max tasks per plan?" with options: 3, 5, 7
-
-**Step 3: Apply changes**
-
-For each setting the user changed from its current value:
-1. Update config.json
-2. Display: "✓ {setting}: {old} ➜ {new}"
-
-If nothing changed, display: "✓ No changes made."
-
-**Step 4: Profile drift detection**
-
-After applying changes, check if any of the profile-tracked settings (effort, autonomy, verification_tier) were modified:
-
-1. Read `active_profile` from config.json (default: "default")
-2. Compare the new effort/autonomy/verification_tier values against the active profile's expected values (see built-in profiles in `/vbw:profile` or `custom_profiles` in config.json)
-3. If the values no longer match the active profile, ask via AskUserQuestion:
-   - Question: "Your settings no longer match the '{active_profile}' profile. Save as a new profile?"
-   - Options: "Save as new profile" (routes to `/vbw:profile save`), "No thanks" (set `active_profile` to "custom")
-4. If the user chooses to save, tell them to run `/vbw:profile save`
-5. If the user declines, update `active_profile` to "custom" in config.json
-
-Skip this step if no profile-tracked settings were changed, or if `active_profile` is already "custom".
-
-Then show:
-```
-```
-Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh config` and display the output.
-
-### With arguments: Modify a setting
-
-Parse $ARGUMENTS as `<setting> <value>`.
-
-1. Validate setting exists
-2. Validate value is allowed
-3. Update config.json
-4. Display: "✓ {setting}: {old} ➜ {new}"
+Validate setting + value. Update config.json. Display ✓ with ➜.
 
 ### Skill-hook wiring: `skill_hook <skill> <event> <matcher>`
 
-Special syntax for configuring skill-to-hook mappings:
+- `config skill_hook lint-fix PostToolUse Write|Edit`
+- `config skill_hook test-runner PostToolUse Bash`
+- `config skill_hook remove <skill>`
 
-- `config skill_hook lint-fix PostToolUse Write|Edit` -- run lint-fix skill after file writes
-- `config skill_hook test-runner PostToolUse Bash` -- run test-runner after bash (e.g., git commit)
-- `config skill_hook remove <skill>` -- remove a skill-hook mapping
-
-Mappings stored in config.json under `skill_hooks`:
+Stored in config.json `skill_hooks`:
 ```json
-{
-  "skill_hooks": {
-    "lint-fix": { "event": "PostToolUse", "matcher": "Write|Edit" },
-    "test-runner": { "event": "PostToolUse", "matcher": "Bash" }
-  }
-}
+{"skill_hooks": {"lint-fix": {"event": "PostToolUse", "matcher": "Write|Edit"}}}
 ```
-
-These mappings are referenced by hooks/hooks.json to invoke skills at the right time.
 
 ## Settings Reference
 
-| Setting              | Type    | Values                                | Default  |
-|----------------------|---------|---------------------------------------|----------|
-| effort               | string  | thorough/balanced/fast/turbo          | balanced |
-| autonomy             | string  | cautious/standard/confident/pure-vibe | standard |
-| auto_commit          | boolean | true/false                            | true     |
-| verification_tier    | string  | quick/standard/deep                   | standard |
-| skill_suggestions    | boolean | true/false                            | true     |
-| auto_install_skills  | boolean | true/false                            | false    |
-| visual_format        | string  | unicode/ascii                         | unicode  |
-| max_tasks_per_plan   | number  | 1-7                                   | 5        |
-| agent_teams          | boolean | true/false                            | true     |
-| branch_per_milestone | boolean | true/false                            | false    |
-| plain_summary        | boolean | true/false                            | true     |
-| active_profile       | string  | profile name or "custom"              | default  |
-| custom_profiles      | object  | user-defined profiles (managed via /vbw:profile) | {}  |
+| Setting | Type | Values | Default |
+|---------|------|--------|---------|
+| effort | string | thorough/balanced/fast/turbo | balanced |
+| autonomy | string | cautious/standard/confident/pure-vibe | standard |
+| auto_commit | boolean | true/false | true |
+| verification_tier | string | quick/standard/deep | standard |
+| skill_suggestions | boolean | true/false | true |
+| auto_install_skills | boolean | true/false | false |
+| visual_format | string | unicode/ascii | unicode |
+| max_tasks_per_plan | number | 1-7 | 5 |
+| agent_teams | boolean | true/false | true |
+| branch_per_milestone | boolean | true/false | false |
+| plain_summary | boolean | true/false | true |
+| active_profile | string | profile name or "custom" | default |
+| custom_profiles | object | user-defined profiles | {} |
 
 ## Output Format
 
-Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md:
-- Single-line box for config display
-- ✓ for successful changes
-- ⚠ for invalid setting/value
-- ➜ for old-to-new transitions
-- No ANSI color codes
+Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md — single-line box, ✓ success, ⚠ invalid, ➜ transitions, no ANSI.
