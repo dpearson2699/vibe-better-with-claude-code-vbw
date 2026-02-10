@@ -181,6 +181,7 @@ For the "I'll just prompt carefully" crowd.
 | Raw agent names in cost tracking | Workflow categories (Build/Plan/Verify) with efficiency insights |
 | Hook failure blocks your session | Universal hook wrapper -- errors logged, session always continues |
 | Install plugin, stare at blank screen | Branded welcome with single call to action on first run |
+| Memorize flags for each command | Consistent argument hints on all 27 commands with discoverable flags |
 
 <br>
 
