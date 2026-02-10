@@ -1,6 +1,6 @@
 #!/bin/bash
 set -u
-# PostToolUse: Auto-update STATE.md + .execution-state.json on PLAN/SUMMARY writes
+# PostToolUse: Auto-update STATE.md, ROADMAP.md + .execution-state.json on PLAN/SUMMARY writes
 # Non-blocking, fail-open (always exit 0)
 
 update_state_md() {
@@ -27,6 +27,52 @@ update_state_md() {
 
 slug_to_name() {
   echo "$1" | sed 's/^[0-9]*-//' | tr '-' ' ' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1'
+}
+
+update_roadmap() {
+  local phase_dir="$1"
+  local roadmap=".vbw-planning/ROADMAP.md"
+
+  [ -f "$roadmap" ] || return 0
+
+  local dirname phase_num plan_count summary_count status date_str
+  dirname=$(basename "$phase_dir")
+  phase_num=$(echo "$dirname" | sed 's/^\([0-9]*\).*/\1/' | sed 's/^0*//')
+  [ -z "$phase_num" ] && return 0
+
+  plan_count=$(ls -1 "$phase_dir"/*-PLAN.md 2>/dev/null | wc -l | tr -d ' ')
+  summary_count=$(ls -1 "$phase_dir"/*-SUMMARY.md 2>/dev/null | wc -l | tr -d ' ')
+
+  [ "$plan_count" -eq 0 ] && return 0
+
+  if [ "$summary_count" -eq "$plan_count" ]; then
+    status="complete"
+    date_str=$(date +%Y-%m-%d)
+  elif [ "$summary_count" -gt 0 ]; then
+    status="in progress"
+    date_str="-"
+  else
+    status="planned"
+    date_str="-"
+  fi
+
+  # Extract phase name from existing progress table row
+  local existing_name
+  existing_name=$(grep -E "^\| *${phase_num} - " "$roadmap" | head -1 | sed 's/^| *[0-9]* - //' | sed 's/ *|.*//')
+  [ -z "$existing_name" ] && return 0
+
+  # Update progress table row
+  local tmp="${roadmap}.tmp.$$"
+  sed "s/^| *${phase_num} - .*/| ${phase_num} - ${existing_name} | ${summary_count}\/${plan_count} | ${status} | ${date_str} |/" "$roadmap" > "$tmp" 2>/dev/null
+
+  # Check checkbox if phase complete
+  if [ "$status" = "complete" ]; then
+    local tmp2="${roadmap}.tmp2.$$"
+    sed "s/^- \[ \] Phase ${phase_num}:/- [x] Phase ${phase_num}:/" "$tmp" > "$tmp2" 2>/dev/null && \
+      mv "$tmp2" "$tmp" 2>/dev/null || rm -f "$tmp2" 2>/dev/null
+  fi
+
+  mv "$tmp" "$roadmap" 2>/dev/null || rm -f "$tmp" 2>/dev/null
 }
 
 advance_phase() {
@@ -85,6 +131,7 @@ FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // ""' 2>/dev/null)
 # PLAN.md trigger: update plan count + activate status
 if echo "$FILE_PATH" | grep -qE 'phases/[^/]+/[0-9]+-[0-9]+-PLAN\.md$'; then
   update_state_md "$(dirname "$FILE_PATH")"
+  update_roadmap "$(dirname "$FILE_PATH")"
   # Status: ready → active when a plan is written
   _sm=".vbw-planning/STATE.md"
   if [ -f "$_sm" ] && grep -q '^Status: ready' "$_sm" 2>/dev/null; then
@@ -144,6 +191,7 @@ jq --arg phase "$PHASE" --arg plan "$PLAN" --arg status "$STATUS" '
 ' "$STATE_FILE" > "$TEMP_FILE" 2>/dev/null && mv "$TEMP_FILE" "$STATE_FILE" 2>/dev/null
 
 update_state_md "$(dirname "$FILE_PATH")"
+update_roadmap "$(dirname "$FILE_PATH")"
 advance_phase "$(dirname "$FILE_PATH")"
 
 exit 0
