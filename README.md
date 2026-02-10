@@ -177,6 +177,7 @@ For the "I'll just prompt carefully" crowd.
 | Skills exist somewhere | Stack-aware skill discovery and auto-suggestion |
 | Generic "what now?" after every command | Context-aware next-action suggestions with plan IDs, phase names, staleness % |
 | Technical output only | Plain-language "What happened" summary after builds (toggleable) |
+| Implicit cross-phase dependencies | Explicit `cross_phase_deps` in plans, validated before execution |
 
 <br>
 
@@ -191,6 +192,14 @@ Every command ends with a "Next Up" block suggesting what to do next. These sugg
 - When phases remain: names the next phase instead of generic "continue building"
 
 Build reports also include a plain-language "What happened" summary -- 2-4 sentences explaining what was built, any deviations, and the QA outcome in plain English. No plan IDs, no wave numbers, no frontmatter jargon. Veterans can disable it with `/vbw:config plain_summary false`.
+
+<br>
+
+### Cross-phase dependency intelligence
+
+Plans within a phase already have `depends_on` for intra-phase ordering. But what about cross-phase dependencies -- when Phase 3 needs files that Phase 2 was supposed to create?
+
+VBW's Lead agent explicitly declares these in `cross_phase_deps` frontmatter during planning: which phase, which plan, which artifact, and why. Before execution starts, the execute command validates every dependency -- checking that the source plan completed successfully and the artifact exists on disk. If a dependency is unsatisfied, you get a clear error naming the failing plan and a fix command, not a mystery failure halfway through the build.
 
 <br>
 
