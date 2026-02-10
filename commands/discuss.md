@@ -48,7 +48,8 @@ Roadmap:
 ## Decisions Made
 {Decisions locked during discussion}
 ```
-4. **Confirm:** Show summary, ask for corrections. Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh discuss` and display.
+4. **Discovery memory:** Read `.vbw-planning/discovery.json` (create `{"answered":[],"inferred":[]}` if missing). Append each question+answer from step 2 to `answered[]` (category from question type, phase="{phase-number}", date=today). Extract inferences and append to `inferred[]`. Write back. This ensures `/vbw:implement` Phase Discovery skips questions already answered here.
+5. **Confirm:** Show summary, ask for corrections. Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/suggest-next.sh discuss` and display.
 
 ## Output Format
 
