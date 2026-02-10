@@ -2,6 +2,20 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.0.99] - 2026-02-10
+
+### Fixed
+
+- **`security-filter.sh`** -- `.planning/` block now conditional on VBW markers, so GSD can write to its own directory when VBW is not the active caller. Previously blocked GSD unconditionally in every project.
+- **`/vbw:init`** -- creates `.vbw-session` marker after enabling GSD isolation, so the security filter allows VBW writes during the remainder of the init flow (codebase mapping).
+
+### Changed
+
+- **Autonomy level rename** -- `dangerously-vibe` renamed to `pure-vibe` across all commands, references, README, and changelog. Tone adjusted to be informative without scare language.
+- **Statusline economy line** -- renamed "Cache" to "Prompt Cache" for clarity.
+
+---
+
 ## [1.0.98] - 2026-02-10
 
 ### Added
