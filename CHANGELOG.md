@@ -2,6 +2,15 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.10.10] - 2026-02-11
+
+### Fixed
+
+- **`refs`** -- purge all stale `/vbw:implement` and standalone command references from shipped code
+- **`meta`** -- correct stale counts in README (9→10 reference files, 11→15 disable-model-invocation commands) and agent memory (27→20 commands, 18→20 hooks, 8→11 event types)
+
+---
+
 ## [1.10.9] - 2026-02-11
 
 ### Fixed
