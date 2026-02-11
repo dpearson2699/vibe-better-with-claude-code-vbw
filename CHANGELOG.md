@@ -2,6 +2,22 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **`statusline`** -- model profile display on L1 after Effort field. Shows current active profile (quality/balanced/budget) dynamically from config.json.
+
+### Changed
+
+- **`defaults`, `init`, `session-start`, `suggest-next`, `statusline`** -- default model profile changed from "balanced" to "quality". New VBW installations and auto-migrations now use Opus for Lead/Dev/Architect/Debugger by default for better output quality.
+
+### Fixed
+
+- **`pre-push-hook`** -- hook now skips enforcement in non-VBW repos. Added early exit guard that checks for VERSION and scripts/bump-version.sh files. If both absent, hook exits cleanly without blocking pushes. Fixes issue where installing VBW plugin blocked git pushes in existing brownfield repositories.
+
+---
+
 ## [1.10.14] - 2026-02-11
 
 ### Added
