@@ -2,10 +2,13 @@
 
 All notable changes to VBW will be documented in this file.
 
-## [1.10.7] - 2026-02-11
+## [1.10.8] - 2026-02-11
 
 ### Added
 
+- **`/vbw:vibe`** -- single intelligent lifecycle command replacing 10 absorbed commands (implement, plan, execute, discuss, assumptions, add-phase, insert-phase, remove-phase, archive, audit). 293 lines, 11 modes, 3 input paths (state detection, NL intent parsing, flags), mandatory confirmation gates. 76/76 automated verification checks PASS.
+- **`references/execute-protocol.md`** -- execution orchestration logic (Steps 2-5) extracted from execute.md for on-demand loading by vibe.md Execute mode. Zero per-request cost.
+- **`scripts/verify-vibe.sh`** -- 241-line automated verification script validating all 25 vibe command requirements across 6 groups.
 - **Context compiler milestone** -- 3-phase optimization reducing agent context loading by 25-35% across all project sizes. 14 feat/refactor commits, 65/65 QA checks (3 phases, all PASS). Agents now receive deterministic, role-specific context instead of loading full project state.
 - **`scripts/compile-context.sh`** -- new script producing `.context-lead.md` (filtered requirements + decisions), `.context-dev.md` (phase goal + conventions + bundled skills), `.context-qa.md` (verification targets). Config-gated with `context_compiler` toggle.
 - **`config`** -- `context_compiler` toggle (default: `true`) in `config/defaults.json`. Setting to `false` reverts all compilation to direct file reads.
@@ -22,6 +25,8 @@ All notable changes to VBW will be documented in this file.
 ### Fixed
 
 - **`hooks`** -- `pre-push-hook.sh` restored to actual validation logic (was replaced by delegator wrapper causing infinite recursion).
+- **`hooks`** -- `qa-gate.sh` tightened from any-recent-summary heuristic to structural plan-vs-summary count. Prevents missing SUMMARY.md from being masked by sibling plan completions.
+- **`commands`** -- `execute.md` Step 3b added: SUMMARY.md verification gate after Dev completion. Ensures every plan produces its summary before proceeding to QA.
 
 ### Removed
 

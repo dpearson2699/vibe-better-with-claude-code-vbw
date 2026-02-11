@@ -6,10 +6,10 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 
 ## Active Context
 
-**Work:** Vibe Command (3 phases)
-**Phase:** 1 of 3 — Create + Wire
-**Status:** Ready for planning
-**Next action:** /vbw:vibe to plan and build Phase 1
+**Work:** None (milestone archived)
+**Last shipped:** Vibe Command — 29→20 commands, 76/76 QA checks, /vbw:vibe replaces 10 lifecycle commands
+**Status:** Ready for new work
+**Next action:** /vbw:vibe to bootstrap next milestone
 
 ## VBW Rules
 
