@@ -9,6 +9,7 @@ if ! command -v jq &>/dev/null; then
 fi
 
 PLANNING_DIR=".vbw-planning"
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 
 # Clean compaction marker at session start (fresh-session guarantee, REQ-15)
 rm -f "$PLANNING_DIR/.compaction-marker" 2>/dev/null
@@ -16,10 +17,10 @@ rm -f "$PLANNING_DIR/.compaction-marker" 2>/dev/null
 UPDATE_MSG=""
 
 # --- First-run welcome (DXP-03) ---
-VBW_MARKER="$HOME/.claude/.vbw-welcomed"
+VBW_MARKER="$CLAUDE_DIR/.vbw-welcomed"
 WELCOME_MSG=""
 if [ ! -f "$VBW_MARKER" ]; then
-  mkdir -p "$HOME/.claude" 2>/dev/null
+  mkdir -p "$CLAUDE_DIR" 2>/dev/null
   touch "$VBW_MARKER" 2>/dev/null
   WELCOME_MSG="FIRST RUN -- Display this welcome to the user verbatim: Welcome to VBW -- Vibe Better with Claude Code. You're not an engineer anymore. You're a prompt jockey with commit access. At least do it properly. Quick start: /vbw:vibe -- describe your project and VBW handles the rest. Type /vbw:help for the full story. --- "
 fi
@@ -60,11 +61,11 @@ else
 fi
 
 # --- Migrate statusLine if using old for-loop pattern ---
-SETTINGS_FILE="$HOME/.claude/settings.json"
+SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 if [ -f "$SETTINGS_FILE" ]; then
   SL_CMD=$(jq -r '.statusLine.command // .statusLine // ""' "$SETTINGS_FILE" 2>/dev/null)
   if echo "$SL_CMD" | grep -q 'for f in' && echo "$SL_CMD" | grep -q 'vbw-statusline'; then
-    CORRECT_CMD="bash -c 'f=\$(ls -1 \"\$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/vbw-statusline.sh 2>/dev/null | sort -V | tail -1) && [ -f \"\$f\" ] && exec bash \"\$f\"'"
+    CORRECT_CMD="bash -c 'f=\$(ls -1 \"\${CLAUDE_CONFIG_DIR:-\$HOME/.claude}\"/plugins/cache/vbw-marketplace/vbw/*/scripts/vbw-statusline.sh 2>/dev/null | sort -V | tail -1) && [ -f \"\$f\" ] && exec bash \"\$f\"'"
     cp "$SETTINGS_FILE" "${SETTINGS_FILE}.bak"
     if ! jq --arg cmd "$CORRECT_CMD" '.statusLine = {"type": "command", "command": $cmd}' "$SETTINGS_FILE" > "${SETTINGS_FILE}.tmp"; then
       cp "${SETTINGS_FILE}.bak" "$SETTINGS_FILE"
@@ -77,7 +78,7 @@ if [ -f "$SETTINGS_FILE" ]; then
 fi
 
 # --- Clean old cache versions (keep only latest) ---
-CACHE_DIR="$HOME/.claude/plugins/cache/vbw-marketplace/vbw"
+CACHE_DIR="$CLAUDE_DIR/plugins/cache/vbw-marketplace/vbw"
 VBW_CLEANUP_LOCK="/tmp/vbw-cache-cleanup-lock"
 if [ -d "$CACHE_DIR" ] && mkdir "$VBW_CLEANUP_LOCK" 2>/dev/null; then
   VERSIONS=$(ls -d "$CACHE_DIR"/*/ 2>/dev/null | sort -V)
@@ -107,7 +108,7 @@ if [ -d "$CACHE_DIR" ]; then
 fi
 
 # --- Auto-sync stale marketplace checkout ---
-MKT_DIR="$HOME/.claude/plugins/marketplaces/vbw-marketplace"
+MKT_DIR="$CLAUDE_DIR/plugins/marketplaces/vbw-marketplace"
 if [ -d "$MKT_DIR/.git" ] && [ -d "$CACHE_DIR" ]; then
   MKT_VER=$(jq -r '.version // "0"' "$MKT_DIR/.claude-plugin/plugin.json" 2>/dev/null)
   CACHE_VER=$(jq -r '.version // "0"' "$(ls -d "$CACHE_DIR"/*/.claude-plugin/plugin.json 2>/dev/null | sort -V | tail -1)" 2>/dev/null)
@@ -133,9 +134,9 @@ if [ -d "$MKT_DIR/.git" ] && [ -d "$CACHE_DIR" ]; then
   fi
 fi
 
-# --- Sync commands to ~/.claude/commands/vbw/ for autocomplete prefix ---
-VBW_CACHE_CMD=$(ls -d "$HOME"/.claude/plugins/cache/vbw-marketplace/vbw/*/commands 2>/dev/null | sort -V | tail -1)
-VBW_GLOBAL_CMD="$HOME/.claude/commands/vbw"
+# --- Sync commands to CLAUDE_DIR/commands/vbw/ for autocomplete prefix ---
+VBW_CACHE_CMD=$(ls -d "$CLAUDE_DIR"/plugins/cache/vbw-marketplace/vbw/*/commands 2>/dev/null | sort -V | tail -1)
+VBW_GLOBAL_CMD="$CLAUDE_DIR/commands/vbw"
 if [ -d "$VBW_CACHE_CMD" ]; then
   mkdir -p "$VBW_GLOBAL_CMD"
   rm -f "$VBW_GLOBAL_CMD"/*.md 2>/dev/null

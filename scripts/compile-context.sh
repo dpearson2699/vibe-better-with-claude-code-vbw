@@ -116,7 +116,7 @@ case "$ROLE" in
           echo "### Skills Reference"
           echo ""
           while IFS= read -r skill; do
-            SKILL_FILE="$HOME/.claude/skills/${skill}/SKILL.md"
+            SKILL_FILE="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/${skill}/SKILL.md"
             if [ -f "$SKILL_FILE" ]; then
               echo "#### ${skill}"
               cat "$SKILL_FILE"

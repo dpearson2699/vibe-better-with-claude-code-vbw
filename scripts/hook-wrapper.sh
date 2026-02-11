@@ -15,7 +15,8 @@ SCRIPT="$1"; shift
 [ -z "$SCRIPT" ] && exit 0
 
 # Resolve from plugin cache (version-sorted, latest wins)
-CACHE="$HOME/.claude/plugins/cache/vbw-marketplace/vbw"
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+CACHE="$CLAUDE_DIR/plugins/cache/vbw-marketplace/vbw"
 TARGET=$(ls -1 "$CACHE"/*/scripts/"$SCRIPT" 2>/dev/null \
   | (sort -V 2>/dev/null || sort -t. -k1,1n -k2,2n -k3,3n) | tail -1)
 [ -z "$TARGET" ] || [ ! -f "$TARGET" ] && exit 0

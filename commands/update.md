@@ -8,13 +8,15 @@ allowed-tools: Read, Bash, Glob
 
 # VBW Update $ARGUMENTS
 
+**Resolve config directory:** `CLAUDE_DIR` = env var `CLAUDE_CONFIG_DIR` if set, otherwise `~/.claude`. Use for all config paths below.
+
 ## Steps
 
 ### Step 1: Read current INSTALLED version
 
 Read the **cached** version (what user actually has installed):
 ```bash
-cat ~/.claude/plugins/cache/vbw-marketplace/vbw/*/VERSION 2>/dev/null | sort -V | tail -1
+cat "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/plugins/cache/vbw-marketplace/vbw/*/VERSION 2>/dev/null | sort -V | tail -1
 ```
 Store as `old_version`. If empty, fall back to `${CLAUDE_PLUGIN_ROOT}/VERSION`.
 
@@ -37,7 +39,7 @@ If remote == old: display "✓ Already at latest (v{old_version}). Refreshing ca
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/cache-nuke.sh
 ```
-Removes ~/.claude/plugins/cache/vbw-marketplace/vbw/, ~/.claude/commands/vbw/, /tmp/vbw-* for pristine update.
+Removes CLAUDE_DIR/plugins/cache/vbw-marketplace/vbw/, CLAUDE_DIR/commands/vbw/, /tmp/vbw-* for pristine update.
 
 ### Step 5: Perform update
 
@@ -56,25 +58,26 @@ Try in order (stop at first success):
 
 **Re-sync global commands** (after A or B succeeds):
 ```bash
-VBW_CACHE_CMD=$(ls -d ~/.claude/plugins/cache/vbw-marketplace/vbw/*/commands 2>/dev/null | sort -V | tail -1)
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+VBW_CACHE_CMD=$(ls -d "$CLAUDE_DIR"/plugins/cache/vbw-marketplace/vbw/*/commands 2>/dev/null | sort -V | tail -1)
 if [ -d "$VBW_CACHE_CMD" ]; then
-  mkdir -p ~/.claude/commands/vbw
-  cp "$VBW_CACHE_CMD"/*.md ~/.claude/commands/vbw/ 2>/dev/null
+  mkdir -p "$CLAUDE_DIR/commands/vbw"
+  cp "$VBW_CACHE_CMD"/*.md "$CLAUDE_DIR/commands/vbw/" 2>/dev/null
 fi
 ```
 
 ### Step 5.5: Ensure VBW statusline
 
-Read `~/.claude/settings.json`, check `statusLine` (string or object .command). If contains `vbw-statusline`: skip. Otherwise update to:
+Read `CLAUDE_DIR/settings.json`, check `statusLine` (string or object .command). If contains `vbw-statusline`: skip. Otherwise update to:
 ```json
-{"type": "command", "command": "bash -c 'f=$(ls -1 \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/vbw-statusline.sh 2>/dev/null | sort -V | tail -1) && [ -f \"$f\" ] && exec bash \"$f\"'"}
+{"type": "command", "command": "bash -c 'f=$(ls -1 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\"/plugins/cache/vbw-marketplace/vbw/*/scripts/vbw-statusline.sh 2>/dev/null | sort -V | tail -1) && [ -f \"$f\" ] && exec bash \"$f\"'"}
 ```
 Use jq to write (backup, update, restore on failure). Display `✓ Statusline restored (restart to activate)` if changed.
 
 ### Step 6: Verify update
 
 ```bash
-NEW_CACHED=$(cat ~/.claude/plugins/cache/vbw-marketplace/vbw/*/VERSION 2>/dev/null | sort -V | tail -1)
+NEW_CACHED=$(cat "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/plugins/cache/vbw-marketplace/vbw/*/VERSION 2>/dev/null | sort -V | tail -1)
 ```
 Use NEW_CACHED as authoritative version. If empty or equals old_version when it shouldn't: "⚠ Update may not have applied. Try /vbw:update again after restart."
 

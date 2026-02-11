@@ -22,7 +22,7 @@ Project files:
 ```
 Skills:
 ```
-!`ls ~/.claude/skills/ 2>/dev/null || echo "No global skills"`
+!`ls "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/" 2>/dev/null || echo "No global skills"`
 ```
 ```
 !`ls .claude/skills/ 2>/dev/null || echo "No project skills"`
@@ -43,7 +43,9 @@ Skills:
 
 **CRITICAL: Complete ENTIRE step (including writing settings.json) BEFORE Step 1. Use AskUserQuestion for prompts. Wait for answers. Write settings.json. Only then proceed.**
 
-Read `~/.claude/settings.json` (create `{}` if missing).
+**Resolve config directory:** Check env var `CLAUDE_CONFIG_DIR`. If set, use that as `CLAUDE_DIR`. Otherwise default to `~/.claude`. Use `CLAUDE_DIR` for all config paths in this command.
+
+Read `CLAUDE_DIR/settings.json` (create `{}` if missing).
 
 **0a. Agent Teams:** Check `env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` == `"1"`.
 - Enabled: display "✓ Agent Teams — enabled", go to 0b
@@ -62,7 +64,7 @@ AskUserQuestion text: "○ VBW includes a custom status line showing phase progr
 
 If approved, set `statusLine` to:
 ```json
-{"type": "command", "command": "bash -c 'f=$(ls -1 \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/vbw-statusline.sh 2>/dev/null | sort -V | tail -1) && [ -f \"$f\" ] && exec bash \"$f\"'"}
+{"type": "command", "command": "bash -c 'f=$(ls -1 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\"/plugins/cache/vbw-marketplace/vbw/*/scripts/vbw-statusline.sh 2>/dev/null | sort -V | tail -1) && [ -f \"$f\" ] && exec bash \"$f\"'"}
 ```
 Object format with `type`+`command` is **required** — plain string fails silently.
 If declined: display "○ Skipped. Run /vbw:config to install it later."
@@ -97,7 +99,7 @@ Create `.vbw-planning/phases/`. Ensure config.json includes `"agent_teams": true
 
 ### Step 1.7: GSD isolation (conditional)
 
-**1.7a. Detection:** `[ -d "$HOME/.claude/commands/gsd" ] || [ -d ".planning" ]`
+**1.7a. Detection:** `[ -d "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/commands/gsd" ] || [ -d ".planning" ]`
 - Neither true: GSD_DETECTED=false, display nothing, skip to Step 2
 - Either true: GSD_DETECTED=true, proceed to 1.7b
 
@@ -158,9 +160,9 @@ If greenfield: write `{"conventions": []}`. Display: `○ Conventions — none y
 **3d. Unified skill prompt:** Combine curated (from 2b) + registry (from 3c) results into single AskUserQuestion multiSelect. Tag `(curated)` or `(registry)`. Max 4 options + "Skip". Install selected: `npx skills add <skill> -g -y`.
 
 **3e.** Write Skills section to STATE.md (SKIL-05 capability map). Protocol:
-  1. **Discovery (SKIL-01):** Scan `~/.claude/skills/` (global), `.claude/skills/` (project), `.claude/mcp.json` (mcp). Record name, scope, path per skill.
+  1. **Discovery (SKIL-01):** Scan `CLAUDE_DIR/skills/` (global), `.claude/skills/` (project), `.claude/mcp.json` (mcp). Record name, scope, path per skill.
   2. **Stack detection (SKIL-02):** Read `${CLAUDE_PLUGIN_ROOT}/config/stack-mappings.json`. For each category, match `detect` patterns via Glob/file content. Collect `recommended_skills[]`.
-  3. **find-skills bootstrap (SKIL-06):** Check `~/.claude/skills/find-skills/` or `~/.agents/skills/find-skills/`. If missing + `skill_suggestions=true`: offer install (`npx skills add vercel-labs/skills --skill find-skills -g -y`).
+  3. **find-skills bootstrap (SKIL-06):** Check `CLAUDE_DIR/skills/find-skills/` or `~/.agents/skills/find-skills/`. If missing + `skill_suggestions=true`: offer install (`npx skills add vercel-labs/skills --skill find-skills -g -y`).
   4. **Suggestions (SKIL-03/04):** Compare recommended vs installed. Tag each `(curated)` or `(registry)`. If `auto_install_skills=true`: auto-install. Else: display with install commands.
   5. **Write STATE.md section:** Format: `### Skills` / `**Installed:** {list or "None detected"}` / `**Suggested:** {list or "None"}` / `**Stack detected:** {comma-separated}` / `**Registry available:** yes/no`
 

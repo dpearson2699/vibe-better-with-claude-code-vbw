@@ -15,8 +15,9 @@ if [[ "${1:-}" == "--keep-latest" ]]; then
   KEEP_LATEST=true
 fi
 
-PLUGIN_CACHE_DIR="$HOME/.claude/plugins/cache/vbw-marketplace/vbw"
-GLOBAL_CMD_DIR="$HOME/.claude/commands/vbw"
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+PLUGIN_CACHE_DIR="$CLAUDE_DIR/plugins/cache/vbw-marketplace/vbw"
+GLOBAL_CMD_DIR="$CLAUDE_DIR/commands/vbw"
 UID_TAG="$(id -u)"
 
 wiped_plugin_cache=false

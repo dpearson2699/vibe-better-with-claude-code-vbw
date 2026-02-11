@@ -12,7 +12,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob
 
 Settings:
 ```
-!`cat ~/.claude/settings.json 2>/dev/null || echo "{}"`
+!`cat "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json" 2>/dev/null || echo "{}"`
 ```
 Planning dir: `!`ls -d .vbw-planning 2>/dev/null && echo "EXISTS" || echo "NONE"``
 CLAUDE.md: `!`ls CLAUDE.md 2>/dev/null && echo "EXISTS" || echo "NONE"``
@@ -25,11 +25,11 @@ Display Phase Banner "VBW Uninstall" explaining system-level config removal. Pro
 
 ### Step 2: Remove global commands
 
-If `~/.claude/commands/vbw/` exists: `rm -rf ~/.claude/commands/vbw/`. If parent now empty, remove it too. Display ✓.
+If `CLAUDE_DIR/commands/vbw/` exists (where CLAUDE_DIR = `$CLAUDE_CONFIG_DIR` or `~/.claude`): `rm -rf CLAUDE_DIR/commands/vbw/`. If parent now empty, remove it too. Display ✓.
 
 ### Step 3: Clean statusLine
 
-Read `~/.claude/settings.json`. If statusLine contains `vbw-statusline`: remove entire statusLine key, display ✓. If not VBW's: "○ Statusline is not VBW's — skipped".
+Read `CLAUDE_DIR/settings.json`. If statusLine contains `vbw-statusline`: remove entire statusLine key, display ✓. If not VBW's: "○ Statusline is not VBW's — skipped".
 
 ### Step 4: Clean Agent Teams env var
 
