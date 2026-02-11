@@ -11,6 +11,14 @@ fi
 PLANNING_DIR=".vbw-planning"
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 
+# Auto-migrate config if .vbw-planning exists
+if [ -d "$PLANNING_DIR" ] && [ -f "$PLANNING_DIR/config.json" ]; then
+  if ! jq -e '.model_profile' "$PLANNING_DIR/config.json" >/dev/null 2>&1; then
+    TMP=$(mktemp)
+    jq '. + {model_profile: "balanced", model_overrides: {}}' "$PLANNING_DIR/config.json" > "$TMP" && mv "$TMP" "$PLANNING_DIR/config.json"
+  fi
+fi
+
 # Clean compaction marker at session start (fresh-session guarantee, REQ-15)
 rm -f "$PLANNING_DIR/.compaction-marker" 2>/dev/null
 
