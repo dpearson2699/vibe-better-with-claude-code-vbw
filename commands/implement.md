@@ -145,8 +145,9 @@ Display: `✓ Planning complete -- transitioning to execution...`
 Read `${CLAUDE_PLUGIN_ROOT}/commands/execute.md` for full protocol.
 
 1.5. **Compile context:** If `config_context_compiler=true`, run:
-   `bash ${CLAUDE_PLUGIN_ROOT}/scripts/compile-context.sh {next_phase} dev {phases_dir}`
+   `bash ${CLAUDE_PLUGIN_ROOT}/scripts/compile-context.sh {next_phase} dev {phases_dir} {plan_path}`
    `bash ${CLAUDE_PLUGIN_ROOT}/scripts/compile-context.sh {next_phase} qa {phases_dir}`
+   The plan_path enables skill bundling into .context-dev.md.
    Include compiled context paths in Dev and QA task descriptions (execute.md will use them). If failed, proceed without.
 
 1. Parse effort, load plans
