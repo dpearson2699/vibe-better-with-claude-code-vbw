@@ -31,15 +31,25 @@ Recent commits:
 
 **Path A: Competing Hypotheses** (effort=high AND ambiguous):
 - Generate 3 hypotheses (cause, codebase area, confirming evidence)
+- Resolve Debugger model:
+  ```bash
+  DEBUGGER_MODEL=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh debugger .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json)
+  if [ $? -ne 0 ]; then echo "$DEBUGGER_MODEL" >&2; exit 1; fi
+  ```
 - Create Agent Team "debug-{timestamp}" via TeamCreate
 - Create 3 tasks via TaskCreate, each with: bug report, ONE hypothesis only (no cross-contamination), working dir, instruction to report via `debugger_report` schema (see `${CLAUDE_PLUGIN_ROOT}/references/handoff-schemas.md`)
-- Spawn 3 vbw-debugger teammates, one task each
+- Spawn 3 vbw-debugger teammates, one task each. **Add `model: "${DEBUGGER_MODEL}"` parameter to each Task spawn.**
 - Wait for completion. Synthesize: strongest evidence + highest confidence wins. Multiple confirmed = contributing factors.
 - Winning hypothesis with fix: apply + commit `fix({scope}): {description}`
 - Shutdown: send shutdown to each teammate, wait for approval, re-request if rejected, then TeamDelete.
 
 **Path B: Standard** (all other cases):
-Spawn vbw-debugger as subagent via Task tool:
+- Resolve Debugger model:
+  ```bash
+  DEBUGGER_MODEL=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh debugger .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json)
+  if [ $? -ne 0 ]; then echo "$DEBUGGER_MODEL" >&2; exit 1; fi
+  ```
+- Spawn vbw-debugger as subagent via Task tool. **Add `model: "${DEBUGGER_MODEL}"` parameter.**
 ```
 Bug investigation. Effort: {DEBUGGER_EFFORT}.
 Bug report: {description}.
