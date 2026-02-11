@@ -138,7 +138,7 @@ fi
 FAST_CF="${_CACHE}-fast"
 
 if ! cache_fresh "$FAST_CF" 5; then
-  PH=""; TT=""; EF="balanced"; BR=""
+  PH=""; TT=""; EF="balanced"; MP="quality"; BR=""
   PD=0; PT=0; PPD=0; QA="--"; GH_URL=""
   if [ -f ".vbw-planning/STATE.md" ]; then
     PH=$(grep -m1 "^Phase:" .vbw-planning/STATE.md | grep -oE '[0-9]+' | head -1)
@@ -148,9 +148,10 @@ if ! cache_fresh "$FAST_CF" 5; then
     # Auto-migrate: add model_profile if missing
     if ! jq -e '.model_profile' .vbw-planning/config.json >/dev/null 2>&1; then
       TMP=$(mktemp)
-      jq '. + {model_profile: "balanced", model_overrides: {}}' .vbw-planning/config.json > "$TMP" && mv "$TMP" .vbw-planning/config.json
+      jq '. + {model_profile: "quality", model_overrides: {}}' .vbw-planning/config.json > "$TMP" && mv "$TMP" .vbw-planning/config.json
     fi
     EF=$(jq -r '.effort // "balanced"' .vbw-planning/config.json 2>/dev/null)
+    MP=$(jq -r '.model_profile // "quality"' .vbw-planning/config.json 2>/dev/null)
   fi
   if git rev-parse --git-dir >/dev/null 2>&1; then
     BR=$(git branch --show-current 2>/dev/null)
@@ -188,11 +189,11 @@ if ! cache_fresh "$FAST_CF" 5; then
     AGENT_DATA="${AGENT_N}"
   fi
 
-  printf '%s\n' "${PH:-0}|${TT:-0}|${EF}|${BR}|${PD}|${PT}|${PPD}|${QA}|${GH_URL}|${GIT_STAGED:-0}|${GIT_MODIFIED:-0}|${GIT_AHEAD:-0}|${EXEC_STATUS:-}|${EXEC_WAVE:-0}|${EXEC_TWAVES:-0}|${EXEC_DONE:-0}|${EXEC_TOTAL:-0}|${EXEC_CURRENT:-}|${AGENT_DATA:-0}" > "$FAST_CF" 2>/dev/null
+  printf '%s\n' "${PH:-0}|${TT:-0}|${EF}|${MP}|${BR}|${PD}|${PT}|${PPD}|${QA}|${GH_URL}|${GIT_STAGED:-0}|${GIT_MODIFIED:-0}|${GIT_AHEAD:-0}|${EXEC_STATUS:-}|${EXEC_WAVE:-0}|${EXEC_TWAVES:-0}|${EXEC_DONE:-0}|${EXEC_TOTAL:-0}|${EXEC_CURRENT:-}|${AGENT_DATA:-0}" > "$FAST_CF" 2>/dev/null
 fi
 
 if [ -O "$FAST_CF" ]; then
-  IFS='|' read -r PH TT EF BR PD PT PPD QA GH_URL GIT_STAGED GIT_MODIFIED GIT_AHEAD \
+  IFS='|' read -r PH TT EF MP BR PD PT PPD QA GH_URL GIT_STAGED GIT_MODIFIED GIT_AHEAD \
                   EXEC_STATUS EXEC_WAVE EXEC_TWAVES EXEC_DONE EXEC_TOTAL EXEC_CURRENT \
                   AGENT_N < "$FAST_CF"
 fi
@@ -374,14 +375,14 @@ elif [ "$EXEC_STATUS" = "complete" ]; then
   L1="${C}${B}[VBW]${X}"
   [ "$TT" -gt 0 ] 2>/dev/null && L1="$L1 Phase ${PH}/${TT}" || L1="$L1 Phase ${PH:-?}"
   [ "$PT" -gt 0 ] 2>/dev/null && L1="$L1 ${D}│${X} Plans: ${PD}/${PT} (${PPD} this phase)"
-  L1="$L1 ${D}│${X} Effort: $EF"
+  L1="$L1 ${D}│${X} Effort: $EF ${D}│${X} Model: $MP"
   if [ "$QA" = "pass" ]; then L1="$L1 ${D}│${X} ${G}QA: pass${X}"
   else L1="$L1 ${D}│${X} ${D}QA: --${X}"; fi
 elif [ -d ".vbw-planning" ]; then
   L1="${C}${B}[VBW]${X}"
   [ "$TT" -gt 0 ] 2>/dev/null && L1="$L1 Phase ${PH}/${TT}" || L1="$L1 Phase ${PH:-?}"
   [ "$PT" -gt 0 ] 2>/dev/null && L1="$L1 ${D}│${X} Plans: ${PD}/${PT} (${PPD} this phase)"
-  L1="$L1 ${D}│${X} Effort: $EF"
+  L1="$L1 ${D}│${X} Effort: $EF ${D}│${X} Model: $MP"
   if [ "$QA" = "pass" ]; then
     L1="$L1 ${D}│${X} ${G}QA: pass${X}"
   else
