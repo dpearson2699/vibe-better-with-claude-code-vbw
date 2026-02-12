@@ -97,8 +97,9 @@ Environment setup complete:
   4. If user approves:
      - Create directory: `mkdir -p .vbw-planning/gsd-archive`
      - Copy contents: `cp -r .planning/* .vbw-planning/gsd-archive/`
-     - Display: "✓ GSD project archived to .vbw-planning/gsd-archive/"
-     - Display: "○ Index generation will run after scaffold completes"
+     - Display: "◆ Generating index..."
+     - Run: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/generate-gsd-index.sh`
+     - Display: "✓ GSD project archived to .vbw-planning/gsd-archive/ (indexed)"
      - Set GSD_IMPORTED=true flag for later steps
      - Proceed to Step 1
 
