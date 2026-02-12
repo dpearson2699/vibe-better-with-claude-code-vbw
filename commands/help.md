@@ -35,6 +35,7 @@ Control which Claude model each agent uses (cost optimization):
 - `/vbw:config model_profile balanced` -- Sonnet for most, Haiku for Scout (~$1.40/phase, default)
 - `/vbw:config model_profile budget` -- Sonnet for critical agents, Haiku for QA/Scout (~$0.70/phase)
 - `/vbw:config model_override dev opus` -- Override single agent without changing profile
+- Interactive mode: Select "Model Profile" → "Configure each agent individually" to set models per-agent (6 questions across 2 rounds). Status display marks overridden agents with asterisk (*).
 
 See: @references/model-profiles.md for full preset definitions and cost comparison.
 

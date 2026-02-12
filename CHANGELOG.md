@@ -2,6 +2,14 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **`config`** -- interactive granular model configuration. Second menu in `/vbw:config` Model Profile flow offers "Use preset profile" or "Configure each agent individually". Individual path presents 6 agent questions across 2 rounds (4+2 split), writes model_overrides to config.json, and displays before/after cost estimate. Status display marks overridden agents with asterisk (*). Feature implemented in commits 1ac752b through 91da54f (Phase 1, Plan 01-01).
+
+---
+
 ## [1.10.15] - 2026-02-11
 
 ### Added
