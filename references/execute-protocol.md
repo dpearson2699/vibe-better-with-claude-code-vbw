@@ -78,6 +78,17 @@ This produces `{phase-dir}/.context-dev.md` with phase goal and conventions.
 The plan_path argument enables skill bundling: compile-context.sh reads skills_used from the plan's frontmatter and bundles referenced SKILL.md content into .context-dev.md. If the plan has no skills_used, this is a no-op.
 If compilation fails, proceed without it — Dev reads files directly.
 
+**V2 Token Budgets (REQ-12):** If `v2_token_budgets=true` in config:
+- After context compilation, enforce per-role token budgets:
+  ```bash
+  bash ${CLAUDE_PLUGIN_ROOT}/scripts/token-budget.sh dev {phase-dir}/.context-dev.md > {phase-dir}/.context-dev.md.tmp && mv {phase-dir}/.context-dev.md.tmp {phase-dir}/.context-dev.md
+  ```
+- Same for QA context: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/token-budget.sh qa {phase-dir}/.context-qa.md > ...`
+- Role caps defined in `config/token-budgets.json`: Scout (200 lines), Lead/Architect (500), QA (600), Dev/Debugger (800).
+- Overage logged to metrics as `token_overage` event with role, lines truncated.
+- Truncation uses tail strategy (keep most recent context).
+- When `v2_token_budgets=false`: no truncation (pass through).
+
 **Model resolution:** Resolve models for Dev and QA agents:
 ```bash
 DEV_MODEL=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/resolve-agent-model.sh dev .vbw-planning/config.json ${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json)
@@ -305,6 +316,12 @@ Display: `◆ Spawning QA agent (${QA_MODEL})...`
 
 **V3 Event Log — phase end (REQ-16):** If `v3_event_log=true` in config:
 - `bash ${CLAUDE_PLUGIN_ROOT}/scripts/log-event.sh phase_end {phase} plans_completed={N} total_tasks={N} 2>/dev/null || true`
+
+**V2 Observability Report (REQ-14):** After phase completion, if `v3_metrics=true` or `v3_event_log=true`:
+- Generate observability report: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/metrics-report.sh {phase}`
+- The report aggregates 7 V2 metrics: task latency, tokens/task, gate failure rate, lease conflicts, resume success, regression escape, fallback %.
+- Display summary table in phase completion output.
+- Dashboards show by profile (thorough|balanced|fast|turbo) and autonomy (cautious|standard|confident|pure-vibe).
 
 **Mark complete:** Set .execution-state.json `"status"` to `"complete"` (statusline auto-deletes on next refresh).
 **Update STATE.md:** phase position, plan completion counts, effort used.
