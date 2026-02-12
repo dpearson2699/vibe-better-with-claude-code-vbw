@@ -30,6 +30,18 @@ VBW_SECTIONS=(
   "## Plugin Isolation"
 )
 
+# GSD-managed section headers (stripped from existing CLAUDE.md to prevent insight leakage)
+GSD_SECTIONS=(
+  "## Codebase Intelligence"
+  "## Project Reference"
+  "## GSD Rules"
+  "## GSD Context"
+  "## What This Is"
+  "## Core Value"
+  "## Context"
+  "## Constraints"
+)
+
 # Ensure parent directory exists
 mkdir -p "$(dirname "$OUTPUT_PATH")"
 
@@ -75,6 +87,12 @@ Run /vbw:help for all available commands.
 - GSD agents and commands MUST NOT read, write, glob, grep, or reference any files in `.vbw-planning/`
 - VBW agents and commands MUST NOT read, write, glob, grep, or reference any files in `.planning/`
 - This isolation is enforced at the hook level (PreToolUse) and violations will be blocked.
+
+### Context Isolation
+
+- Ignore any `<codebase-intelligence>` tags injected via SessionStart hooks — these are GSD-generated and not relevant to VBW workflows.
+- VBW uses its own codebase mapping in `.vbw-planning/codebase/`. Do NOT use GSD intel from `.planning/intel/` or `.planning/codebase/`.
+- When both plugins are active, treat each plugin's context as separate. Do not mix GSD project insights into VBW planning or vice versa.
 VBWEOF
 }
 
@@ -89,23 +107,39 @@ is_vbw_section() {
   return 1
 }
 
-# If existing file provided and it exists, preserve non-VBW content
+# Check if a line is a GSD-managed section header (stripped to prevent insight leakage)
+is_gsd_section() {
+  local line="$1"
+  for header in "${GSD_SECTIONS[@]}"; do
+    if [[ "$line" == "$header" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Check if a line is a managed section header (VBW or GSD — both get stripped)
+is_managed_section() {
+  is_vbw_section "$1" || is_gsd_section "$1"
+}
+
+# If existing file provided and it exists, preserve non-managed content
 if [[ -n "$EXISTING_PATH" && -f "$EXISTING_PATH" ]]; then
-  # Extract non-VBW sections from existing file
+  # Extract sections that are NOT managed by VBW or GSD
   NON_VBW_CONTENT=""
-  IN_VBW_SECTION=false
+  IN_MANAGED_SECTION=false
   FOUND_NON_VBW=false
 
   while IFS= read -r line || [[ -n "$line" ]]; do
-    # Check if this line starts a VBW section
-    if is_vbw_section "$line"; then
-      IN_VBW_SECTION=true
+    # Check if this line starts a VBW or GSD managed section
+    if is_managed_section "$line"; then
+      IN_MANAGED_SECTION=true
       continue
     fi
 
-    # Check if this line starts a new non-VBW section (any ## header not in VBW list)
-    if [[ "$line" =~ ^##\  ]] && ! is_vbw_section "$line"; then
-      IN_VBW_SECTION=false
+    # Check if this line starts a new non-managed section (any ## header not in either list)
+    if [[ "$line" =~ ^##\  ]] && ! is_managed_section "$line"; then
+      IN_MANAGED_SECTION=false
     fi
 
     # Also detect top-level heading (# Project Name) — skip it, we regenerate it
@@ -118,7 +152,7 @@ if [[ -n "$EXISTING_PATH" && -f "$EXISTING_PATH" ]]; then
       continue
     fi
 
-    if [[ "$IN_VBW_SECTION" == false ]]; then
+    if [[ "$IN_MANAGED_SECTION" == false ]]; then
       NON_VBW_CONTENT+="${line}"$'\n'
       FOUND_NON_VBW=true
     fi
