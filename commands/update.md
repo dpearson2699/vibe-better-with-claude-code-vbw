@@ -56,15 +56,12 @@ Try in order (stop at first success):
 - **B) Reinstall:** `claude plugin uninstall vbw@vbw-marketplace 2>&1 && claude plugin install vbw@vbw-marketplace 2>&1`
 - **C) Manual fallback:** display commands for user to run manually, STOP.
 
-**Re-sync global commands** (after A or B succeeds):
+**Clean stale global commands** (after A or B succeeds):
 ```bash
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-VBW_CACHE_CMD=$(ls -d "$CLAUDE_DIR"/plugins/cache/vbw-marketplace/vbw/*/commands 2>/dev/null | sort -V | tail -1)
-if [ -d "$VBW_CACHE_CMD" ]; then
-  mkdir -p "$CLAUDE_DIR/commands/vbw"
-  cp "$VBW_CACHE_CMD"/*.md "$CLAUDE_DIR/commands/vbw/" 2>/dev/null
-fi
+rm -rf "$CLAUDE_DIR/commands/vbw" 2>/dev/null
 ```
+This removes stale copies that break `${CLAUDE_PLUGIN_ROOT}` resolution. Commands load from the plugin cache where `${CLAUDE_PLUGIN_ROOT}` is guaranteed.
 
 ### Step 5.5: Ensure VBW statusline
 
