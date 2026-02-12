@@ -202,56 +202,219 @@ Both branches converge on calling bootstrap-requirements.sh:
 
 ### Mode Routing Table
 
-**Lines 68-76:** State detection table maps conditions to modes. Bootstrap mode is row 2 (priority 2), triggered only when `project_exists=false`.
+**State Detection Table (lines 68-76):**
+
+| Priority | Condition | Mode | Line |
+|----------|-----------|------|------|
+| 1 | `planning_dir_exists=false` | Init Redirect | 71 |
+| 2 | `project_exists=false` | Bootstrap | 72 |
+| 3 | `phase_count=0` | Scope | 73 |
+| 4 | `next_phase_state=needs_plan_and_execute` | Plan + Execute | 74 |
+| 5 | `next_phase_state=needs_execute` | Execute | 75 |
+| 6 | `next_phase_state=all_done` | Archive | 76 |
+
+**Verification:**
+- Bootstrap is Priority 2, only triggered when `project_exists=false`
+- All other modes check different state variables from phase-detect.sh
+- No mode conditions overlap (mutually exclusive routing)
+- Flag-based invocation (Path 1, lines 29-50) bypasses state detection entirely
 
 ### Bootstrap Variables
 
-Bootstrap mode defines these variables within B1-B6 scope:
-- NAME, DESCRIPTION (B1)
-- DISCOVERY_DEPTH (B1.5)
-- PROJECT_NAME, MILESTONE_NAME, PHASE_COUNT (B3-B4)
-- CORE_VALUE (B6)
-- BROWNFIELD flag (B5)
+Bootstrap mode (B1-B7) defines these **local scope** variables:
+
+**Project identity (B1):**
+- `NAME` - Project name from user input or $ARGUMENTS
+- `DESCRIPTION` - Project description from user input
+
+**Discovery settings (B1.5):**
+- `DISCOVERY_DEPTH` - Mapped from active_profile (skip/quick/standard/thorough)
+
+**Roadmap context (B3):**
+- `PROJECT_NAME` - Extracted from PROJECT.md for script calls
+- `/tmp/vbw-phases.json` - Temporary phases JSON file path
+
+**State setup (B4):**
+- `MILESTONE_NAME` - First milestone name (same as PROJECT_NAME typically)
+- `PHASE_COUNT` - Number of phases from phases.json
+
+**CLAUDE.md generation (B6):**
+- `CORE_VALUE` - Extracted from PROJECT.md
+- `EXISTING_PATH` - Optional path to existing CLAUDE.md for preservation
+
+**Brownfield signal (B5):**
+- `BROWNFIELD` - Boolean flag from Guard step (git ls-files or Glob check)
+
+**Scope:** All variables are local to Bootstrap mode execution context. Not persisted to config or state files.
 
 ### Non-Bootstrap Modes
 
-Reviewed all non-Bootstrap modes for references to Bootstrap variables or logic:
+**Complete structural review of all 7 non-Bootstrap modes:**
 
-**Scope (lines 151-161):**
-- Reads PROJECT.md, REQUIREMENTS.md (files, not variables)
-- No Bootstrap variable references ✓
+#### 1. Scope Mode (lines 151-161)
 
-**Discuss (lines 163-173):**
-- Reads ROADMAP.md, writes CONTEXT.md
-- No Bootstrap variable references ✓
+**Purpose:** Define phases after project bootstrapped but no roadmap exists.
 
-**Assumptions (lines 175-183):**
-- Reads project files for context
-- No Bootstrap variable references ✓
+**State inputs:**
+- PROJECT.md (file read)
+- REQUIREMENTS.md (file read)
+- `.vbw-planning/codebase/` (optional, file reads)
 
-**Plan (lines 186-221):**
-- Reads config for effort level
-- No Bootstrap variable references ✓
+**Outputs:**
+- ROADMAP.md (file write)
+- `.vbw-planning/phases/{NN}-{slug}/` directories (create)
+- STATE.md update (file edit)
 
-**Execute (lines 223-238):**
-- Delegates to execute-protocol.md
-- No Bootstrap variable references ✓
+**Bootstrap variable references:** None ✓
 
-**Add/Insert/Remove Phase (lines 240-284):**
-- Operates on ROADMAP.md and phase directories
-- No Bootstrap variable references ✓
+**File dependencies:** Reads files written by Bootstrap, but no variable coupling.
 
-**Archive (lines 286-311):**
-- Reads SUMMARY.md files for metrics
-- No Bootstrap variable references ✓
+#### 2. Discuss Mode (lines 163-173)
 
-### State Mutation
+**Purpose:** Capture phase-specific user feedback via discovery questions.
 
-Bootstrap mode (B1-B7) writes files but does not mutate runtime state used by other modes:
-- Writes: PROJECT.md, REQUIREMENTS.md, ROADMAP.md, STATE.md, CLAUDE.md (all file-based)
-- Does not modify: config.json, phase-detect.sh output, or shared variables
+**State inputs:**
+- ROADMAP.md (phase goal, requirements, success criteria)
+- `.vbw-planning/discovery.json` (optional, append answers)
 
-After B7 (line 149), Bootstrap mode re-evaluates state via phase-detect.sh and routes to the next matching mode. This is a clean transition with no shared mutable state.
+**Outputs:**
+- `.vbw-planning/phases/{phase-dir}/{phase}-CONTEXT.md` (write)
+- `.vbw-planning/discovery.json` (update, append)
+
+**Bootstrap variable references:** None ✓
+
+**Discovery coupling:** Appends to discovery.json (created in Bootstrap B2), but reads/writes file independently.
+
+#### 3. Assumptions Mode (lines 175-183)
+
+**Purpose:** Surface and validate planning assumptions.
+
+**State inputs:**
+- ROADMAP.md, REQUIREMENTS.md, PROJECT.md, STATE.md (file reads)
+- CONTEXT.md (optional, file read)
+- Codebase signals (optional, file scans)
+
+**Outputs:**
+- Ephemeral display only (no file writes in this mode)
+
+**Bootstrap variable references:** None ✓
+
+**Note:** Suggests using `/vbw:vibe --discuss` for persistence, does not modify Bootstrap outputs.
+
+#### 4. Plan Mode (lines 186-221)
+
+**Purpose:** Generate execution plans for a phase.
+
+**State inputs:**
+- ROADMAP.md (phase requirements)
+- config.json (`effort`, `context_compiler`, `model_profile`)
+- discovery.json (optional, for phase discovery)
+- Compiled context (optional, from compile-context.sh)
+
+**Outputs:**
+- `{phase-dir}/{NN}-{MM}-PLAN.md` (via vbw-lead agent)
+- `{phase}-CONTEXT.md` (optional, if phase discovery runs)
+- STATE.md update (phase status)
+
+**Bootstrap variable references:** None ✓
+
+**Model resolution:** Reads config for model profile, calls resolve-agent-model.sh (no Bootstrap coupling).
+
+#### 5. Execute Mode (lines 223-238)
+
+**Purpose:** Delegate to execute-protocol.md for plan execution.
+
+**State inputs:**
+- PLAN.md files (from Plan mode)
+- config.json (`effort`, `skip_qa`, `context_compiler`)
+- Compiled context (optional, from compile-context.sh)
+
+**Outputs:**
+- Per execute-protocol.md (SUMMARY.md, code commits, etc.)
+
+**Bootstrap variable references:** None ✓
+
+**Protocol delegation:** Reads execute-protocol.md and follows its instructions. Bootstrap mode does not influence protocol behavior.
+
+#### 6. Add/Insert/Remove Phase Modes (lines 240-284)
+
+**Purpose:** Mutate phase structure after roadmap created.
+
+**State inputs:**
+- ROADMAP.md (read + edit)
+- Phase directories (scan, rename, create, delete)
+- Active milestone context (if using milestones)
+
+**Outputs:**
+- ROADMAP.md (updated entries, renumbered phases)
+- Phase directories (created, renamed, or deleted)
+- PLAN/SUMMARY files (frontmatter updates, depends_on references)
+
+**Bootstrap variable references:** None ✓
+
+**Isolation:** Operates on ROADMAP structure written by Bootstrap/Scope, but no variable coupling.
+
+#### 7. Archive Mode (lines 286-311)
+
+**Purpose:** Ship completed milestone, archive artifacts.
+
+**State inputs:**
+- ROADMAP.md (phases list)
+- SUMMARY.md files (metrics extraction)
+- REQUIREMENTS.md (coverage check)
+- VERIFICATION.md files (audit check)
+- config.json (optional, for flags)
+
+**Outputs:**
+- `.vbw-planning/milestones/{slug}/` (archived files)
+- SHIPPED.md (summary)
+- Git tag (milestone marker)
+- Git branch merge (if branch exists)
+- CLAUDE.md (regenerated Active Context)
+
+**Bootstrap variable references:** None ✓
+
+**CLAUDE.md regeneration:** Replaces VBW-managed sections only, preserves non-VBW content (same pattern as Bootstrap B6).
+
+### State Mutation Analysis
+
+**Bootstrap mode writes (B1-B7):**
+- PROJECT.md (create)
+- REQUIREMENTS.md (create via bootstrap-requirements.sh)
+- ROADMAP.md (create via bootstrap-roadmap.sh)
+- STATE.md (create via bootstrap-state.sh)
+- CLAUDE.md (create/update via bootstrap-claude.sh)
+- discovery.json (create)
+- `/tmp/vbw-phases.json` (temporary, deleted after use)
+
+**What Bootstrap does NOT modify:**
+- config.json (never written, only read)
+- phase-detect.sh output (ephemeral, re-run per invocation)
+- Git state (no commits in Bootstrap mode)
+- Existing phase directories (none exist during Bootstrap)
+
+**Post-Bootstrap transition (B7):**
+```markdown
+**B7: Transition** -- Display "Bootstrap complete. Transitioning to scoping..." Re-evaluate state, route to next match.
+```
+- Re-runs phase-detect.sh to get fresh state
+- Routes to Scope mode (since PROJECT.md now exists, phase_count=0)
+- Clean handoff: no shared variables, only file-based state
+
+### Mode Independence Verification
+
+**File-based communication only:**
+All modes communicate via files in `.vbw-planning/`, not runtime variables:
+- Bootstrap → Scope: PROJECT.md, REQUIREMENTS.md (files)
+- Scope → Plan: ROADMAP.md (file)
+- Plan → Execute: PLAN.md files (files)
+- Execute → Archive: SUMMARY.md files (files)
+
+**No global state:**
+No mode sets environment variables or modifies config.json. phase-detect.sh re-runs per invocation (stateless).
+
+**Variable scope discipline:**
+All Bootstrap variables (NAME, DESCRIPTION, DISCOVERY_DEPTH, etc.) are local to the Bootstrap mode execution block (B1-B7). Not exported or persisted beyond file writes.
 
 ## Regression Status
 
