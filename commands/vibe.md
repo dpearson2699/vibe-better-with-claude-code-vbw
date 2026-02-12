@@ -102,7 +102,10 @@ If `planning_dir_exists=false`: display "Run /vbw:init first to set up your proj
 **Brownfield detection:** `git ls-files` or Glob check for existing code.
 
 **Steps:**
-- **B1: PROJECT.md** -- If $ARGUMENTS provided (excluding flags), use as description. Otherwise ask name + core purpose. Write immediately.
+- **B1: PROJECT.md** -- If $ARGUMENTS provided (excluding flags), use as description. Otherwise ask name + core purpose. Then call:
+  ```
+  bash ${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap/bootstrap-project.sh .vbw-planning/PROJECT.md "$NAME" "$DESCRIPTION"
+  ```
 - **B1.5: Discovery Depth** -- Read `discovery_questions` and `active_profile` from config. Map profile to depth:
 
   | Profile | Depth | Questions |
