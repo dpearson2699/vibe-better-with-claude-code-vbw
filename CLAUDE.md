@@ -6,10 +6,10 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 
 ## Active Context
 
-**Work:** None (milestone archived)
-**Last shipped:** Vibe Command — 29→20 commands, 76/76 QA checks, /vbw:vibe replaces 10 lifecycle commands
-**Status:** Ready for new work
-**Next action:** /vbw:vibe to bootstrap next milestone
+**Work:** No active milestone
+**Last shipped:** Init Auto-Bootstrap — 4 phases, 6 plans, 28 tasks, 29 commits. Transformed /vbw:init into intelligent, context-aware initialization with brownfield inference, GSD history extraction, confirmation UX, and shared bootstrap scripts.
+**Previous:** Granular Model Config — 2 phases, 2 plans, 6 tasks, 6 commits
+**Next action:** Run /vbw:vibe to start a new milestone, or /vbw:status to review progress
 
 ## VBW Rules
 
@@ -25,6 +25,10 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 
 | Decision | Date | Rationale |
 |----------|------|-----------|
+| 3 preset profiles (quality/balanced/budget) | 2026-02-11 | Covers 95% of use cases; overrides handle edge cases |
+| Balanced as default (Sonnet + Haiku for Scout) | 2026-02-11 | Good quality/cost tradeoff for most projects |
+| Model profile integrated into /vbw:config | 2026-02-11 | One config interface, not separate command |
+| Pass explicit model param to Task tool | 2026-02-11 | Session /model doesn't propagate to subagents |
 | Hard delete old commands (no aliases, no deprecation) | 2026-02-11 | Zero technical debt; CHANGELOG documents the change |
 | Single vibe.md (~300 lines) with inline mode logic | 2026-02-11 | One file = one truth; execute-protocol.md is the only extraction |
 | NL parsing via prompt instructions, not code | 2026-02-11 | Zero maintenance; model improvements are free |
