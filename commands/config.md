@@ -59,7 +59,17 @@ echo "  Lead: $LEAD_DISPLAY | Dev: $DEV_DISPLAY | QA: $QA_DISPLAY | Scout: $SCOU
 - Autonomy: cautious | standard | confident | pure-vibe
 - Verification: quick | standard | deep
 - Max tasks per plan: 3 | 5 | 7
-- Model Profile: quality | balanced | budget
+- Model Profile
+
+**Step 2.5:** If "Model Profile" was selected, AskUserQuestion with 2 options:
+- Use preset profile (quality/balanced/budget)
+- Configure each agent individually (6 questions)
+
+Store selection in variable `PROFILE_METHOD`.
+
+**Branching:**
+- If `PROFILE_METHOD = "Use preset profile"`: AskUserQuestion with 3 options (quality | balanced | budget). Apply selected profile using model profile switching logic (lines 88-130).
+- If `PROFILE_METHOD = "Configure each agent individually"`: Proceed to individual agent configuration flow (see Task 2+ logic below).
 
 **Step 3:** Apply changes to config.json. Display ✓ per changed setting with ➜. No changes: "✓ No changes made."
 
