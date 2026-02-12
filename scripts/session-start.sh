@@ -20,7 +20,10 @@ if [ -d "$PLANNING_DIR" ] && [ -f "$PLANNING_DIR/config.json" ]; then
   # V2 enforcement flags migration
   if ! jq -e '.v2_hard_contracts' "$PLANNING_DIR/config.json" >/dev/null 2>&1; then
     TMP=$(mktemp)
-    jq '. + {v2_hard_contracts: false, v2_hard_gates: false}' "$PLANNING_DIR/config.json" > "$TMP" && mv "$TMP" "$PLANNING_DIR/config.json"
+    jq '. + {v2_hard_contracts: false, v2_hard_gates: false, v2_typed_protocol: false}' "$PLANNING_DIR/config.json" > "$TMP" && mv "$TMP" "$PLANNING_DIR/config.json"
+  elif ! jq -e '.v2_typed_protocol' "$PLANNING_DIR/config.json" >/dev/null 2>&1; then
+    TMP=$(mktemp)
+    jq '. + {v2_typed_protocol: false}' "$PLANNING_DIR/config.json" > "$TMP" && mv "$TMP" "$PLANNING_DIR/config.json"
   fi
 fi
 
