@@ -42,6 +42,7 @@ fi
 date +%s > .vbw-planning/.compaction-marker 2>/dev/null || true
 
 jq -n --arg ctx "$PRIORITIES" '{
+  "hookEventName": "PreCompact",
   "hookSpecificOutput": {
     "additionalContext": ("Compaction priorities: " + $ctx + " Re-read assigned files from disk after compaction.")
   }
