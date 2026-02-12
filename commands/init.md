@@ -300,6 +300,66 @@ Display the detected scenario:
 
 No user interaction in this step. Proceed immediately to Step 6.
 
+### Step 6: Inference & confirmation
+
+Run inference scripts based on the detected scenario, display results, and confirm with the user. Always show inferred data even if fields are null (REQ-03).
+
+**6a. Greenfield branch** (SCENARIO=GREENFIELD or SCENARIO=HYBRID):
+- Display: `○ Greenfield — no codebase context to infer`
+- Set SKIP_INFERENCE=true
+- Skip to Step 7 (discovery questions will be asked inline)
+
+**6b. Brownfield branch** (SCENARIO=BROWNFIELD):
+- Run inference: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/infer-project-context.sh .vbw-planning/codebase/ "$(pwd)"`
+- Capture JSON output to `.vbw-planning/inference.json` via Bash
+- Parse the JSON and display inferred fields:
+  ```
+  ◆ Inferred project context:
+    Name:         {name.value} (source: {name.source})
+    Tech stack:   {tech_stack.value | join(", ")} (source: {tech_stack.source})
+    Architecture: {architecture.value} (source: {architecture.source})
+    Purpose:      {purpose.value} (source: {purpose.source})
+    Features:     {features.value | join(", ")} (source: {features.source})
+  ```
+- For null fields, display: `{field}: (not detected)` — always show every field
+
+**6c. GSD Migration branch** (SCENARIO=GSD_MIGRATION):
+- Run GSD inference: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/infer-gsd-summary.sh .vbw-planning/gsd-archive/`
+- Capture JSON output to `.vbw-planning/gsd-inference.json` via Bash
+- If `.vbw-planning/codebase/` exists, also run: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/infer-project-context.sh .vbw-planning/codebase/ "$(pwd)"`
+  - Capture to `.vbw-planning/inference.json`
+- Display merged results:
+  ```
+  ◆ Inferred from GSD work history:
+    Latest milestone: {latest_milestone.name} ({latest_milestone.status})
+    Recent phases:    {recent_phases | map(.name) | join(", ")}
+    Key decisions:    {key_decisions | join("; ")}
+    Current work:     {current_work.phase} ({current_work.status})
+  ```
+- If codebase inference also ran, display those fields too (same format as 6b)
+- For null fields, display: `{field}: (not detected)` — always show every field
+
+**6d. Confirmation UX** (all non-greenfield scenarios):
+
+Use AskUserQuestion to confirm inferred data:
+
+"Does this look right?"
+
+Options:
+- **"Yes, looks right"** → Proceed to Step 7 with inferred data as-is
+- **"Close, but needs adjustments"** → Enter correction flow (6e)
+- **"Define from scratch"** → Set SKIP_INFERENCE=true, proceed to Step 7
+
+**6e. Correction flow** (when user picks "Close, but needs adjustments"):
+
+Display all fields as a numbered list. Use AskUserQuestion: "Which fields would you like to correct? (enter numbers, comma-separated)"
+
+For each selected field, use AskUserQuestion to ask the user for the corrected value. Update the inference JSON with corrected values.
+
+After all corrections, display updated summary and proceed to Step 7 with corrected data.
+
+Write the final confirmed/corrected data to `.vbw-planning/inference.json` for Step 7 consumption.
+
 ## Output Format
 
 Follow @${CLAUDE_PLUGIN_ROOT}/references/vbw-brand-essentials.md — Phase Banner (double-line box), File Checklist (✓), ○ for pending, Next Up Block, no ANSI color codes.
