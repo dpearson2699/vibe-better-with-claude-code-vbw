@@ -1,0 +1,56 @@
+{
+  "schema_version": "2.0",
+  "envelope_fields": ["id", "type", "phase", "task", "author_role", "timestamp", "schema_version", "payload", "confidence"],
+  "schemas": {
+    "scout_findings": {
+      "allowed_roles": ["scout"],
+      "payload_required": ["domain", "documents"],
+      "payload_optional": ["cross_cutting", "confidence_rationale"],
+      "description": "Research findings from Scout agent"
+    },
+    "plan_contract": {
+      "allowed_roles": ["lead", "architect"],
+      "payload_required": ["plan_id", "phase_id", "objective", "tasks", "allowed_paths", "must_haves"],
+      "payload_optional": ["forbidden_paths", "depends_on", "verification_checks", "token_budget"],
+      "description": "Plan contract issued by Lead/Architect"
+    },
+    "execution_update": {
+      "allowed_roles": ["dev"],
+      "payload_required": ["plan_id", "task_id", "status", "commit"],
+      "payload_optional": ["files_modified", "concerns", "evidence"],
+      "description": "Task progress/completion update from Dev"
+    },
+    "blocker_report": {
+      "allowed_roles": ["dev", "debugger"],
+      "payload_required": ["plan_id", "task_id", "blocker", "needs"],
+      "payload_optional": ["attempted", "severity"],
+      "description": "Escalation when agent is blocked"
+    },
+    "qa_verdict": {
+      "allowed_roles": ["qa"],
+      "payload_required": ["tier", "result", "checks"],
+      "payload_optional": ["failures", "body", "recommendations"],
+      "description": "Verification results from QA agent"
+    },
+    "approval_request": {
+      "allowed_roles": ["dev", "lead"],
+      "payload_required": ["subject", "request_type", "evidence"],
+      "payload_optional": ["options", "deadline"],
+      "description": "Request for approval (plan, scope change, override)"
+    },
+    "approval_response": {
+      "allowed_roles": ["lead", "architect"],
+      "payload_required": ["request_id", "approved", "reason"],
+      "payload_optional": ["conditions", "modifications"],
+      "description": "Response to an approval request"
+    }
+  },
+  "role_hierarchy": {
+    "lead": {"can_send": ["plan_contract", "approval_request", "approval_response"], "can_receive": ["execution_update", "blocker_report", "qa_verdict", "scout_findings", "approval_request"]},
+    "architect": {"can_send": ["plan_contract", "approval_response"], "can_receive": ["scout_findings", "approval_request"]},
+    "dev": {"can_send": ["execution_update", "blocker_report", "approval_request"], "can_receive": ["plan_contract", "approval_response"]},
+    "qa": {"can_send": ["qa_verdict"], "can_receive": ["plan_contract"]},
+    "scout": {"can_send": ["scout_findings"], "can_receive": ["plan_contract"]},
+    "debugger": {"can_send": ["blocker_report"], "can_receive": ["plan_contract"]}
+  }
+}
