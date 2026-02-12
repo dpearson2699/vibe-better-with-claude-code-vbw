@@ -152,13 +152,16 @@ CFG_COMPACTION="130000"
 CFG_CONTEXT_COMPILER="true"
 
 if [ "$JQ_AVAILABLE" = true ] && [ -f "$CONFIG_FILE" ]; then
-  CFG_EFFORT=$(jq -r '.effort // "balanced"' "$CONFIG_FILE" 2>/dev/null)
-  CFG_AUTONOMY=$(jq -r '.autonomy // "standard"' "$CONFIG_FILE" 2>/dev/null)
-  CFG_AUTO_COMMIT=$(jq -r '.auto_commit // true' "$CONFIG_FILE" 2>/dev/null)
-  CFG_VERIFICATION_TIER=$(jq -r '.verification_tier // "standard"' "$CONFIG_FILE" 2>/dev/null)
-  CFG_AGENT_TEAMS=$(jq -r '.agent_teams // false' "$CONFIG_FILE" 2>/dev/null)
-  CFG_MAX_TASKS=$(jq -r '.max_tasks_per_plan // 5' "$CONFIG_FILE" 2>/dev/null)
-  CFG_CONTEXT_COMPILER=$(jq -r '.context_compiler // true' "$CONFIG_FILE" 2>/dev/null)
+  # Single jq call to extract all config values (reduces 7 subprocesses to 1)
+  eval "$(jq -r '
+    "CFG_EFFORT=\(.effort // "balanced")",
+    "CFG_AUTONOMY=\(.autonomy // "standard")",
+    "CFG_AUTO_COMMIT=\(.auto_commit // true)",
+    "CFG_VERIFICATION_TIER=\(.verification_tier // "standard")",
+    "CFG_AGENT_TEAMS=\(.agent_teams // false)",
+    "CFG_MAX_TASKS=\(.max_tasks_per_plan // 5)",
+    "CFG_CONTEXT_COMPILER=\(.context_compiler // true)"
+  ' "$CONFIG_FILE" 2>/dev/null)" || true
 fi
 
 echo "config_effort=$CFG_EFFORT"
