@@ -10,6 +10,9 @@ Loaded on demand by /vbw:vibe Execute mode. Not a user-facing command.
 4. Build remaining plans list. If `--plan=NN`, filter to that plan.
 5. Partially-complete plans: note resume-from task number.
 6. **Crash recovery:** If `.vbw-planning/.execution-state.json` exists with `"status": "running"`, update plan statuses to match current SUMMARY.md state.
+   - **V3 Event Recovery (REQ-17):** If `v3_event_recovery=true` in config, attempt event-sourced recovery first:
+     `RECOVERED=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/recover-state.sh {phase} 2>/dev/null || echo "{}")`
+     If non-empty and has `plans` array, use recovered state as the baseline instead of the stale execution-state.json. This provides more accurate status when execution-state.json was not written (crash before flush).
 7. **Write execution state** to `.vbw-planning/.execution-state.json`:
 ```json
 {
@@ -61,6 +64,13 @@ You are the team LEAD. NEVER implement tasks yourself.
 - NEVER Write/Edit files in a plan's `files_modified` — only state files: STATE.md, ROADMAP.md, .execution-state.json, SUMMARY.md
 - If Dev fails: guidance via SendMessage, not takeover. If all Devs unavailable: create new Dev.
 - At Turbo (or smart-routed to turbo): no team — Dev executes directly.
+
+**V3 Monorepo Routing (REQ-17):** If `v3_monorepo_routing=true` in config:
+- Before context compilation, detect relevant package paths:
+  `PACKAGES=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/route-monorepo.sh {phase_dir} 2>/dev/null || echo "[]")`
+- If non-empty array (not `[]`): pass package paths to context compilation for scoped file inclusion.
+  Log: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/collect-metrics.sh monorepo_route {phase} packages=$PACKAGES 2>/dev/null || true`
+- If empty or error: proceed with default (full repo) context compilation.
 
 **Context compilation (REQ-11):** If `config_context_compiler=true` from Context block above, before creating Dev tasks run:
 `bash ${CLAUDE_PLUGIN_ROOT}/scripts/compile-context.sh {phase} dev {phases_dir} {plan_path}`
@@ -184,6 +194,15 @@ All metrics calls should be `2>/dev/null || true` — never block execution.
   `bash ${CLAUDE_PLUGIN_ROOT}/scripts/lock-lite.sh release {task_id} 2>/dev/null || true`
 - Conflicts are advisory only (logged to metrics, not blocking).
 - Lock cleanup: at phase end, `rm -f .vbw-planning/.locks/*.lock 2>/dev/null || true`.
+
+**V3 Lease Locks (REQ-17):** If `v3_lease_locks=true` in config:
+- Use `lease-lock.sh` instead of `lock-lite.sh` for all lock operations above:
+  - Acquire: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/lease-lock.sh acquire {task_id} --ttl=300 {claimed_files...} 2>/dev/null || true`
+  - Release: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/lease-lock.sh release {task_id} 2>/dev/null || true`
+- **During long-running tasks** (>2 minutes estimated): renew lease periodically:
+  `bash ${CLAUDE_PLUGIN_ROOT}/scripts/lease-lock.sh renew {task_id} 2>/dev/null || true`
+- Check for expired leases before acquiring: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/lease-lock.sh check {task_id} {claimed_files...} 2>/dev/null || true`
+- If both `v3_lease_locks` and `v3_lock_lite` are true, lease-lock takes precedence.
 
 ### Step 3b: SUMMARY.md verification gate (mandatory)
 
