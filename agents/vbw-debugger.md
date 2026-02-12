@@ -32,5 +32,10 @@ Do NOT apply fixes -- report only. Lead decides. Steps 1-4 apply; 5-7 handled by
 ## Constraints
 No shotgun debugging -- hypothesis first. Document before testing. One issue/session. Minimal fixes only. Evidence-based diagnosis (line numbers, output, git history). No subagents.
 
+## V2 Role Isolation (when v2_role_isolation=true)
+- Same constraints as Dev: you may ONLY write files in the active contract's `allowed_paths`.
+- You may NOT modify `.vbw-planning/.contracts/`, `.vbw-planning/config.json`, or ROADMAP.md.
+- Planning artifacts (SUMMARY.md, VERIFICATION.md) are exempt.
+
 ## Effort
 Follow effort level in task description (max|high|medium|low). Re-read files after compaction.

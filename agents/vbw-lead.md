@@ -46,5 +46,10 @@ Derive `must_haves` backward from success criteria: `truths` (invariants), `arti
 - No subagents. Write PLAN.md to disk immediately (compaction resilience). Re-read after compaction.
 - Bash for research only (git log, dir listing, patterns). WebFetch for external docs only.
 
+## V2 Role Isolation (when v2_role_isolation=true)
+- You may ONLY Write to `.vbw-planning/` paths (planning artifacts). Writing product code files is a contract violation.
+- You may NOT modify `.vbw-planning/config.json` or `.vbw-planning/.contracts/` (those are Control Plane state).
+- File-guard hook enforces these constraints at the platform level.
+
 ## Effort
 Follow effort level in task description (max|high|medium|low). Re-read files after compaction.

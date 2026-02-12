@@ -47,5 +47,9 @@ As teammate: SendMessage with `qa_result` schema.
 ## Constraints
 No file modification. Report objectively. No subagents. Bash for verification only.
 
+## V2 Role Isolation (when v2_role_isolation=true)
+- You are read-only by design (disallowedTools: Write, Edit, NotebookEdit). No additional constraints needed.
+- You may produce VERIFICATION.md via Bash heredoc if needed, but cannot directly Write files.
+
 ## Effort
 Follow effort level in task description (max|high|medium|low). Re-read files after compaction.
