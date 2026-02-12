@@ -2,11 +2,33 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- **`isolation`** -- consolidated to single `CLAUDE.md`. Removed redundant `.claude/CLAUDE.md` guard file (identical content already embedded in root `CLAUDE.md` via `generate_plugin_isolation_section()`). Removed `--write-isolation-guard` mode from `bootstrap-claude.sh`. GSD isolation defense model simplified from three-layer to two-layer: root `CLAUDE.md` Plugin Isolation instructions + `security-filter.sh` PreToolUse hard block.
+
+### Removed
+
+- **`bootstrap`** -- `--write-isolation-guard` CLI mode and `write_isolation_guard()` function from `bootstrap-claude.sh`. The `generate_plugin_isolation_section()` function is preserved — still called by `generate_vbw_sections()` for root `CLAUDE.md`.
+- **`.claude/CLAUDE.md`** -- redundant isolation guard file. Hard enforcement handled entirely by `security-filter.sh` via PreToolUse hooks.
+
+---
+
 ## [1.10.18] - 2026-02-12
 
 ### Added
 
 - **`isolation`** -- context isolation to prevent GSD insight leakage into VBW sessions. New `### Context Isolation` subsection in Plugin Isolation instructs Claude to ignore `<codebase-intelligence>` tags and use VBW's own codebase mapping. bootstrap-claude.sh now strips 8 known GSD section headers when regenerating CLAUDE.md from existing files.
+- **`verification`** -- new `scripts/verify-claude-bootstrap.sh` regression suite for CLAUDE generation. Covers isolation guard generation, greenfield output, brownfield preservation of non-managed sections, managed-section stripping, and idempotent regeneration.
+
+### Changed
+
+- **`init`** -- Step 3.5 CLAUDE bootstrap guidance moved to script-first flow. Removed the large inline `CLAUDE.md` template payload and standardized on `scripts/bootstrap/bootstrap-claude.sh` for generation semantics (greenfield + brownfield).
+
+### Fixed
+
+- **`hooks`** -- `validate-frontmatter.sh` no longer appears hung when run manually in an interactive shell. Added TTY stdin guard so direct terminal invocation exits cleanly while preserving hook stdin behavior.
 
 ---
 
@@ -232,7 +254,7 @@ All notable changes to VBW will be documented in this file.
 - **Token economy engine** -- per-agent cost attribution in the statusline. Each render cycle computes cost delta and attributes it to the active agent (Dev, Lead, QA, Scout, Debugger, Architect, or Other). Accumulated in `.vbw-planning/.cost-ledger.json`. Displays `Cost: $X.XX` on Line 4 and a full economy breakdown on Line 5 (per-agent costs sorted descending, percentages, cache hit rate, $/line metric). Economy line suppressed when total cost is $0.00.
 - **Agent lifecycle hooks** -- `SubagentStart` hook writes active agent type to `.vbw-planning/.active-agent` via `scripts/agent-start.sh`. `SubagentStop` hook clears the marker via `scripts/agent-stop.sh`. Enables cost attribution to know which agent incurred each cost delta.
 - **`/vbw:status` economy section** -- status command reads `.cost-ledger.json` and displays per-agent cost breakdown when cost data is available. Guarded on file existence and non-zero total.
-- **GSD isolation** -- three-layer defense preventing GSD from accessing `.vbw-planning/`. Layer 1: `.claude/CLAUDE.md` instruction injection. Layer 2: project `CLAUDE.md` reinforcement. Layer 3: `security-filter.sh` PreToolUse hard block (exit 2) when `.gsd-isolation` flag exists and no VBW markers present. Two marker files (`.active-agent` for subagents, `.vbw-session` for commands) prevent false positives. Opt-in during `/vbw:init` with automatic GSD detection.
+- **GSD isolation** -- two-layer defense preventing GSD from accessing `.vbw-planning/`. Layer 1: root `CLAUDE.md` Plugin Isolation instructions. Layer 2: `security-filter.sh` PreToolUse hard block (exit 2) when `.gsd-isolation` flag exists and no VBW markers present. Two marker files (`.active-agent` for subagents, `.vbw-session` for commands) prevent false positives. Opt-in during `/vbw:init` with automatic GSD detection.
 
 ### Changed
 

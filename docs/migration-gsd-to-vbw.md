@@ -161,7 +161,7 @@ If you want to prevent GSD commands/agents from accessing VBW files:
 - Prompts: "Enable plugin isolation?"
 - If approved:
   - Creates `.vbw-planning/.gsd-isolation` flag
-  - Writes `.claude/CLAUDE.md` with isolation rules
+  - Plugin Isolation instructions are embedded in the root `CLAUDE.md` by `scripts/bootstrap/bootstrap-claude.sh`
   - PreToolUse hooks block cross-plugin file access
 
 **Effect:**
