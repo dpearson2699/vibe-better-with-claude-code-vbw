@@ -95,11 +95,14 @@ fi
 
 # 5. File reference check against active contract
 if [ -n "$MSG_TYPE" ]; then
-  # Extract file references from payload
-  FILE_REFS=$(echo "$MSG" | jq -r '
-    .payload.files_modified // empty | .[] // empty,
-    .payload.allowed_paths // empty | .[] // empty
-  ' 2>/dev/null) || FILE_REFS=""
+  # Extract file references from payload (separate extractions to avoid jq precedence issues)
+  REFS_MODIFIED=$(echo "$MSG" | jq -r '.payload.files_modified // [] | .[]' 2>/dev/null) || REFS_MODIFIED=""
+  REFS_PATHS=$(echo "$MSG" | jq -r '.payload.allowed_paths // [] | .[]' 2>/dev/null) || REFS_PATHS=""
+  FILE_REFS=""
+  [ -n "$REFS_MODIFIED" ] && FILE_REFS="$REFS_MODIFIED"
+  if [ -n "$REFS_PATHS" ]; then
+    [ -n "$FILE_REFS" ] && FILE_REFS="${FILE_REFS}"$'\n'"${REFS_PATHS}" || FILE_REFS="$REFS_PATHS"
+  fi
 
   if [ -n "$FILE_REFS" ]; then
     PHASE=$(echo "$MSG" | jq -r '.phase // 0' 2>/dev/null) || PHASE=0
