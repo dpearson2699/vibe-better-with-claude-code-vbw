@@ -36,7 +36,9 @@ create_test_config() {
   "v3_plan_research_persist": false,
   "v3_metrics": false,
   "v3_contract_lite": false,
-  "v3_lock_lite": false
+  "v3_lock_lite": false,
+  "v3_validation_gates": false,
+  "v3_smart_routing": false
 }
 CONF
 }
