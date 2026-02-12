@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# cache-context.sh <phase> <role> [config-path] [plan-path]
+# Computes deterministic cache key for compiled context and checks cache.
+# Output: "hit <hash> <cached-path>" or "miss <hash>"
+# Exit 0 always (caller decides what to do).
+
+if [ $# -lt 2 ]; then
+  echo "Usage: cache-context.sh <phase> <role> [config-path] [plan-path]" >&2
+  exit 1
+fi
+
+PHASE="$1"
+ROLE="$2"
+CONFIG_PATH="${3:-.vbw-planning/config.json}"
+PLAN_PATH="${4:-}"
+CACHE_DIR=".vbw-planning/.cache/context"
+
+# --- Build hash input from deterministic sources ---
+HASH_INPUT="phase=${PHASE}:role=${ROLE}"
+
+# Plan content checksum (if plan exists)
+if [ -n "$PLAN_PATH" ] && [ -f "$PLAN_PATH" ]; then
+  PLAN_SUM=$(shasum -a 256 "$PLAN_PATH" 2>/dev/null | cut -d' ' -f1 || echo "noplan")
+  HASH_INPUT="${HASH_INPUT}:plan=${PLAN_SUM}"
+fi
+
+# Config V3 flags (affect compilation behavior)
+if [ -f "$CONFIG_PATH" ] && command -v jq &>/dev/null; then
+  V3_FLAGS=$(jq -r '[.v3_delta_context // false, .v3_context_cache // false, .v3_plan_research_persist // false, .v3_metrics // false] | join(",")' "$CONFIG_PATH" 2>/dev/null || echo "false,false,false,false")
+  HASH_INPUT="${HASH_INPUT}:flags=${V3_FLAGS}"
+fi
+
+# Changed files list (git diff for delta awareness)
+if command -v git &>/dev/null && git rev-parse --is-inside-work-tree &>/dev/null 2>&1; then
+  CHANGED_SUM=$(git diff --name-only HEAD 2>/dev/null | sort | shasum -a 256 2>/dev/null | cut -d' ' -f1 || echo "nogit")
+  HASH_INPUT="${HASH_INPUT}:changed=${CHANGED_SUM}"
+fi
+
+# --- Compute final hash ---
+HASH=$(printf '%s' "$HASH_INPUT" | shasum -a 256 2>/dev/null | cut -d' ' -f1 || echo "")
+
+if [ -z "$HASH" ]; then
+  echo "miss nohash"
+  exit 0
+fi
+
+# Truncate to 16 chars for shorter filenames
+HASH="${HASH:0:16}"
+
+CACHED_FILE="${CACHE_DIR}/${HASH}.md"
+
+# --- Check cache ---
+if [ -f "$CACHED_FILE" ]; then
+  echo "hit ${HASH} ${CACHED_FILE}"
+else
+  echo "miss ${HASH}"
+fi
