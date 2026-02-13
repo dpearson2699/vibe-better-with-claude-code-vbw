@@ -42,6 +42,26 @@ if [ -d "$PLANNING_DIR" ] && [ -f "$PLANNING_DIR/config.json" ]; then
   fi
 fi
 
+# --- Session-level config cache (performance optimization, REQ-01 #9) ---
+# Write commonly-read config flags to a flat file for fast sourcing.
+# Invalidation: overwritten every session start. Scripts can opt-in:
+#   [ -f /tmp/vbw-config-cache-$(id -u) ] && source /tmp/vbw-config-cache-$(id -u)
+VBW_CONFIG_CACHE="/tmp/vbw-config-cache-$(id -u)"
+if [ -d "$PLANNING_DIR" ] && [ -f "$PLANNING_DIR/config.json" ] && command -v jq &>/dev/null; then
+  jq -r '
+    "VBW_EFFORT=\(.effort // "balanced")",
+    "VBW_AUTONOMY=\(.autonomy // "standard")",
+    "VBW_V2_HARD_CONTRACTS=\(.v2_hard_contracts // false)",
+    "VBW_V2_HARD_GATES=\(.v2_hard_gates // false)",
+    "VBW_V3_EVENT_LOG=\(.v3_event_log // false)",
+    "VBW_V3_METRICS=\(.v3_metrics // false)",
+    "VBW_V3_CONTEXT_CACHE=\(.v3_context_cache // false)",
+    "VBW_V3_DELTA_CONTEXT=\(.v3_delta_context // false)",
+    "VBW_V2_ROLE_ISOLATION=\(.v2_role_isolation // false)",
+    "VBW_V2_TOKEN_BUDGETS=\(.v2_token_budgets // false)"
+  ' "$PLANNING_DIR/config.json" > "$VBW_CONFIG_CACHE" 2>/dev/null || true
+fi
+
 # --- Flag dependency validation (REQ-01) ---
 FLAG_WARNINGS=""
 if [ -d "$PLANNING_DIR" ] && [ -f "$PLANNING_DIR/config.json" ]; then
