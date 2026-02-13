@@ -263,11 +263,40 @@ case "$ROLE" in
       echo "### Goal"
       echo "$PHASE_GOAL"
       echo ""
+      echo "### Success Criteria"
+      echo "$PHASE_SUCCESS"
+      echo ""
       echo "### Requirements (${PHASE_REQS})"
       if [ -n "$REQ_PATTERN" ] && [ -f "$PLANNING_DIR/REQUIREMENTS.md" ]; then
         grep -E "($REQ_PATTERN)" "$PLANNING_DIR/REQUIREMENTS.md" 2>/dev/null || echo "No matching requirements found"
       else
         echo "No matching requirements found"
+      fi
+      if [ -f "$PLANNING_DIR/conventions.json" ] && command -v jq &>/dev/null; then
+        CONVENTIONS=$(jq -r '.conventions[] | "- [\(.tag)] \(.rule)"' "$PLANNING_DIR/conventions.json" 2>/dev/null) || true
+        if [ -n "$CONVENTIONS" ]; then
+          echo ""
+          echo "### Conventions"
+          echo "$CONVENTIONS"
+        fi
+      fi
+      # --- V3: Include RESEARCH.md if present ---
+      RESEARCH_FILE=$(find "$PHASE_DIR" -maxdepth 1 -name "*-RESEARCH.md" -print -quit 2>/dev/null || true)
+      if [ -n "$RESEARCH_FILE" ] && [ -f "$RESEARCH_FILE" ]; then
+        echo ""
+        echo "### Research Findings"
+        cat "$RESEARCH_FILE"
+      fi
+      # --- V3: Delta file list (read-only, no code slices) ---
+      if [ "$V3_DELTA_ENABLED" = "true" ] && [ -f "${SCRIPT_DIR}/delta-files.sh" ]; then
+        DELTA_FILES=$(bash "${SCRIPT_DIR}/delta-files.sh" "$PHASE_DIR" "$PLAN_PATH" 2>/dev/null || true)
+        if [ -n "$DELTA_FILES" ]; then
+          echo ""
+          echo "### Changed Files (Delta)"
+          echo "$DELTA_FILES" | while IFS= read -r f; do
+            echo "- \`$f\`"
+          done
+        fi
       fi
     } > "${PHASE_DIR}/.context-scout.md"
     ;;
