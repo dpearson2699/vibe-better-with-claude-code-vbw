@@ -27,7 +27,7 @@ If no .vbw-planning/ dir: STOP "Run /vbw:init first." (check `.vbw-planning/conf
 
 After the settings table, display Model Profile section:
 ```bash
-PROFILE=$(jq -r '.model_profile // "balanced"' .vbw-planning/config.json)
+PROFILE=$(jq -r '.model_profile // "quality"' .vbw-planning/config.json)
 echo ""
 echo "Model Profile: $PROFILE"
 echo "Agent Models:"
@@ -75,7 +75,7 @@ Store selection in variable `PROFILE_METHOD`.
 
 Calculate OLD_COST before making changes (cost weights: opus=100, sonnet=20, haiku=2):
 ```bash
-CURRENT_PROFILE=$(jq -r '.model_profile // "balanced"' .vbw-planning/config.json)
+CURRENT_PROFILE=$(jq -r '.model_profile // "quality"' .vbw-planning/config.json)
 PROFILES_PATH="${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json"
 
 # Get current models (before changes)
@@ -224,7 +224,7 @@ if ! jq -e ".$PROFILE" "$PROFILES_PATH" >/dev/null 2>&1; then
 fi
 
 # Get current profile
-OLD_PROFILE=$(jq -r '.model_profile // "balanced"' .vbw-planning/config.json)
+OLD_PROFILE=$(jq -r '.model_profile // "quality"' .vbw-planning/config.json)
 
 # Calculate cost estimate
 # Cost weights: opus=100, sonnet=20, haiku=2

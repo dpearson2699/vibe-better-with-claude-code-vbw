@@ -218,7 +218,7 @@ If `planning_dir_exists=false`: display "Run /vbw:init first to set up your proj
 7. **Validate output:** Verify PLAN.md has valid frontmatter (phase, plan, title, wave, depends_on, must_haves) and tasks. Check wave deps acyclic.
 8. **Present:** Update STATE.md (phase position, plan count, status=Planned). Resolve model profile:
    ```bash
-   MODEL_PROFILE=$(jq -r '.model_profile // "balanced"' .vbw-planning/config.json)
+   MODEL_PROFILE=$(jq -r '.model_profile // "quality"' .vbw-planning/config.json)
    ```
    Display Phase Banner with plan list, effort level, and model profile:
    ```
