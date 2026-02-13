@@ -2,6 +2,24 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- **`pre-push hook`** -- Relaxed to consistency-only check. No longer requires a version bump on every push; only verifies that all 4 version files match each other. Fixes false positives on merge commits and eliminates version conflicts across concurrent contributors. (Issue #33)
+
+### Added
+
+- **`bump-version.yml`** -- New GitHub Action that automatically bumps the version when a PR is merged to `main`. Runs `scripts/bump-version.sh --offline` and commits the result. Contributors no longer need to touch version files.
+
+### Updated
+
+- **`CONTRIBUTING.md`** -- Rewritten Version Management and Push Workflow sections to reflect merge-time bumping.
+- **`copilot-instructions.md`** -- Updated Version Management and Contributing sections.
+- **`CLAUDE.md`** -- Updated VBW Rules to reference automatic merge-time version bumps.
+
+---
+
 ## [1.20.5] - 2026-02-13
 
 ### Community Contributions
