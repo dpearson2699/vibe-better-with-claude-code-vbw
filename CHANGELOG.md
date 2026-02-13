@@ -2,6 +2,13 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.20.8](https://github.com/dpearson2699/vibe-better-with-claude-code-vbw/compare/v1.20.7...v1.20.8) (2026-02-13)
+
+
+### Bug Fixes
+
+* **scripts:** resolve ShellCheck SC2034 unused variable warnings ([2739cf0](https://github.com/dpearson2699/vibe-better-with-claude-code-vbw/commit/2739cf0eaa305ba7cec277f83d72d8124a6b8485))
+
 ## [Unreleased]
 
 ### Changed
