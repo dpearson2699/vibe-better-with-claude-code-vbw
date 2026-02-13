@@ -72,6 +72,30 @@ You are the team LEAD. NEVER implement tasks yourself.
   Log: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/collect-metrics.sh monorepo_route {phase} packages=$PACKAGES 2>/dev/null || true`
 - If empty or error: proceed with default (full repo) context compilation.
 
+**Control Plane Coordination (REQ-05):** If `${CLAUDE_PLUGIN_ROOT}/scripts/control-plane.sh` exists:
+- **Once per plan (before first task):** Run the `full` action to generate contract and compile context:
+  ```bash
+  CP_RESULT=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/control-plane.sh full {phase} {plan} 1 \
+    --plan-path={plan_path} --role=dev --phase-dir={phase-dir} 2>/dev/null || echo '{"action":"full","steps":[]}')
+  ```
+  Extract `contract_path` and `context_path` from result for subsequent per-task calls.
+- **Before each task:** Run the `pre-task` action:
+  ```bash
+  CP_RESULT=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/control-plane.sh pre-task {phase} {plan} {task} \
+    --plan-path={plan_path} --task-id={phase}-{plan}-T{task} \
+    --claimed-files={files_from_task} 2>/dev/null || echo '{"action":"pre-task","steps":[]}')
+  ```
+  If the result contains a gate failure (step with `status=fail`), treat as gate failure and follow existing auto-repair + escalation flow.
+- **After each task:** Run the `post-task` action:
+  ```bash
+  CP_RESULT=$(bash ${CLAUDE_PLUGIN_ROOT}/scripts/control-plane.sh post-task {phase} {plan} {task} \
+    --task-id={phase}-{plan}-T{task} 2>/dev/null || echo '{"action":"post-task","steps":[]}')
+  ```
+- If `control-plane.sh` does NOT exist: fall through to the individual script calls below (backward compatibility).
+- On any `control-plane.sh` error: fall through to individual script calls (fail-open).
+
+The existing individual script call sections (V3 Contract-Lite, V2 Hard Gates, Context compilation, Token Budgets) remain unchanged below as the fallback path.
+
 **Context compilation (REQ-11):** If `config_context_compiler=true` from Context block above, before creating Dev tasks run:
 `bash ${CLAUDE_PLUGIN_ROOT}/scripts/compile-context.sh {phase} dev {phases_dir} {plan_path}`
 This produces `{phase-dir}/.context-dev.md` with phase goal and conventions.
