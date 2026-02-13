@@ -154,9 +154,30 @@ If `planning_dir_exists=false`: display "Run /vbw:init first to set up your proj
              4. Add "Let me explain..." as 4th option
           2. Present interpretations as AskUserQuestion with descriptive options
           3. If "Let me explain" chosen: record user's free-text explanation, then ask if they want to revisit the original question with their explanation as context
-          4. Record disambiguated answer to discovery.json with original vague text in metadata
+          4. Record disambiguated answer to discovery.json with extended schema including disambiguation metadata
           If no vague pattern: proceed to record answer as-is.
-       d. Record answers to discovery.json with round number (append to answered[] with fields: question, answer, category, phase='bootstrap', round=ROUND, date)
+       d. Record answers to discovery.json with round number (append to answered[] with fields: question, answer, category, phase='bootstrap', round=ROUND, date). **Extended schema for disambiguated answers:**
+          ```json
+          {
+            "question": "...",
+            "answer": "Works on mobile devices",
+            "category": "...",
+            "phase": "bootstrap",
+            "round": 1,
+            "date": "2026-02-13",
+            "disambiguation": {
+              "original_vague": "easy to use",
+              "interpretations_offered": [
+                "Works on mobile devices?",
+                "No signup required?",
+                "Loads in under 2 seconds?",
+                "Let me explain..."
+              ],
+              "chosen": "Works on mobile devices?"
+            }
+          }
+          ```
+          If answer was NOT disambiguated (no vague pattern), omit the `disambiguation` field entirely. This preserves the user's intent journey and enables future analysis of common vague→concrete patterns.
        e. Increment ROUND, update QUESTIONS_ASKED count
        f. **Keep-exploring gate:**
           - If ROUND <= 3: AskUserQuestion "We've covered [topic]. What would you like to do?" with options ["Keep exploring — I have more to share", "Move on — I'm ready for the next step"]
