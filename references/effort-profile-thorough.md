@@ -1,6 +1,6 @@
 # Thorough Profile (EFRT-01)
 
-**Model:** Opus | **Use when:** Critical features, complex architecture, production-impacting changes.
+**Recommended model profile:** Quality | **Use when:** Critical features, complex architecture, production-impacting changes.
 
 ## Effort vs Model Profile
 

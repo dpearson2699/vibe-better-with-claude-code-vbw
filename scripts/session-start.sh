@@ -4,61 +4,143 @@ set -u
 
 # --- Dependency check ---
 if ! command -v jq &>/dev/null; then
-  echo '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"VBW: jq not found. Install: brew install jq (macOS) / apt install jq (Linux). All 17 VBW quality gates are disabled until jq is installed -- no commit validation, no security filtering, no file guarding."}}'
+  echo '{"hookSpecificOutput":{"additionalContext":"VBW: jq not found. Install: brew install jq (macOS) / apt install jq (Linux). All 17 VBW quality gates are disabled until jq is installed -- no commit validation, no security filtering, no file guarding."}}'
   exit 0
 fi
 
 PLANNING_DIR=".vbw-planning"
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Auto-migrate config if .vbw-planning exists
+# Version marker: skip flag migration when config already has all flags from this version.
+# The marker is the count of expected flags — if it matches, no jq pass needed.
+EXPECTED_FLAG_COUNT=22
 if [ -d "$PLANNING_DIR" ] && [ -f "$PLANNING_DIR/config.json" ]; then
-  if ! jq -e '.model_profile' "$PLANNING_DIR/config.json" >/dev/null 2>&1; then
+  if ! jq -e 'has("model_profile")' "$PLANNING_DIR/config.json" >/dev/null 2>&1; then
     TMP=$(mktemp)
     jq '. + {model_profile: "quality", model_overrides: {}}' "$PLANNING_DIR/config.json" > "$TMP" && mv "$TMP" "$PLANNING_DIR/config.json"
   fi
-fi
+  # Check if migration is needed: count how many of the expected flags already exist.
+  # If all present, skip the jq pass entirely (H8: avoid re-evaluation every session).
+  CURRENT_FLAG_COUNT=$(jq '[
+    has("context_compiler"), has("v3_delta_context"), has("v3_context_cache"),
+    has("v3_plan_research_persist"), has("v3_metrics"), has("v3_contract_lite"),
+    has("v3_lock_lite"), has("v3_validation_gates"), has("v3_smart_routing"),
+    has("v3_event_log"), has("v3_schema_validation"), has("v3_snapshot_resume"),
+    has("v3_lease_locks"), has("v3_event_recovery"), has("v3_monorepo_routing"),
+    has("v2_hard_contracts"), has("v2_hard_gates"), has("v2_typed_protocol"),
+    has("v2_role_isolation"), has("v2_two_phase_completion"), has("v2_token_budgets"),
+    has("model_overrides")
+  ] | map(select(.)) | length' "$PLANNING_DIR/config.json" 2>/dev/null)
 
-# Auto-migrate .claude/CLAUDE.md to root CLAUDE.md (VBW projects only)
-if [ -d "$PLANNING_DIR" ] && [ ! -f "$PLANNING_DIR/.claude-md-migrated" ]; then
-  CLAUDE_MIGRATE_OK=true
-  if [ -f ".claude/CLAUDE.md" ]; then
-    if [ ! -f "CLAUDE.md" ]; then
-      # Scenario A: .claude/CLAUDE.md only → move to root
-      mv ".claude/CLAUDE.md" "CLAUDE.md" || CLAUDE_MIGRATE_OK=false
+  if [ "${CURRENT_FLAG_COUNT:-0}" -lt "$EXPECTED_FLAG_COUNT" ]; then
+    # Comprehensive feature flag migration — single pass adds all missing flags
+    # Canonical flag list from config/defaults.json. All default to false for existing users.
+    TMP=$(mktemp)
+    if jq '
+      . +
+      (if has("context_compiler") then {} else {context_compiler: true} end) +
+      (if has("v3_delta_context") then {} else {v3_delta_context: false} end) +
+      (if has("v3_context_cache") then {} else {v3_context_cache: false} end) +
+      (if has("v3_plan_research_persist") then {} else {v3_plan_research_persist: false} end) +
+      (if has("v3_metrics") then {} else {v3_metrics: false} end) +
+      (if has("v3_contract_lite") then {} else {v3_contract_lite: false} end) +
+      (if has("v3_lock_lite") then {} else {v3_lock_lite: false} end) +
+      (if has("v3_validation_gates") then {} else {v3_validation_gates: false} end) +
+      (if has("v3_smart_routing") then {} else {v3_smart_routing: false} end) +
+      (if has("v3_event_log") then {} else {v3_event_log: false} end) +
+      (if has("v3_schema_validation") then {} else {v3_schema_validation: false} end) +
+      (if has("v3_snapshot_resume") then {} else {v3_snapshot_resume: false} end) +
+      (if has("v3_lease_locks") then {} else {v3_lease_locks: false} end) +
+      (if has("v3_event_recovery") then {} else {v3_event_recovery: false} end) +
+      (if has("v3_monorepo_routing") then {} else {v3_monorepo_routing: false} end) +
+      (if has("v2_hard_contracts") then {} else {v2_hard_contracts: false} end) +
+      (if has("v2_hard_gates") then {} else {v2_hard_gates: false} end) +
+      (if has("v2_typed_protocol") then {} else {v2_typed_protocol: false} end) +
+      (if has("v2_role_isolation") then {} else {v2_role_isolation: false} end) +
+      (if has("v2_two_phase_completion") then {} else {v2_two_phase_completion: false} end) +
+      (if has("v2_token_budgets") then {} else {v2_token_budgets: false} end)
+    ' "$PLANNING_DIR/config.json" > "$TMP" 2>/dev/null; then
+      mv "$TMP" "$PLANNING_DIR/config.json"
     else
-      # Scenario B: both exist — extract non-VBW content from guard
-      EXTRACTED=$(awk '
-        BEGIN { skip = 0 }
-        /^## (Active Context|VBW Rules|Key Decisions|Installed Skills|Project Conventions|Commands|Plugin Isolation)$/ { skip = 1; next }
-        /^## / { skip = 0 }
-        /^# / && !/^## / { next }
-        /^\*\*Core value:\*\*/ { next }
-        !skip { print }
-      ' ".claude/CLAUDE.md")
-      if echo "$EXTRACTED" | grep -q '[^[:space:]]'; then
-        # Has user content — merge into root before VBW sections
-        FIRST_VBW=$(grep -nE '^## (Active Context|VBW Rules|Key Decisions|Installed Skills|Project Conventions|Commands|Plugin Isolation)$' "CLAUDE.md" | head -1 | cut -d: -f1)
-        TMP=$(mktemp)
-        if [ -n "${FIRST_VBW:-}" ]; then
-          head -n $((FIRST_VBW - 1)) "CLAUDE.md" > "$TMP"
-          echo "$EXTRACTED" >> "$TMP"
-          echo "" >> "$TMP"
-          tail -n +"$FIRST_VBW" "CLAUDE.md" >> "$TMP"
-        else
-          cat "CLAUDE.md" > "$TMP"
-          echo "" >> "$TMP"
-          echo "$EXTRACTED" >> "$TMP"
-        fi
-        mv "$TMP" "CLAUDE.md" || CLAUDE_MIGRATE_OK=false
-      fi
-      if [ "$CLAUDE_MIGRATE_OK" = true ]; then
-        rm ".claude/CLAUDE.md" || CLAUDE_MIGRATE_OK=false
-      fi
+      rm -f "$TMP"
     fi
   fi
-  if [ "$CLAUDE_MIGRATE_OK" = true ]; then
-    touch "$PLANNING_DIR/.claude-md-migrated"
+fi
+
+# --- Migrate .claude/CLAUDE.md to root CLAUDE.md (one-time, #20) ---
+# Old VBW versions wrote a duplicate isolation guard to .claude/CLAUDE.md.
+# Consolidate to root CLAUDE.md only. Three scenarios:
+#   A) .claude/CLAUDE.md only (no root) → mv to root
+#   B) Both exist → root already has isolation via bootstrap, delete guard
+#   C) Root only → no-op
+if [ -d "$PLANNING_DIR" ] && [ ! -f "$PLANNING_DIR/.claude-md-migrated" ]; then
+  GUARD=".claude/CLAUDE.md"
+  ROOT_CLAUDE="CLAUDE.md"
+  if [ -f "$GUARD" ]; then
+    if [ ! -f "$ROOT_CLAUDE" ]; then
+      # Scenario A: guard only → move to root
+      mv "$GUARD" "$ROOT_CLAUDE" 2>/dev/null || true
+    else
+      # Scenario B: both exist → root wins, delete guard
+      rm -f "$GUARD" 2>/dev/null || true
+    fi
+  fi
+  # Mark migration done (idempotent)
+  echo "1" > "$PLANNING_DIR/.claude-md-migrated" 2>/dev/null || true
+fi
+
+# --- Session-level config cache (performance optimization, REQ-01 #9) ---
+# Write commonly-read config flags to a flat file for fast sourcing.
+# Invalidation: overwritten every session start. Scripts can opt-in:
+#   [ -f /tmp/vbw-config-cache-$(id -u) ] && source /tmp/vbw-config-cache-$(id -u)
+VBW_CONFIG_CACHE="/tmp/vbw-config-cache-$(id -u)"
+if [ -d "$PLANNING_DIR" ] && [ -f "$PLANNING_DIR/config.json" ] && command -v jq &>/dev/null; then
+  jq -r '
+    "VBW_EFFORT=\(.effort // "balanced")",
+    "VBW_AUTONOMY=\(.autonomy // "standard")",
+    "VBW_CONTEXT_COMPILER=\(if .context_compiler == null then true else .context_compiler end)",
+    "VBW_V3_DELTA_CONTEXT=\(.v3_delta_context // false)",
+    "VBW_V3_CONTEXT_CACHE=\(.v3_context_cache // false)",
+    "VBW_V3_PLAN_RESEARCH_PERSIST=\(.v3_plan_research_persist // false)",
+    "VBW_V3_METRICS=\(.v3_metrics // false)",
+    "VBW_V3_CONTRACT_LITE=\(.v3_contract_lite // false)",
+    "VBW_V3_LOCK_LITE=\(.v3_lock_lite // false)",
+    "VBW_V3_VALIDATION_GATES=\(.v3_validation_gates // false)",
+    "VBW_V3_SMART_ROUTING=\(.v3_smart_routing // false)",
+    "VBW_V3_EVENT_LOG=\(.v3_event_log // false)",
+    "VBW_V3_SCHEMA_VALIDATION=\(.v3_schema_validation // false)",
+    "VBW_V3_SNAPSHOT_RESUME=\(.v3_snapshot_resume // false)",
+    "VBW_V3_LEASE_LOCKS=\(.v3_lease_locks // false)",
+    "VBW_V3_EVENT_RECOVERY=\(.v3_event_recovery // false)",
+    "VBW_V3_MONOREPO_ROUTING=\(.v3_monorepo_routing // false)",
+    "VBW_V2_HARD_CONTRACTS=\(.v2_hard_contracts // false)",
+    "VBW_V2_HARD_GATES=\(.v2_hard_gates // false)",
+    "VBW_V2_TYPED_PROTOCOL=\(.v2_typed_protocol // false)",
+    "VBW_V2_ROLE_ISOLATION=\(.v2_role_isolation // false)",
+    "VBW_V2_TWO_PHASE_COMPLETION=\(.v2_two_phase_completion // false)",
+    "VBW_V2_TOKEN_BUDGETS=\(.v2_token_budgets // false)"
+  ' "$PLANNING_DIR/config.json" > "$VBW_CONFIG_CACHE" 2>/dev/null || true
+fi
+
+# --- Flag dependency validation (REQ-01) ---
+FLAG_WARNINGS=""
+if [ -d "$PLANNING_DIR" ] && [ -f "$PLANNING_DIR/config.json" ]; then
+  _v2_hard_gates=$(jq -r '.v2_hard_gates // false' "$PLANNING_DIR/config.json" 2>/dev/null)
+  _v2_hard_contracts=$(jq -r '.v2_hard_contracts // false' "$PLANNING_DIR/config.json" 2>/dev/null)
+  _v3_event_recovery=$(jq -r '.v3_event_recovery // false' "$PLANNING_DIR/config.json" 2>/dev/null)
+  _v3_event_log=$(jq -r '.v3_event_log // false' "$PLANNING_DIR/config.json" 2>/dev/null)
+  _v2_two_phase=$(jq -r '.v2_two_phase_completion // false' "$PLANNING_DIR/config.json" 2>/dev/null)
+
+  if [ "$_v2_hard_gates" = "true" ] && [ "$_v2_hard_contracts" != "true" ]; then
+    FLAG_WARNINGS="${FLAG_WARNINGS} WARNING: v2_hard_gates requires v2_hard_contracts -- enable v2_hard_contracts first or contract_compliance gate will fail."
+  fi
+  if [ "$_v3_event_recovery" = "true" ] && [ "$_v3_event_log" != "true" ]; then
+    FLAG_WARNINGS="${FLAG_WARNINGS} WARNING: v3_event_recovery requires v3_event_log -- enable v3_event_log first or event recovery will find no events."
+  fi
+  if [ "$_v2_two_phase" = "true" ] && [ "$_v3_event_log" != "true" ]; then
+    FLAG_WARNINGS="${FLAG_WARNINGS} WARNING: v2_two_phase_completion requires v3_event_log -- enable v3_event_log first or completion events will be lost."
   fi
 fi
 
@@ -88,7 +170,6 @@ fi
 
 if [ ! -f "$CACHE" ] || [ $((NOW - MT)) -gt 86400 ]; then
   # Get installed version from plugin.json next to this script
-  SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
   LOCAL_VER=$(jq -r '.version // "0.0.0"' "$SCRIPT_DIR/../.claude-plugin/plugin.json" 2>/dev/null)
 
   # Fetch latest version from GitHub (3s timeout)
@@ -166,7 +247,7 @@ if [ -d "$MKT_DIR/.git" ] && [ -d "$CACHE_DIR" ]; then
   if [ "$MKT_VER" != "$CACHE_VER" ] && [ -n "$CACHE_VER" ] && [ "$CACHE_VER" != "0" ]; then
     (cd "$MKT_DIR" && git fetch origin --quiet 2>/dev/null && \
       if git diff --quiet 2>/dev/null; then
-        git reset --hard origin/main --quiet 2>/dev/null
+        git merge --ff-only origin/main --quiet 2>/dev/null
       else
         echo "VBW: marketplace checkout has local modifications — skipping reset" >&2
       fi) &
@@ -175,14 +256,31 @@ if [ -d "$MKT_DIR/.git" ] && [ -d "$CACHE_DIR" ]; then
   if [ -d "$MKT_DIR/commands" ] && [ -d "$CACHE_DIR" ]; then
     LATEST_VER=$(ls -d "$CACHE_DIR"/*/ 2>/dev/null | sort -V | tail -1)
     if [ -n "$LATEST_VER" ] && [ -d "${LATEST_VER}commands" ]; then
-      MKT_CMD_COUNT=$(ls "$MKT_DIR/commands/"*.md 2>/dev/null | wc -l | tr -d ' ')
-      CACHE_CMD_COUNT=$(ls "${LATEST_VER}commands/"*.md 2>/dev/null | wc -l | tr -d ' ')
+      # zsh compat: bare globs error before ls runs in zsh (nomatch). Use ls dir | grep.
+      MKT_CMD_COUNT=$(ls -1 "$MKT_DIR/commands/" 2>/dev/null | grep '\.md$' | wc -l | tr -d ' ')
+      CACHE_CMD_COUNT=$(ls -1 "${LATEST_VER}commands/" 2>/dev/null | grep '\.md$' | wc -l | tr -d ' ')
       if [ "${MKT_CMD_COUNT:-0}" -ne "${CACHE_CMD_COUNT:-0}" ]; then
         echo "VBW cache stale — marketplace has ${MKT_CMD_COUNT} commands, cache has ${CACHE_CMD_COUNT}" >&2
         rm -rf "$CACHE_DIR"
       fi
     fi
   fi
+fi
+
+# --- Sync global commands mirror for vbw: prefix in autocomplete ---
+VBW_GLOBAL_CMD="$CLAUDE_DIR/commands/vbw"
+CACHED_VER=$(ls -d "$CACHE_DIR"/*/ 2>/dev/null | sort -V | tail -1)
+if [ -n "$CACHED_VER" ] && [ -d "${CACHED_VER}commands" ]; then
+  mkdir -p "$VBW_GLOBAL_CMD"
+  # Remove stale commands not in cache, then copy fresh
+  if [ -d "$VBW_GLOBAL_CMD" ]; then
+    for f in "$VBW_GLOBAL_CMD"/*.md; do
+      [ -f "$f" ] || continue
+      base=$(basename "$f")
+      [ -f "${CACHED_VER}commands/$base" ] || rm -f "$f"
+    done
+  fi
+  cp "${CACHED_VER}commands/"*.md "$VBW_GLOBAL_CMD/" 2>/dev/null
 fi
 
 # --- Auto-install git hooks if missing ---
@@ -204,7 +302,8 @@ if [ -f "$EXEC_STATE" ]; then
     fi
     if [ -n "$PHASE_DIR" ] && [ -d "$PHASE_DIR" ]; then
       PLAN_COUNT=$(jq -r '.plans | length' "$EXEC_STATE" 2>/dev/null)
-      SUMMARY_COUNT=$(ls "$PHASE_DIR"/*-SUMMARY.md 2>/dev/null | wc -l | tr -d ' ')
+      # zsh compat: use ls dir | grep to avoid bare glob expansion errors
+      SUMMARY_COUNT=$(ls -1 "$PHASE_DIR" 2>/dev/null | grep '\-SUMMARY\.md$' | wc -l | tr -d ' ')
       if [ "${SUMMARY_COUNT:-0}" -ge "${PLAN_COUNT:-1}" ] && [ "${PLAN_COUNT:-0}" -gt 0 ]; then
         # All plans have SUMMARY.md — build finished after crash
         jq '.status = "complete"' "$EXEC_STATE" > "$PLANNING_DIR/.execution-state.json.tmp" && mv "$PLANNING_DIR/.execution-state.json.tmp" "$EXEC_STATE"
@@ -222,7 +321,6 @@ fi
 if [ ! -d "$PLANNING_DIR" ]; then
   jq -n --arg update "$UPDATE_MSG" --arg welcome "$WELCOME_MSG" '{
     "hookSpecificOutput": {
-      "hookEventName": "SessionStart",
       "additionalContext": ($welcome + "No .vbw-planning/ directory found. Run /vbw:init to set up the project." + $update)
     }
   }'
@@ -258,9 +356,9 @@ config_max_tasks="5"
 if [ -f "$CONFIG_FILE" ]; then
   config_effort=$(jq -r '.effort // "balanced"' "$CONFIG_FILE" 2>/dev/null)
   config_autonomy=$(jq -r '.autonomy // "standard"' "$CONFIG_FILE" 2>/dev/null)
-  config_auto_commit=$(jq -r '.auto_commit // true' "$CONFIG_FILE" 2>/dev/null)
+  config_auto_commit=$(jq -r 'if .auto_commit == null then true else .auto_commit end' "$CONFIG_FILE" 2>/dev/null)
   config_verification=$(jq -r '.verification_tier // "standard"' "$CONFIG_FILE" 2>/dev/null)
-  config_agent_teams=$(jq -r '.agent_teams // true' "$CONFIG_FILE" 2>/dev/null)
+  config_agent_teams=$(jq -r 'if .agent_teams == null then true else .agent_teams end' "$CONFIG_FILE" 2>/dev/null)
   config_max_tasks=$(jq -r '.max_tasks_per_plan // 5' "$CONFIG_FILE" 2>/dev/null)
 fi
 
@@ -325,8 +423,9 @@ else
     next_phase=""
     for pdir in $(ls -d "$PHASES_DIR"/*/ 2>/dev/null | sort); do
       pname=$(basename "$pdir")
-      plan_count=$(ls "$pdir"/*-PLAN.md 2>/dev/null | wc -l | tr -d ' ')
-      summary_count=$(ls "$pdir"/*-SUMMARY.md 2>/dev/null | wc -l | tr -d ' ')
+      # zsh compat: use ls dir | grep to avoid bare glob expansion errors
+      plan_count=$(ls -1 "$pdir" 2>/dev/null | grep '\-PLAN\.md$' | wc -l | tr -d ' ')
+      summary_count=$(ls -1 "$pdir" 2>/dev/null | grep '\-SUMMARY\.md$' | wc -l | tr -d ' ')
       if [ "${plan_count:-0}" -eq 0 ]; then
         # Phase has no plans yet — needs planning
         pnum=$(echo "$pname" | sed 's/-.*//')
@@ -355,10 +454,9 @@ CTX="$CTX Progress: ${progress_pct}%."
 CTX="$CTX Config: effort=${config_effort}, autonomy=${config_autonomy}, auto_commit=${config_auto_commit}, verification=${config_verification}, agent_teams=${config_agent_teams}, max_tasks=${config_max_tasks}."
 CTX="$CTX Next: ${NEXT_ACTION}."
 
-jq -n --arg ctx "$CTX" --arg update "$UPDATE_MSG" --arg welcome "$WELCOME_MSG" '{
+jq -n --arg ctx "$CTX" --arg update "$UPDATE_MSG" --arg welcome "$WELCOME_MSG" --arg flags "${FLAG_WARNINGS:-}" '{
   "hookSpecificOutput": {
-    "hookEventName": "SessionStart",
-    "additionalContext": ($welcome + $ctx + $update)
+    "additionalContext": ($welcome + $ctx + $update + $flags)
   }
 }'
 

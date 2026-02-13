@@ -6,7 +6,7 @@
 # Usage: bash detect-stack.sh [project-dir]
 # Output: JSON object with detected stack, installed skills, and suggestions.
 
-set -euo pipefail
+set -eo pipefail
 
 # --- jq dependency check ---
 if ! command -v jq &>/dev/null; then
@@ -39,140 +39,37 @@ if [ -d "$HOME/.agents/skills" ]; then
 fi
 ALL_INSTALLED="$INSTALLED_GLOBAL,$INSTALLED_PROJECT,$INSTALLED_AGENTS"
 
-# --- Shared find helper (exclude generated/vendor trees) ---
-project_find() {
-  find "$PROJECT_DIR" \
-    -not -path "*/.git/*" \
-    -not -path "*/node_modules/*" \
-    -not -path "*/.vbw-planning/*" \
-    -not -path "*/.planning/*" \
-    -not -path "*/vendor/*" \
-    -not -path "*/dist/*" \
-    -not -path "*/build/*" \
-    -not -path "*/target/*" \
-    -not -path "*/.next/*" \
-    -not -path "*/__pycache__/*" \
-    -not -path "*/.venv/*" \
-    "$@" 2>/dev/null
+# --- Read manifest files once ---
+# Reads root manifest first, then appends subdirectory manifests (depth 2-3)
+# for monorepo support. This catches dependencies in packages/*/package.json etc.
+read_manifest() {
+  local filename="$1"
+  local content=""
+  # Root manifest
+  if [ -f "$PROJECT_DIR/$filename" ]; then
+    content=$(cat "$PROJECT_DIR/$filename" 2>/dev/null)
+  fi
+  # Subdirectory manifests (monorepo patterns: packages/*, apps/*, src/*)
+  while IFS= read -r subfile; do
+    [ -z "$subfile" ] && continue
+    content="$content"$'\n'"$(cat "$subfile" 2>/dev/null)"
+  done < <(find "$PROJECT_DIR" -maxdepth 3 -name "$filename" \
+    -not -path '*/node_modules/*' -not -path '*/.git/*' \
+    -not -path '*/vendor/*' -not -path '*/target/*' \
+    -not -path "$PROJECT_DIR/$filename" 2>/dev/null | head -10)
+  echo "$content"
 }
 
-has_glob_chars() {
-  case "$1" in
-    *"*"*|*"?"*|*"["*) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
-file_has_dependency() {
-  local file="$1"
-  local dep="$2"
-  local basename
-  basename=$(basename "$file")
-
-  if [ "$basename" = "package.json" ]; then
-    if jq -e --arg dep "$dep" '
-      ((.dependencies // {}) | has($dep)) or
-      ((.devDependencies // {}) | has($dep)) or
-      ((.peerDependencies // {}) | has($dep)) or
-      ((.optionalDependencies // {}) | has($dep))
-    ' "$file" >/dev/null 2>&1; then
-      return 0
-    fi
-  fi
-
-  if grep -qF "$dep" "$file" 2>/dev/null; then
-    return 0
-  fi
-
-  return 1
-}
-
-check_dependency_pattern() {
-  local file_pattern="$1"
-  local dep="$2"
-  local candidate
-  local root_file
-
-  # Exact relative path (e.g. backend/functions/package.json:express)
-  if [[ "$file_pattern" == */* ]] && [[ "$file_pattern" != \*\*/* ]] && ! has_glob_chars "$file_pattern"; then
-    candidate="$PROJECT_DIR/$file_pattern"
-    if [ -f "$candidate" ] && file_has_dependency "$candidate" "$dep"; then
-      return 0
-    fi
-    return 1
-  fi
-
-  # Explicit recursive path pattern (e.g. **/package.json:firebase)
-  if [[ "$file_pattern" == \*\*/* ]]; then
-    local suffix="${file_pattern#**/}"
-    while IFS= read -r candidate; do
-      if file_has_dependency "$candidate" "$dep"; then
-        return 0
-      fi
-    done < <(project_find -type f -path "*/$suffix")
-    return 1
-  fi
-
-  # Glob filename pattern (e.g. *.json:foo)
-  if has_glob_chars "$file_pattern"; then
-    while IFS= read -r candidate; do
-      if file_has_dependency "$candidate" "$dep"; then
-        return 0
-      fi
-    done < <(project_find -type f -name "$file_pattern")
-    return 1
-  fi
-
-  # Plain filename: check root + nested manifests (excluding vendor/generated dirs)
-  root_file="$PROJECT_DIR/$file_pattern"
-  if [ -f "$root_file" ] && file_has_dependency "$root_file" "$dep"; then
-    return 0
-  fi
-
-  while IFS= read -r candidate; do
-    if [ "$candidate" = "$root_file" ]; then
-      continue
-    fi
-    if file_has_dependency "$candidate" "$dep"; then
-      return 0
-    fi
-  done < <(project_find -type f -name "$file_pattern")
-
-  return 1
-}
-
-check_path_pattern() {
-  local pattern="$1"
-
-  # Exact relative path first
-  if [ -e "$PROJECT_DIR/$pattern" ]; then
-    return 0
-  fi
-
-  # Explicit recursive path pattern (e.g. **/firebase.json)
-  if [[ "$pattern" == \*\*/* ]]; then
-    local suffix="${pattern#**/}"
-    if project_find -path "*/$suffix" -print -quit | grep -q .; then
-      return 0
-    fi
-    return 1
-  fi
-
-  # Glob patterns should match both files and dirs recursively (e.g. *.xcodeproj)
-  if has_glob_chars "$pattern"; then
-    if project_find -name "$pattern" -print -quit | grep -q .; then
-      return 0
-    fi
-    return 1
-  fi
-
-  # Plain filename/dirname fallback: search nested paths too
-  if [[ "$pattern" != */* ]] && project_find -name "$pattern" -print -quit | grep -q .; then
-    return 0
-  fi
-
-  return 1
-}
+PKG_JSON=$(read_manifest "package.json")
+REQUIREMENTS_TXT=$(read_manifest "requirements.txt")
+PYPROJECT_TOML=$(read_manifest "pyproject.toml")
+GEMFILE=$(read_manifest "Gemfile")
+CARGO_TOML=$(read_manifest "Cargo.toml")
+GO_MOD=$(read_manifest "go.mod")
+COMPOSER_JSON=$(read_manifest "composer.json")
+MIX_EXS=$(read_manifest "mix.exs")
+POM_XML=$(read_manifest "pom.xml")
+BUILD_GRADLE=$(read_manifest "build.gradle")
 
 # --- Check a single detect pattern ---
 # Returns 0 (true) if pattern matches, 1 (false) if not.
@@ -181,14 +78,49 @@ check_pattern() {
 
   if echo "$pattern" | grep -qF ':'; then
     # Dependency pattern: "file:dependency"
-    local file dep
+    local file dep content
     file=$(echo "$pattern" | cut -d: -f1)
     dep=$(echo "$pattern" | cut -d: -f2-)
-    check_dependency_pattern "$file" "$dep"
-    return $?
+
+    case "$file" in
+      package.json)    content="$PKG_JSON" ;;
+      requirements.txt) content="$REQUIREMENTS_TXT" ;;
+      pyproject.toml)  content="$PYPROJECT_TOML" ;;
+      Gemfile)         content="$GEMFILE" ;;
+      Cargo.toml)      content="$CARGO_TOML" ;;
+      go.mod)          content="$GO_MOD" ;;
+      composer.json)   content="$COMPOSER_JSON" ;;
+      mix.exs)         content="$MIX_EXS" ;;
+      pom.xml)         content="$POM_XML" ;;
+      build.gradle)    content="$BUILD_GRADLE" ;;
+      *)               content="" ;;
+    esac
+
+    if [ -n "$content" ] && echo "$content" | grep -qF "\"$dep\""; then
+      return 0
+    fi
+    # Fallback for non-JSON formats (requirements.txt, go.mod, Gemfile, etc.)
+    # Skip for JSON files — quoted match above is sufficient and avoids false
+    # positives (e.g., "react" word-matching inside "react-native").
+    case "$file" in
+      *.json) ;;
+      *)
+        if [ -n "$content" ] && echo "$content" | grep -qiw "$dep"; then
+          return 0
+        fi
+        ;;
+    esac
+    return 1
   else
-    check_path_pattern "$pattern"
-    return $?
+    # File/directory pattern
+    if [ -e "$PROJECT_DIR/$pattern" ]; then
+      return 0
+    fi
+    # Recursive detection: check subdirectories up to depth 4
+    if find "$PROJECT_DIR" -maxdepth 4 -name "$(basename "$pattern")" -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/vendor/*' -print -quit 2>/dev/null | grep -q .; then
+      return 0
+    fi
+    return 1
   fi
 }
 
@@ -207,7 +139,7 @@ ENTRIES=$(jq -r '
   join("|")
 ' "$MAPPINGS" 2>/dev/null)
 
-while IFS='|' read -r category name description skills_csv detect_csv; do
+while IFS='|' read -r _category name _description skills_csv detect_csv; do
   [ -z "$name" ] && continue
 
   # Check each detect pattern

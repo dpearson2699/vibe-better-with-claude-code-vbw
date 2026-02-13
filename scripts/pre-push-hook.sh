@@ -13,24 +13,22 @@ if [ -z "$ROOT" ]; then
   exit 0
 fi
 
-if [ -f "$ROOT/scripts/bump-version.sh" ]; then
-  VERIFY_OUTPUT=$(bash "$ROOT/scripts/bump-version.sh" --verify 2>&1) || {
-    echo ""
-    echo "ERROR: Push blocked -- version files are out of sync."
-    echo ""
-    echo "$VERIFY_OUTPUT" | grep -A 10 "MISMATCH"
-    echo ""
-    echo "  Run: bash scripts/bump-version.sh"
-    echo ""
-    exit 1
-  }
-fi
-
-# This repository does not use the VBW VERSION + bump-version.sh workflow.
-# If those files are absent, skip the VBW hook so pushes aren't blocked.
-if [ ! -f "$ROOT/VERSION" ] && [ ! -f "$ROOT/scripts/bump-version.sh" ]; then
+# This hook is VBW-specific. Skip entirely if bump-version.sh is absent.
+# Note: checking VERSION alone is insufficient — many non-VBW repos have VERSION files.
+if [ ! -f "$ROOT/scripts/bump-version.sh" ]; then
   exit 0
 fi
+
+VERIFY_OUTPUT=$(bash "$ROOT/scripts/bump-version.sh" --verify 2>&1) || {
+  echo ""
+  echo "ERROR: Push blocked -- version files are out of sync."
+  echo ""
+  echo "$VERIFY_OUTPUT" | grep -A 10 "MISMATCH"
+  echo ""
+  echo "  Run: bash scripts/bump-version.sh"
+  echo ""
+  exit 1
+}
 
 while read -r local_ref local_sha remote_ref remote_sha; do
   # Skip tag pushes and deletes

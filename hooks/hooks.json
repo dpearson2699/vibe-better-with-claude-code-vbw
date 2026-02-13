@@ -122,6 +122,7 @@
     ],
     "TeammateIdle": [
       {
+        "matcher": "vbw-lead|vbw-dev|vbw-qa|vbw-scout|vbw-debugger|vbw-architect",
         "hooks": [
           {
             "type": "command",
@@ -133,11 +134,17 @@
     ],
     "TaskCompleted": [
       {
+        "matcher": "vbw-lead|vbw-dev|vbw-qa|vbw-scout|vbw-debugger|vbw-architect",
         "hooks": [
           {
             "type": "command",
             "command": "bash -c 'w=$(ls -1 \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/hook-wrapper.sh 2>/dev/null | (sort -V 2>/dev/null || sort -t. -k1,1n -k2,2n -k3,3n) | tail -1) && [ -f \"$w\" ] && exec bash \"$w\" task-verify.sh; exit 0'",
             "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "bash -c 'w=$(ls -1 \"$HOME\"/.claude/plugins/cache/vbw-marketplace/vbw/*/scripts/hook-wrapper.sh 2>/dev/null | (sort -V 2>/dev/null || sort -t. -k1,1n -k2,2n -k3,3n) | tail -1) && [ -f \"$w\" ] && exec bash \"$w\" blocker-notify.sh; exit 0'",
+            "timeout": 5
           }
         ]
       }

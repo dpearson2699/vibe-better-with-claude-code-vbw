@@ -2,20 +2,61 @@
 
 All notable changes to VBW will be documented in this file.
 
-## [Unreleased]
+## [1.20.1] - 2026-02-13
+
+### Fixed
+
+- **`update`** -- prefix all `claude plugin` commands with `unset CLAUDECODE &&` to prevent "cannot be launched inside another Claude Code session" error when running `/vbw:update` from within an active session.
+- **`statusline`** -- remove misleading agent count that counted all system-wide `claude` processes instead of VBW-managed agents.
+
+## [1.20.0] - 2026-02-13
 
 ### Added
 
-- **`session-start`** -- auto-migration of `.claude/CLAUDE.md` to root `CLAUDE.md` for existing VBW projects. Three scenarios handled: move (guard-only → root), merge (user content extracted and inserted before VBW sections in root), no-op (root already exists, no guard). Gated on `.vbw-planning/` existence with `.claude-md-migrated` idempotency marker.
+- **`doctor`** -- `/vbw:doctor` health check command with 10 diagnostic checks: jq installed, VERSION file, version sync, plugin cache, hooks.json validity, agent files, config validation, script permissions, gh CLI, sort -V support. `disable-model-invocation: true`.
+- **`templates`** -- CONTEXT.md and RESEARCH.md templates for agent context compilation and research output structure.
+- **`blocker-notify`** -- TaskCompleted hook auto-notifies blocked agents when their blockers resolve, preventing teammate deadlocks.
+- **`control-plane`** -- lightweight Control Plane dispatcher (`scripts/control-plane.sh`, 328 lines) that sequences all enforcement scripts into a unified flow. Four actions: pre-task (contract → lease → gate), post-task (gate → release), compile (context compilation), full (all-in-one). Fail-open on script errors, JSON result output, lease conflict retry with 2s wait. 15 unit tests + 3 integration tests.
+- **`rollout-stage`** -- 3-stage progressive flag rollout automation (`scripts/rollout-stage.sh`). Stages: observability (threshold 0), optimization (threshold 2), full (threshold 5). Actions: check prerequisites, advance flags atomically, status report with all 14 v3_ flags. Stage definitions in `config/rollout-stages.json`. Supports `--dry-run`. 10 tests.
+- **`token-baseline`** -- per-phase token usage measurement and comparison (`scripts/token-baseline.sh`). Actions: measure (aggregate from event log), compare (delta with direction indicators), report (markdown with budget utilization by role). Baselines saved to `.baselines/token-baseline.json`. 10 tests.
+- **`token-intelligence`** -- per-task token budgets computed from contract metadata. Complexity scoring (must_haves weight 1, files weight 2, dependencies weight 3) maps to 4 tier multipliers. Fallback chain: per-task → per-role → config defaults. Token cap escalation emits `token_cap_escalated` event and reduces remaining budget for subsequent tasks. 12 tests.
+- **`context-index`** -- `context-index.json` manifest generated in `.cache/` with key-to-path mapping per role/phase. Atomic writes via mktemp+mv. Updated on every cache miss, timestamps refreshed on cache hits. 6 tests.
+- **`execute-protocol`** -- Control Plane orchestration block in Step 3, context compilation and token budget guards in Steps 3-4, cleanup in Step 5. Individual scripts (generate-contract.sh, hard-gate.sh, compile-context.sh, lock-lite.sh) preserved as independent fallbacks.
 
 ### Changed
 
-- **`isolation`** -- consolidated to single `CLAUDE.md`. Removed redundant `.claude/CLAUDE.md` guard file (identical content already embedded in root `CLAUDE.md` via `generate_plugin_isolation_section()`). Removed `--write-isolation-guard` mode from `bootstrap-claude.sh`. GSD isolation defense model simplified from three-layer to two-layer: root `CLAUDE.md` Plugin Isolation instructions + `security-filter.sh` PreToolUse hard block.
+- **`isolation`** -- consolidated to single root CLAUDE.md with context isolation rules for both VBW and GSD plugins.
+- **`agents`** -- removed dead `memory: project` from all 6 agent frontmatters. Clarified standalone vs teammate session scope in debugger.
+- **`references`** -- fixed internal references in verification-protocol.md (S5→§5/VRFY-06). Added per-model cost basis to model-profiles.md methodology note.
+- **`README`** -- token efficiency section updated with v1.20.0 numbers (8,807 lines bash, 63 scripts, 21 commands, 11 references). Command/hook counts updated to 21. Typo and incomplete sentence fixes.
+- **`compile-context`** -- ROADMAP metadata parser fixed (`### Phase` → `## Phase` to match actual format). Scout, Debugger, and Architect roles extended with conventions, research, and delta files. Code slices added to Debugger and Dev contexts.
+- **`token-budget`** -- extended argument parsing for contract path and task number. Per-task budget computation with complexity scoring. Escalation config added to `config/token-budgets.json`.
+- **`detect-stack`** -- expanded coverage for Python, Rust, Go, Elixir, Java, .NET, Rails, Laravel, Spring. 4 new manifest file detections.
+- **`control-plane`** -- `context_compiler` default harmonized from `false` to `true` to match phase-detect.sh and defaults.json.
+- **`config`** -- all 20 V2/V3 feature flags available in project config (default: off, enable via `/vbw:config`). 15 flags added to migration: lock_lite, validation_gates, smart_routing, event_log, schema_validation, snapshot_resume, lease_locks, event_recovery, monorepo_routing, hard_contracts, hard_gates, typed_protocol, role_isolation, two_phase_completion, token_budgets.
 
-### Removed
+### Fixed
 
-- **`bootstrap`** -- `--write-isolation-guard` CLI mode and `write_isolation_guard()` function from `bootstrap-claude.sh`. The `generate_plugin_isolation_section()` function is preserved — still called by `generate_vbw_sections()` for root `CLAUDE.md`.
-- **`.claude/CLAUDE.md`** -- redundant isolation guard file. Hard enforcement handled entirely by `security-filter.sh` via PreToolUse hooks.
+- **`task-verify`** -- bash 3.2 compatibility: replaced `case...esac` inside piped command substitution with `grep -Ev` stop word filter. macOS bash 3.2.57 parsing bug.
+- **`bump-version`** -- added `--offline` flag to skip remote GitHub fetch for CI/air-gapped environments.
+- **`phase-detect`** -- compaction threshold now configurable via `compaction_threshold` in config.json (default: 130000).
+- **`scope`** -- prevent lifecycle actions from polluting Todos.
+- **`init`** -- remove `*.sln` glob that crashes zsh on macOS.
+- **`teams`** -- auto-notify blocked agents when blockers clear.
+- **`defaults`** -- harmonize model_profile fallback to quality across all scripts.
+- **`migration`** -- comprehensive flag migration and jq boolean bug fix.
+- **`release`** -- resolve 8 findings from 6-agent pre-release verification.
+- **`validate-commit`** -- heredoc commit messages no longer overwritten by `-m` flag extraction. macOS sed compatibility fix.
+- **`session-start`** -- zsh glob compatibility across session-start, snapshot-resume, lock-lite, and file-guard scripts.
+- **`security-filter`** -- stale marker detection (24h threshold) prevents false positive blocks on old markers.
+
+### Documentation
+
+- **`tokens`** -- v1.20.0 Full Spec Token Analysis (664 lines): 258 commits, 6 milestones, per-request -7.3%, ~85% coordination overhead reduction maintained despite 33% codebase growth.
+
+### Tests
+
+- **86 new tests** across 5 new test files: phase0-bugfix-scripts.bats (10), phase0-bugfix-verify.bats (16), token-budgets.bats (12), context-index.bats (6), control-plane.bats (18), rollout-stage.bats (10), token-baseline.bats (10). Plus 4 context metadata tests. Test suite: 237 → 323 (zero regressions).
 
 ---
 
@@ -24,15 +65,6 @@ All notable changes to VBW will be documented in this file.
 ### Added
 
 - **`isolation`** -- context isolation to prevent GSD insight leakage into VBW sessions. New `### Context Isolation` subsection in Plugin Isolation instructs Claude to ignore `<codebase-intelligence>` tags and use VBW's own codebase mapping. bootstrap-claude.sh now strips 8 known GSD section headers when regenerating CLAUDE.md from existing files.
-- **`verification`** -- new `scripts/verify-claude-bootstrap.sh` regression suite for CLAUDE generation. Covers isolation guard generation, greenfield output, brownfield preservation of non-managed sections, managed-section stripping, and idempotent regeneration.
-
-### Changed
-
-- **`init`** -- Step 3.5 CLAUDE bootstrap guidance moved to script-first flow. Removed the large inline `CLAUDE.md` template payload and standardized on `scripts/bootstrap/bootstrap-claude.sh` for generation semantics (greenfield + brownfield).
-
-### Fixed
-
-- **`hooks`** -- `validate-frontmatter.sh` no longer appears hung when run manually in an interactive shell. Added TTY stdin guard so direct terminal invocation exits cleanly while preserving hook stdin behavior.
 
 ---
 
@@ -81,8 +113,8 @@ All notable changes to VBW will be documented in this file.
 - **`vibe`** -- Phase Banner displays active model profile during Plan and Execute modes.
 - **`execute-protocol`** -- agent spawn messages include model name in parentheses format: "◆ Spawning {agent} ({model})...".
 - **`model-routing`** -- agent model resolution helper script (`scripts/resolve-agent-model.sh`) with hybrid architecture pattern: commands read config, helper handles merge/override logic.
-- **`init`** -- new projects seeded with `model_profile: "balanced"` in config.json.
-- **`session-start`, `suggest-next`, `statusline`** -- auto-migration adds `model_profile: "balanced"` to existing projects without the field.
+- **`init`** -- new projects seeded with `model_profile: "quality"` in config.json.
+- **`session-start`, `suggest-next`, `statusline`** -- auto-migration adds `model_profile: "quality"` to existing projects without the field.
 
 ### Changed
 
@@ -258,7 +290,7 @@ All notable changes to VBW will be documented in this file.
 - **Token economy engine** -- per-agent cost attribution in the statusline. Each render cycle computes cost delta and attributes it to the active agent (Dev, Lead, QA, Scout, Debugger, Architect, or Other). Accumulated in `.vbw-planning/.cost-ledger.json`. Displays `Cost: $X.XX` on Line 4 and a full economy breakdown on Line 5 (per-agent costs sorted descending, percentages, cache hit rate, $/line metric). Economy line suppressed when total cost is $0.00.
 - **Agent lifecycle hooks** -- `SubagentStart` hook writes active agent type to `.vbw-planning/.active-agent` via `scripts/agent-start.sh`. `SubagentStop` hook clears the marker via `scripts/agent-stop.sh`. Enables cost attribution to know which agent incurred each cost delta.
 - **`/vbw:status` economy section** -- status command reads `.cost-ledger.json` and displays per-agent cost breakdown when cost data is available. Guarded on file existence and non-zero total.
-- **GSD isolation** -- two-layer defense preventing GSD from accessing `.vbw-planning/`. Layer 1: root `CLAUDE.md` Plugin Isolation instructions. Layer 2: `security-filter.sh` PreToolUse hard block (exit 2) when `.gsd-isolation` flag exists and no VBW markers present. Two marker files (`.active-agent` for subagents, `.vbw-session` for commands) prevent false positives. Opt-in during `/vbw:init` with automatic GSD detection.
+- **GSD isolation** -- two-layer defense preventing GSD from accessing `.vbw-planning/`. Layer 1: root `CLAUDE.md` Plugin Isolation section (advisory). Layer 2: `security-filter.sh` PreToolUse hard block (exit 2) when `.gsd-isolation` flag exists and no VBW markers present. Two marker files (`.active-agent` for subagents, `.vbw-session` for commands) prevent false positives. Opt-in during `/vbw:init` with automatic GSD detection.
 
 ### Changed
 

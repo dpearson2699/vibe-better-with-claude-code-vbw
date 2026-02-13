@@ -25,39 +25,40 @@
 
 ## VBW Token Efficiency vs Stock Opus 4.6 Agent Teams
 
-VBW wraps Claude Code's native Agent Teams with 18 optimization mechanisms across 8 architectural layers, shell pre-computation, model routing, context diet, deterministic context routing, compaction resilience, scope enforcement, structured coordination, and effort scaling. Aggressive content compression (v1.10.2) cut every instruction file by 50%+, and the Context Compiler (v1.10.7) routes only role-relevant content to each agent via pre-compiled context files. The result: same coordination capability, ~86% fewer tokens burned on overhead.
+VBW wraps Claude Code's native Agent Teams with 18 optimization mechanisms across 8 architectural layers. Since v1.10.7, the codebase grew 33% (12,181 to 16,154 lines) and the script count tripled (23 to 63), yet per-request overhead *decreased* 7% — because every new capability is shell-only. The 40 new scripts (V2 protocol enforcement, V3 feature flags, test harness, bootstrap) execute as bash subprocesses at zero model token cost. Vibe consolidation replaced 10 commands with a single `/vbw:vibe`, shrinking the active command footprint. The result: 8,807 lines of bash infrastructure the model never sees, across 21 commands, 6 agents, and 11 reference files.
 
-Stock teams load all command descriptions into every request, run every agent on Opus, coordinate via expensive message round-trips, and let each agent independently discover project state by reading the same files. VBW replaces all of that with 3,065 lines of bash that execute at zero model token cost, hardcoded model routing (Scout on Haiku, QA on Sonnet), disk-based coordination, pre-computed state injection, deterministic context compilation, and terse compressed instructions across all 20 commands, 6 agents, and 10 reference files.
+Stock teams load all command descriptions into every request, run every agent on Opus, coordinate via expensive message round-trips, and let each agent independently discover project state by reading the same files. VBW replaces all of that with shell pre-computation, deterministic context routing via `compile-context.sh`, configurable model profiles (Scout on Haiku, QA on Sonnet), disk-based coordination, pre-computed state injection, 22 feature-flagged shell hooks, and terse compressed instructions.
 
 | Category | Stock Agent Teams | VBW | Saving |
 | :--- | ---: | ---: | ---: |
-| Base context overhead | 10,800 tokens | 1,840 tokens | **83%** |
+| Base context overhead | 10,800 tokens | 1,800 tokens | **83%** |
 | State computation per command | 1,300 tokens | 200 tokens | **85%** |
-| Agent coordination (x4 agents) | 16,000 tokens | 1,200 tokens | **93%** |
+| Agent coordination (x4 agents) | 16,000 tokens | 1,500 tokens | **91%** |
 | Compaction recovery | 5,000 tokens | 700 tokens | **86%** |
-| Context duplication (shared files) | 16,500 tokens | 800 tokens | **95%** |
+| Context duplication (shared files) | 16,500 tokens | 900 tokens | **95%** |
 | Agent model cost per phase | $2.78 | $1.40 | **50%** |
-| **Total coordination overhead** | **87,100 tokens** | **12,100 tokens** | **86%** |
+| **Total coordination overhead** | **87,100 tokens** | **13,100 tokens** | **85%** |
 
-The five highest-impact optimizations: `compile-context.sh` produces role-specific context files so each agent loads only what its role needs (Lead gets filtered requirements, Dev gets phase goal + conventions, QA gets verification targets); `disable-model-invocation` on 15 of 20 commands removes ~9,000 tokens from every API request; content compression cut commands 53%, agents 47%, and references 72%; model routing sends Scout to Haiku (60x cheaper than Opus) and QA to Sonnet (5x cheaper); and shell pre-computation via `phase-detect.sh` and `session-start.sh` replaces 5-7 file reads with 22 pre-computed key-value pairs.
+The five highest-impact optimizations: `compile-context.sh` (470 lines, 6 roles) produces role-specific context files so each agent loads only what its role needs — Lead gets filtered requirements, Dev gets phase goal + conventions + delta files, QA gets verification targets, Scout/Debugger/Architect get scoped research context; `disable-model-invocation` on 15 of 21 commands removes ~9,000 tokens from every API request; vibe consolidation replaced 10 active commands with 1 (`vibe.md`), cutting per-request overhead by 915 tokens; model routing sends Scout to Haiku (60x cheaper than Opus) and QA to Sonnet (5x cheaper), with 3 preset profiles (Quality/Balanced/Budget) and per-agent overrides; and 63 shell scripts handle state computation, protocol enforcement, security filtering, and session lifecycle at zero model token cost.
 
 **What this means for your bill:**
 
-VBW's ~60% total token reduction per phase means each phase burns roughly 40% of the tokens stock teams would use. For API users, that's direct dollar savings. For subscription plans, your rate limit budget stretches ~2.5x further -- equivalent to getting 150% more development capacity for the same price.
+Each VBW phase eliminates ~85% of the coordination tokens stock teams burn on context loading, state recomputation, and agent bootstrapping. Model routing stacks additional savings on top: Scout on Haiku (60x cheaper than Opus), QA on Sonnet (5x cheaper), with three presets from conservative to aggressive. For API users, per-phase cost drops from $2.78 to $1.40 (Balanced) or $0.70 (Budget). For subscription plans, the structural efficiency stretches your rate limit budget ~2.5x further — **150% more development capacity for the same price**.
 
-| Scenario | Without VBW | With VBW | Impact |
+| Scenario | Without VBW | With VBW (Balanced) | Impact |
 | :--- | ---: | ---: | ---: |
 | API: single project (10 phases) | ~$28 | ~$14 | **~$14 saved** |
 | API: active dev (20 phases/mo) | ~$56/mo | ~$28/mo | **~$28/mo saved (~$336/yr)** |
 | API: heavy dev (50 phases/mo) | ~$139/mo | ~$70/mo | **~$69/mo saved (~$828/yr)** |
+| API: team (100 phases/mo) | ~$278/mo | ~$139/mo | **~$139/mo saved (~$1,668/yr)** |
 | Pro ($20/mo) | baseline capacity | ~2.5x phases per cycle | **150% more work done** |
 | Pro annual ($17/mo) | baseline capacity | ~2.5x phases per cycle | **150% more work done** |
 | Max 5x ($100/mo) | 5x Pro capacity | ~12.5x vs base Pro | **150% more work done** |
 | Max 20x ($200/mo) | 20x Pro capacity | ~50x vs base Pro | **150% more work done** |
 
-*API projections use the per-phase agent costs from the table above ($2.78 stock, $1.40 VBW). Subscription plans have a flat fee — VBW doesn't change what you pay, but each phase burns ~60% fewer overhead tokens, so you fit ~2.5x more phases into the same rate limit budget. Based on [current API pricing](https://claude.com/pricing).*
+*API projections use Balanced profile ($1.40/phase vs $2.78 stock). Budget profile ($0.70/phase) doubles these savings — ~$104/mo on heavy dev (~$1,248/yr), ~$209/mo for teams (~$2,508/yr). Quality profile ($2.80/phase) matches stock agent costs but adds V2/V3 protocol enforcement, typed handoffs, and continuous verification at zero cost premium — same bill, better process. Subscription plans have a flat fee — VBW doesn't change what you pay, but ~85% less overhead means ~2.5x more phases per rate limit cycle regardless of model profile. Based on [current API pricing](https://claude.com/pricing).*
 
-Full analysis: **[VBW v1.10.7 Context Compiler Token Analysis](docs/vbw-1-10-7-context-compiler-token-analysis.md)** | Previous: **[VBW v1.10.2 Token Analysis](docs/vbw-1-10-2-vs-stock-agent-teams-token-analysis.md)** 
+Full analysis: **[VBW v1.20.0 Full Spec Token Analysis](docs/vbw-1-20-0-full-spec-token-analysis.md)** | Previous: **[v1.10.7 Context Compiler](docs/vbw-1-10-7-context-compiler-token-analysis.md)** | **[v1.10.2 Compression](docs/vbw-1-10-2-vs-stock-agent-teams-token-analysis.md)**
 <br>
 
 ## Manifesto
@@ -66,9 +67,9 @@ VBW is open source because the best tools are built by the people who use them.
 
 This project exists to make AI coding better for everyone, and "everyone" means exactly that.
 
-**For absolute beginners:** VBW may look intimidating, expecially if you've never used Claude Code, but it is, in fact, incredibly easy to use. And your results will be significantly better than using an IDE with a chatbot.
+**For absolute beginners:** VBW may look intimidating, especially if you've never used Claude Code, but it is, in fact, incredibly easy to use. And your results will be significantly better than using an IDE with a chatbot.
 
-**For seasoned developers:** Four effort profiles control agent depth and cost tradeoff. Four autonomy levels gate confirmation prompts from cautious (plan approval at balanced effort) to pure-vibe (full phase looping, zero stops). Verification tiers scale from quick sanity checks to deep goal-backward QA. Work profiles bundle effort, autonomy, and verification into switchable presets. Model routing pins Scout to Haiku and QA to Sonnet while Dev runs on Opus. Skill-hook wiring lets you trigger installed skills on PostToolUse and PreToolUse events with custom matchers. Convention enforcement auto-detects your codebase patterns during init and injects them into every agent's context via. Platform-enforced `disallowedTools` on 4 of 6 agents, not prompt-based restrictions. The beginners get guardrails; you get a control surface.
+**For seasoned developers:** Four effort profiles control agent depth and cost tradeoff. Four autonomy levels gate confirmation prompts from cautious (plan approval at balanced effort) to pure-vibe (full phase looping, zero stops). Verification tiers scale from quick sanity checks to deep goal-backward QA. Work profiles bundle effort, autonomy, and verification into switchable presets. Model routing pins Scout to Haiku and QA to Sonnet while Dev runs on Opus. Skill-hook wiring lets you trigger installed skills on PostToolUse and PreToolUse events with custom matchers. Convention enforcement auto-detects your codebase patterns during init and injects them into every agent's context via `compile-context.sh`. Platform-enforced `disallowedTools` on 4 of 6 agents, not prompt-based restrictions. The beginners get guardrails; you get a control surface.
 
 **For contributors:** VBW is a living project. The plugin system, the agents, the verification pipeline - all of it is open to improvement. If you've found a better way to plan, build, or verify code with Claude, bring it. File an issue, open a PR, or just show up and share what you've learned. Every contribution makes the next person's experience better.
 
@@ -125,7 +126,7 @@ Most Claude Code plugins were built for the subagent era, one main session spawn
 
 - **Agent Teams for real parallelism.** `/vbw:vibe` creates a team of Dev teammates that execute tasks concurrently, each in their own context window. `/vbw:map` runs 4 Scout teammates in parallel to analyze your codebase. This isn't "spawn a subagent and wait" -- it's coordinated teamwork with a shared task list and direct inter-agent communication.
 
-- **Native hooks for continuous verification.** 20 hooks across 11 event types run automatically -- validating SUMMARY.md structure, checking commit format, validating frontmatter descriptions, gating task completion, blocking sensitive file access, enforcing plan file boundaries, managing session lifecycle, tracking agent lifecycle and cost attribution, tracking session metrics, pre-flight prompt validation, and post-compaction context verification. No more spawning a QA agent after every task. The platform enforces it, not the prompt.
+- **Native hooks for continuous verification.** 21 hooks across 11 event types run automatically -- validating SUMMARY.md structure, checking commit format, validating frontmatter descriptions, gating task completion, blocking sensitive file access, enforcing plan file boundaries, managing session lifecycle, tracking agent lifecycle and cost attribution, tracking session metrics, pre-flight prompt validation, and post-compaction context verification. No more spawning a QA agent after every task. The platform enforces it, not the prompt.
 
 - **Platform-enforced tool permissions.** Each agent has `tools`/`disallowedTools` in their YAML frontmatter -- 4 of 6 agents have platform-enforced deny lists. Scout and QA literally cannot write files. Sensitive file access (`.env`, credentials) is intercepted by the `security-filter` hook. `disallowedTools` is enforced by Claude Code itself, not by instructions an agent might ignore during compaction.
 
@@ -373,7 +374,7 @@ Closed your terminal? Switched branches? Came back after a weekend of pretending
 >
 > **If you accidentally `/clear`**, run `/vbw:resume` immediately. It restores project context from ground truth files in `.vbw-planning/` — state, roadmap, plans, summaries — and tells you exactly where to pick up.
 
-> **For advanced users:** The [full command reference](#commands) below has 20 commands for granular control — `/vbw:vibe` with flags for explicit mode selection (`--plan`, `--execute`, `--discuss`, `--assumptions`), `/vbw:qa` for on-demand verification, `/vbw:debug` for systematic bug investigation, and more. But you never *need* the flags. `/vbw:vibe` with no arguments handles the entire lifecycle on its own.
+> **For advanced users:** The [full command reference](#commands) below has 21 commands for granular control — `/vbw:vibe` with flags for explicit mode selection (`--plan`, `--execute`, `--discuss`, `--assumptions`), `/vbw:qa` for on-demand verification, `/vbw:debug` for systematic bug investigation, and more. But you never *need* the flags. `/vbw:vibe` with no arguments handles the entire lifecycle on its own.
 
 <br>
 
@@ -417,6 +418,7 @@ These are the commands you'll use every day. This is the job now.
 | `/vbw:config` | View and toggle VBW settings: effort profiles, autonomy levels (cautious/standard/confident/pure-vibe), plain-language summaries (`plain_summary`), skill suggestions, auto-install behavior, and skill-hook wiring. Detects profile drift and offers to save as new profile. |
 | `/vbw:profile` | Switch between work profiles or create custom ones. 4 built-in presets (default, prototype, production, yolo) change effort, autonomy, and verification in one command. Interactive profile creation for custom workflows. |
 | `/vbw:teach` | View, add, or manage project conventions. Auto-detected from codebase during init, manually teachable anytime. Shows what VBW already knows and warns about conflicts before adding. Conventions are injected into agent context via CLAUDE.md and verified by QA. |
+| `/vbw:doctor` | Run 10 health checks on your VBW installation: jq, VERSION sync, plugin cache, hooks validity, agent files, config, script permissions, gh CLI, sort -V support. Diagnoses issues before they become mysteries. |
 | `/vbw:help` | Command reference with usage examples. You are reading its output's spiritual ancestor right now. |
 
 <br>
@@ -480,7 +482,7 @@ Here's when each one shows up to work:
   │(subagt)  │   (scope creep is for amateurs)                         │ verify
   └──────────┘                                                         │
                                                                        ▼
-  HOOKS (11 event types, 20 handlers)                              VERIFICATION.md
+  HOOKS (11 event types, 21 handlers)                              VERIFICATION.md
   ┌───────────────────────────────────────────────────────────────────────────────┐
   │  Verification                                                                 │
   │    PostToolUse ──── Validates SUMMARY.md on write, checks commit format,      │
@@ -593,13 +595,13 @@ VBW spawns specialized agents for planning, development, and verification. Model
 
 | Profile | Use Case | Lead | Dev | QA | Scout | Est. Cost/Phase |
 | :--- | :--- | :--- | :--- | :--- | :--- | ---: |
-| **Quality** | Production work, architecture decisions | opus | opus | sonnet | haiku | ~$2.80 |
-| **Balanced** | Standard development (default) | sonnet | sonnet | sonnet | haiku | ~$1.40 |
+| **Quality** | Production work, architecture decisions (default) | opus | opus | sonnet | haiku | ~$2.80 |
+| **Balanced** | Standard development | sonnet | sonnet | sonnet | haiku | ~$1.40 |
 | **Budget** | Prototyping, tight budgets | sonnet | sonnet | haiku | haiku | ~$0.70 |
 
 *Debugger and Architect follow the same model as Lead. Estimates based on typical 3-plan phase.*
 
-**Balanced is the default.** It gives you solid planning and verification at 50% the cost of Quality. Most projects never need to change it.
+**Quality is the default.** It gives you maximum reasoning depth for architecture decisions and production-critical work. Switch to Balanced (`/vbw:config model_profile balanced`) for 50% cost savings on standard development.
 
 **Quality** uses Opus for Lead, Dev, Debugger, and Architect -- maximum reasoning depth for critical work. QA stays on Sonnet (verification doesn't need Opus), Scout on Haiku (research throughput).
 
@@ -663,7 +665,7 @@ For the "I'll just prompt carefully" crowd.
 | One long session, no structure | Phased roadmap with requirements traceability |
 | Manual agent spawning | 6 specialized agents with enforced permissions |
 | Hope the AI remembers context | Persistent state across sessions via `.vbw-planning/` |
-| No verification unless you ask | Continuous QA via 20 hooks + deep verification on demand |
+| No verification unless you ask | Continuous QA via 21 hooks + deep verification on demand |
 | Commits whenever, whatever | Atomic commits per task with validation |
 | "It works on my machine" | Goal-backward verification against success criteria |
 | Agents talk in free-form text | Structured JSON handoff schemas between agents |
@@ -674,7 +676,7 @@ For the "I'll just prompt carefully" crowd.
 | Raw agent names in cost tracking | Workflow categories (Build/Plan/Verify) with efficiency insights |
 | Hook failure blocks your session | Universal hook wrapper -- errors logged, session always continues |
 | Install plugin, stare at blank screen | Branded welcome with single call to action on first run |
-| Memorize flags for each command | Consistent argument hints on all 20 commands with discoverable flags |
+| Memorize flags for each command | Consistent argument hints on all 21 commands with discoverable flags |
 | Change 3-4 settings to switch work mode | Work profiles: one command to switch between prototype, production, and yolo modes |
 | Conventions live as free text in CLAUDE.md | Structured conventions auto-detected from codebase, conflict-checked, QA-verified |
 
@@ -689,7 +691,7 @@ For the "I'll just prompt carefully" crowd.
 ```
 .claude-plugin/    Plugin manifest (plugin.json)
 agents/            6 agent definitions with native tool permissions
-commands/          20 slash commands (commands/*.md)
+commands/          21 slash commands (commands/*.md)
 config/            Default settings and stack-to-skill mappings
 hooks/             Plugin hooks for continuous verification
 scripts/           Hook handler scripts (security, validation, QA gates)

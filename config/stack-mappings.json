@@ -1,6 +1,63 @@
 {
   "_description": "Maps detected project stack to recommended Claude Code skills",
   "_usage": "Used by /vbw:init and /vbw:vibe to suggest relevant skills",
+  "languages": {
+    "python": {
+      "detect": ["pyproject.toml", "requirements.txt", "setup.py"],
+      "skills": ["python-skill"],
+      "description": "Python project"
+    },
+    "rust": {
+      "detect": ["Cargo.toml"],
+      "skills": ["rust-skill"],
+      "description": "Rust project"
+    },
+    "go": {
+      "detect": ["go.mod"],
+      "skills": ["go-skill"],
+      "description": "Go project"
+    },
+    "elixir": {
+      "detect": ["mix.exs"],
+      "skills": ["elixir-skill"],
+      "description": "Elixir project"
+    },
+    "java": {
+      "detect": ["pom.xml", "build.gradle"],
+      "skills": ["java-skill"],
+      "description": "Java project"
+    },
+    "dotnet": {
+      "detect": ["*.csproj", "*.sln"],
+      "skills": ["dotnet-skill"],
+      "description": ".NET project"
+    },
+    "deno": {
+      "detect": ["deno.json", "deno.jsonc", "deno.lock"],
+      "skills": ["deno-skill"],
+      "description": "Deno runtime"
+    },
+    "bun": {
+      "detect": ["bun.lockb", "bunfig.toml"],
+      "skills": ["bun-skill"],
+      "description": "Bun runtime"
+    },
+    "ruby": {
+      "detect": ["Gemfile", "*.gemspec"],
+      "skills": ["ruby-skill"],
+      "description": "Ruby project"
+    },
+    "php": {
+      "detect": ["composer.json", "composer.lock"],
+      "skills": ["php-skill"],
+      "description": "PHP project"
+    },
+    "kotlin": {
+      "detect": ["build.gradle.kts"],
+      "skills": ["kotlin-skill"],
+      "description": "Kotlin project"
+    }
+  },
   "frameworks": {
     "next": {
       "detect": ["next.config.js", "next.config.mjs", "next.config.ts"],
@@ -66,6 +123,46 @@
       "detect": ["nuxt.config.ts", "nuxt.config.js", "package.json:nuxt"],
       "skills": ["nuxt-skill"],
       "description": "Nuxt.js framework"
+    },
+    "rails": {
+      "detect": ["config/routes.rb", "Gemfile"],
+      "skills": ["rails-skill"],
+      "description": "Ruby on Rails framework"
+    },
+    "laravel": {
+      "detect": ["artisan", "composer.json:laravel"],
+      "skills": ["laravel-skill"],
+      "description": "Laravel PHP framework"
+    },
+    "spring": {
+      "detect": ["pom.xml:spring-boot", "build.gradle:spring-boot"],
+      "skills": ["spring-skill"],
+      "description": "Spring Boot Java framework"
+    },
+    "angular": {
+      "detect": ["angular.json", "package.json:@angular/core"],
+      "skills": ["angular-skill"],
+      "description": "Angular framework"
+    },
+    "nestjs": {
+      "detect": ["nest-cli.json", "package.json:@nestjs/core"],
+      "skills": ["nestjs-skill"],
+      "description": "NestJS server framework"
+    },
+    "flask": {
+      "detect": ["requirements.txt:flask", "pyproject.toml:flask"],
+      "skills": ["python-skill"],
+      "description": "Flask Python framework"
+    },
+    "solidjs": {
+      "detect": ["package.json:solid-js"],
+      "skills": ["solidjs-skill"],
+      "description": "SolidJS reactive framework"
+    },
+    "phoenix": {
+      "detect": ["mix.exs:phoenix"],
+      "skills": ["elixir-skill"],
+      "description": "Phoenix Elixir framework"
     }
   },
   "testing": {
@@ -130,6 +227,33 @@
       "detect": [".storybook/main.js", ".storybook/main.ts", "package.json:storybook"],
       "skills": ["storybook-skill"],
       "description": "Storybook component development"
+    }
+  },
+  "mobile": {
+    "ios-swift": {
+      "detect": ["Package.swift", "*.xcodeproj", "*.xcworkspace"],
+      "skills": ["swift-skill"],
+      "description": "iOS/Swift native"
+    },
+    "swiftui": {
+      "detect": ["Package.swift"],
+      "skills": ["swift-skill"],
+      "description": "SwiftUI framework"
+    },
+    "android-kotlin": {
+      "detect": ["build.gradle.kts", "build.gradle", "settings.gradle"],
+      "skills": ["android-skill"],
+      "description": "Android/Kotlin native"
+    },
+    "flutter": {
+      "detect": ["pubspec.yaml", "lib/main.dart"],
+      "skills": ["flutter-skill"],
+      "description": "Flutter cross-platform"
+    },
+    "react-native": {
+      "detect": ["package.json:react-native", "app.json"],
+      "skills": ["react-native-skill"],
+      "description": "React Native cross-platform"
     }
   },
   "devops": {

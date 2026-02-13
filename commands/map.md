@@ -1,5 +1,5 @@
 ---
-name: vbw:map
+name: map
 disable-model-invocation: true
 description: Analyze existing codebase with adaptive Scout teammates to produce structured mapping documents.
 argument-hint: [--incremental] [--package=name] [--tier=solo|duo|quad]
@@ -51,12 +51,11 @@ Display: `◆ Sizing: {SOURCE_FILE_COUNT} source files → {tier} mode`
 
 ### Step 2: Detect monorepo
 
-Use broad, language-agnostic heuristics:
-- JS workspace markers: `lerna.json`, `pnpm-workspace.yaml`, root `workspaces` field
-- Conventional package roots: `packages/` or `apps/` containing sub-project manifests
-- Distinct build-system roots at different paths (for example sibling roots containing `package.json`, `Cargo.toml`, `go.mod`, `pyproject.toml`, `*.xcodeproj`, `*.xcworkspace`, `*.sln`, `*.csproj`, `build.gradle`, or `pom.xml`)
+**JS/Node patterns:** Check lerna.json, pnpm-workspace.yaml, packages/ or apps/ with sub-package.json, root workspaces field.
 
-If ≥2 independent component roots are detected, treat as monorepo. If monorepo + --package: scope to that package.
+**Multi-component detection:** Count distinct build system roots at different paths. Build system markers: package.json, Cargo.toml, go.mod, pyproject.toml, build.gradle, pom.xml, *.xcodeproj, Podfile, pubspec.yaml. If 2+ markers found at different directory levels (not just root), treat as monorepo.
+
+If monorepo + --package: scope to that package.
 
 ### Step 3: Execute mapping (tier-branched)
 
@@ -91,7 +90,7 @@ Security: PreToolUse hook handles enforcement. **Scout model:** same as duo.
 **Scout communication (effort-gated):**
 
 | Effort | Messages |
-| ------ | -------- |
+|--------|----------|
 | Thorough | Cross-cutting findings + contradiction flags for INDEX.md Validation Notes |
 | Balanced | Cross-cutting findings only |
 | Fast | Blockers only |

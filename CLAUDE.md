@@ -7,9 +7,9 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 ## Active Context
 
 **Work:** No active milestone
-**Last shipped:** Init Auto-Bootstrap — 4 phases, 6 plans, 28 tasks, 29 commits. Transformed /vbw:init into intelligent, context-aware initialization with brownfield inference, GSD history extraction, confirmation UX, and shared bootstrap scripts.
-**Previous:** Granular Model Config — 2 phases, 2 plans, 6 tasks, 6 commits
-**Next action:** Run /vbw:vibe to start a new milestone, or /vbw:status to review progress
+**Last shipped:** Full Spec Compliance — 5 phases, 51 tasks, 46 commits, 188/188 QA
+**Previous:** Spec Completion — 3 phases, 12 tasks, 12 commits, 92/92 QA
+**Next action:** Run /vbw:vibe to start a new milestone
 
 ## VBW Rules
 
@@ -26,7 +26,7 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 | Decision | Date | Rationale |
 |----------|------|-----------|
 | 3 preset profiles (quality/balanced/budget) | 2026-02-11 | Covers 95% of use cases; overrides handle edge cases |
-| Balanced as default (Sonnet + Haiku for Scout) | 2026-02-11 | Good quality/cost tradeoff for most projects |
+| Quality as default (Opus + Sonnet QA + Haiku Scout) | 2026-02-11 | Maximum reasoning for critical work; changed from balanced in v1.10.15 |
 | Model profile integrated into /vbw:config | 2026-02-11 | One config interface, not separate command |
 | Pass explicit model param to Task tool | 2026-02-11 | Session /model doesn't propagate to subagents |
 | Hard delete old commands (no aliases, no deprecation) | 2026-02-11 | Zero technical debt; CHANGELOG documents the change |
@@ -34,6 +34,7 @@ A Claude Code plugin that adds structured development workflows — planning, ex
 | NL parsing via prompt instructions, not code | 2026-02-11 | Zero maintenance; model improvements are free |
 | Confirmation gates mandatory (except --yolo) | 2026-02-11 | NL misinterpretation risk → always confirm before acting |
 | Per-project memory only | 2026-02-10 | Get basics right first, cross-project learning deferred |
+| Domain research before discovery questions | 2026-02-13 | Informed scenarios catch unknown unknowns; graceful fallback preserves speed |
 
 ## Installed Skills
 

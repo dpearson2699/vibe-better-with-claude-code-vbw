@@ -4,6 +4,9 @@ set -u
 # Exit 2 = block completion, Exit 0 = allow
 # Exit 0 on ANY error (fail-open: never block legitimate work)
 
+# Only apply to VBW contexts
+[ ! -d ".vbw-planning" ] && exit 0
+
 # Read stdin to get task context
 INPUT=$(cat 2>/dev/null) || exit 0
 
@@ -18,7 +21,12 @@ fi
 
 # Get recent commits (last 20, within 2 hours)
 NOW=$(date +%s 2>/dev/null) || exit 0
+# Configurable commit recency window (default: 2 hours)
 TWO_HOURS=7200
+if command -v jq &>/dev/null && [ -f ".vbw-planning/config.json" ]; then
+  _window=$(jq -r '.qa_commit_window_seconds // 7200' .vbw-planning/config.json 2>/dev/null)
+  [ "${_window:-0}" -gt 0 ] 2>/dev/null && TWO_HOURS="$_window"
+fi
 RECENT_COMMITS=$(git log --oneline -20 --format="%ct %s" 2>/dev/null) || exit 0
 
 if [ -z "$RECENT_COMMITS" ]; then
@@ -51,11 +59,11 @@ if [ -z "$TASK_SUBJECT" ]; then
 fi
 
 # Extract keywords from task subject (words > 3 chars, lowercased, max 8)
+# Filter out common stop words that cause false positive matches
+STOP_WORDS="^(that|this|with|from|have|been|will|would|should|could|their|them|then|than|when|what|which|where|were|some|each|into|also|more|over|only|does|make|like|just|most|well|very|much|such|even)$"
 KEYWORDS=$(echo "$TASK_SUBJECT" | tr '[:upper:]' '[:lower:]' | tr -cs '[:alnum:]' '\n' | while read -r word; do
-  if [ ${#word} -gt 3 ]; then
-    echo "$word"
-  fi
-done | head -8)
+  [ ${#word} -gt 3 ] && echo "$word"
+done | grep -Ev "$STOP_WORDS" | head -8)
 
 if [ -z "$KEYWORDS" ]; then
   # No usable keywords extracted, allow (fail-open)

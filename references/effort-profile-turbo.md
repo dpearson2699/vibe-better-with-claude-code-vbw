@@ -1,6 +1,6 @@
 # Turbo Profile (EFRT-04)
 
-**Model:** Sonnet | **Use when:** Quick fixes, config changes, obvious tasks, low-stakes edits.
+**Recommended model profile:** Budget | **Use when:** Quick fixes, config changes, obvious tasks, low-stakes edits.
 
 ## Effort vs Model Profile
 

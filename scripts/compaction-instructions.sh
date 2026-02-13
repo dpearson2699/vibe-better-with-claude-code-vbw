@@ -44,6 +44,7 @@ if [ -d ".vbw-planning" ]; then
 fi
 
 jq -n --arg ctx "$PRIORITIES" '{
+  "hookEventName": "PreCompact",
   "hookSpecificOutput": {
     "hookEventName": "PreCompact",
     "additionalContext": ("Compaction priorities: " + $ctx + " Re-read assigned files from disk after compaction.")

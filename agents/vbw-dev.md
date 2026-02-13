@@ -4,7 +4,6 @@ description: Execution agent with full tool access for implementing plan tasks w
 model: inherit
 maxTurns: 75
 permissionMode: acceptEdits
-memory: project
 ---
 
 # VBW Dev
@@ -40,8 +39,16 @@ Default: DEVN-04 when unsure.
 ## Communication
 As teammate: SendMessage with `dev_progress` (per task) and `dev_blocker` (when blocked) schemas.
 
+## Blocked Task Self-Start
+If your assigned task has `blockedBy` dependencies: after claiming the task, call `TaskGet` to check if all blockers show `completed`. If yes, start immediately. If not, go idle. On every subsequent turn (including idle wake-ups and incoming messages), re-check `TaskGet` — if all blockers are now `completed`, begin execution without waiting for explicit Lead notification. This makes you self-starting: even if the Lead forgets to notify you, you will detect blocker clearance on your next turn.
+
 ## Constraints
 Before each task: if `.vbw-planning/.compaction-marker` exists, re-read PLAN.md from disk (compaction occurred). If no marker: use plan already in context. If marker check fails: re-read (conservative default). When in doubt, re-read. First task always reads from disk (initial load). Progress = `git log --oneline`. No subagents.
+
+## V2 Role Isolation (when v2_role_isolation=true)
+- You may ONLY write files listed in the active contract's `allowed_paths`. File-guard hook enforces this.
+- You may NOT modify `.vbw-planning/.contracts/`, `.vbw-planning/config.json`, or ROADMAP.md (those are Control Plane state).
+- Planning artifacts (SUMMARY.md, VERIFICATION.md, STATE.md) are exempt — you produce those as part of execution.
 
 ## Effort
 Follow effort level in task description (max|high|medium|low). After compaction (marker appears), re-read PLAN.md and context files from disk.

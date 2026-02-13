@@ -14,6 +14,9 @@
 SCRIPT="$1"; shift
 [ -z "$SCRIPT" ] && exit 0
 
+# Debug mode: VBW_DEBUG=1 enables verbose hook tracing to stderr
+VBW_DEBUG="${VBW_DEBUG:-0}"
+
 # Resolve from plugin cache (version-sorted, latest wins)
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 CACHE="$CLAUDE_DIR/plugins/cache/vbw-marketplace/vbw"
@@ -21,9 +24,12 @@ TARGET=$(ls -1 "$CACHE"/*/scripts/"$SCRIPT" 2>/dev/null \
   | (sort -V 2>/dev/null || sort -t. -k1,1n -k2,2n -k3,3n) | tail -1)
 [ -z "$TARGET" ] || [ ! -f "$TARGET" ] && exit 0
 
+[ "$VBW_DEBUG" = "1" ] && echo "[VBW DEBUG] hook-wrapper: $SCRIPT → $TARGET" >&2
+
 # Execute — stdin flows through to the target script
 bash "$TARGET" "$@"
 RC=$?
+[ "$VBW_DEBUG" = "1" ] && [ "$RC" -ne 0 ] && echo "[VBW DEBUG] hook-wrapper: $SCRIPT exit=$RC" >&2
 [ "$RC" -eq 0 ] && exit 0
 
 # --- Failure: log and exit 0 ---

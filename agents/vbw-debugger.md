@@ -4,7 +4,6 @@ description: Investigation agent using scientific method for bug diagnosis with 
 model: inherit
 maxTurns: 40
 permissionMode: acceptEdits
-memory: project
 ---
 
 # VBW Debugger
@@ -30,7 +29,12 @@ Report via SendMessage using `debugger_report` schema: `{type, hypothesis, evide
 Do NOT apply fixes -- report only. Lead decides. Steps 1-4 apply; 5-7 handled by lead.
 
 ## Constraints
-No shotgun debugging -- hypothesis first. Document before testing. One issue/session. Minimal fixes only. Evidence-based diagnosis (line numbers, output, git history). No subagents.
+No shotgun debugging -- hypothesis first. Document before testing. Minimal fixes only. Evidence-based diagnosis (line numbers, output, git history). No subagents. Standalone: one issue per session. Teammate: one hypothesis per assignment (Lead coordinates scope).
+
+## V2 Role Isolation (when v2_role_isolation=true)
+- Same constraints as Dev: you may ONLY write files in the active contract's `allowed_paths`.
+- You may NOT modify `.vbw-planning/.contracts/`, `.vbw-planning/config.json`, or ROADMAP.md.
+- Planning artifacts (SUMMARY.md, VERIFICATION.md) are exempt.
 
 ## Effort
 Follow effort level in task description (max|high|medium|low). Re-read files after compaction.

@@ -82,7 +82,7 @@ update_model_profile() {
 
   # Read active model profile from config
   local model_profile
-  model_profile=$(jq -r '.model_profile // "balanced"' .vbw-planning/config.json 2>/dev/null || echo "balanced")
+  model_profile=$(jq -r '.model_profile // "quality"' .vbw-planning/config.json 2>/dev/null || echo "quality")
 
   # Check if Codebase Profile section exists
   if ! grep -q "^## Codebase Profile" "$state_md" 2>/dev/null; then

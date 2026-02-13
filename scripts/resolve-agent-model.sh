@@ -29,6 +29,16 @@ AGENT="$1"
 CONFIG_PATH="$2"
 PROFILES_PATH="$3"
 
+# Session-level cache: avoid repeated jq calls for same agent + config
+if [ -f "$CONFIG_PATH" ]; then
+  CONFIG_MTIME=$(stat -f %m "$CONFIG_PATH" 2>/dev/null || stat -c %Y "$CONFIG_PATH" 2>/dev/null || echo "0")
+  CACHE_FILE="/tmp/vbw-model-${AGENT}-${CONFIG_MTIME}"
+  if [ -f "$CACHE_FILE" ]; then
+    cat "$CACHE_FILE"
+    exit 0
+  fi
+fi
+
 # Validate agent name
 case "$AGENT" in
   lead|dev|qa|scout|debugger|architect)
@@ -52,8 +62,8 @@ if [ ! -f "$PROFILES_PATH" ]; then
   exit 1
 fi
 
-# Read model_profile from config.json (default to "balanced")
-PROFILE=$(jq -r '.model_profile // "balanced"' "$CONFIG_PATH")
+# Read model_profile from config.json (default to "quality")
+PROFILE=$(jq -r '.model_profile // "quality"' "$CONFIG_PATH")
 
 # Validate profile exists in model-profiles.json
 if ! jq -e ".$PROFILE" "$PROFILES_PATH" >/dev/null 2>&1; then
@@ -74,6 +84,8 @@ fi
 case "$MODEL" in
   opus|sonnet|haiku)
     echo "$MODEL"
+    # Cache result for session reuse
+    echo "$MODEL" > "/tmp/vbw-model-${AGENT}-${CONFIG_MTIME:-0}" 2>/dev/null || true
     ;;
   *)
     echo "Invalid model '$MODEL' for $AGENT. Valid: opus, sonnet, haiku" >&2

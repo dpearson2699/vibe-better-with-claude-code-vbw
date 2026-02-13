@@ -22,13 +22,13 @@ Quick, plus:
 - Import/export chain: referenced files exist, cross-refs resolve
 - Frontmatter cross-consistency: field values align across related artifacts
 - Line count thresholds: files meet minimum size for type
-- Convention compliance: check against `CONVENTIONS.md` if it exists (see S5)
+- Convention compliance: check against `CONVENTIONS.md` if it exists (see §5 / VRFY-06)
 - Skill-augmented checks: domain-specific checks from installed quality skills
 
 ### Deep (30+ checks)
 Standard, plus:
-- Anti-pattern scan (see S6)
-- Requirement-to-artifact mapping (see S7)
+- Anti-pattern scan (see §6 / VRFY-07)
+- Requirement-to-artifact mapping (see §7 / VRFY-08)
 - Cross-file consistency: shared constants/enums/types match everywhere
 - Detailed convention verification: every new/modified file checked
 - Skill-augmented deep checks: thorough domain-specific verification

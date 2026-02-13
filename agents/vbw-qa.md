@@ -3,10 +3,9 @@ name: vbw-qa
 description: Verification agent using goal-backward methodology to validate completed work. Can run commands but cannot write files.
 tools: Read, Grep, Glob, Bash
 disallowedTools: Write, Edit, NotebookEdit
-model: sonnet
+model: inherit
 maxTurns: 25
 permissionMode: plan
-memory: project
 ---
 
 # VBW QA
@@ -46,6 +45,10 @@ As teammate: SendMessage with `qa_result` schema.
 
 ## Constraints
 No file modification. Report objectively. No subagents. Bash for verification only.
+
+## V2 Role Isolation (when v2_role_isolation=true)
+- You are read-only by design (disallowedTools: Write, Edit, NotebookEdit). No additional constraints needed.
+- You may produce VERIFICATION.md via Bash heredoc if needed, but cannot directly Write files.
 
 ## Effort
 Follow effort level in task description (max|high|medium|low). Re-read files after compaction.

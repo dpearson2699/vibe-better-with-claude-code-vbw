@@ -27,7 +27,7 @@ If no .vbw-planning/ dir: STOP "Run /vbw:init first." (check `.vbw-planning/conf
 
 After the settings table, display Model Profile section:
 ```bash
-PROFILE=$(jq -r '.model_profile // "balanced"' .vbw-planning/config.json)
+PROFILE=$(jq -r '.model_profile // "quality"' .vbw-planning/config.json)
 echo ""
 echo "Model Profile: $PROFILE"
 echo "Agent Models:"
@@ -75,7 +75,7 @@ Store selection in variable `PROFILE_METHOD`.
 
 Calculate OLD_COST before making changes (cost weights: opus=100, sonnet=20, haiku=2):
 ```bash
-CURRENT_PROFILE=$(jq -r '.model_profile // "balanced"' .vbw-planning/config.json)
+CURRENT_PROFILE=$(jq -r '.model_profile // "quality"' .vbw-planning/config.json)
 PROFILES_PATH="${CLAUDE_PLUGIN_ROOT}/config/model-profiles.json"
 
 # Get current models (before changes)
@@ -224,7 +224,7 @@ if ! jq -e ".$PROFILE" "$PROFILES_PATH" >/dev/null 2>&1; then
 fi
 
 # Get current profile
-OLD_PROFILE=$(jq -r '.model_profile // "balanced"' .vbw-planning/config.json)
+OLD_PROFILE=$(jq -r '.model_profile // "quality"' .vbw-planning/config.json)
 
 # Calculate cost estimate
 # Cost weights: opus=100, sonnet=20, haiku=2
@@ -316,6 +316,29 @@ echo "✓ Model override: $AGENT ➜ $MODEL"
 | plain_summary | boolean | true/false | true |
 | active_profile | string | profile name or "custom" | default |
 | custom_profiles | object | user-defined profiles | {} |
+| model_profile | string | quality/balanced/budget | quality |
+| model_overrides | object | agent-to-model map | {} |
+| context_compiler | boolean | true/false | true |
+| v3_delta_context | boolean | true/false | false |
+| v3_context_cache | boolean | true/false | false |
+| v3_plan_research_persist | boolean | true/false | false |
+| v3_metrics | boolean | true/false | false |
+| v3_contract_lite | boolean | true/false | false |
+| v3_lock_lite | boolean | true/false | false |
+| v3_validation_gates | boolean | true/false | false |
+| v3_smart_routing | boolean | true/false | false |
+| v3_event_log | boolean | true/false | false |
+| v3_schema_validation | boolean | true/false | false |
+| v3_snapshot_resume | boolean | true/false | false |
+| v3_lease_locks | boolean | true/false | false |
+| v3_event_recovery | boolean | true/false | false |
+| v3_monorepo_routing | boolean | true/false | false |
+| v2_hard_contracts | boolean | true/false | false |
+| v2_hard_gates | boolean | true/false | false |
+| v2_typed_protocol | boolean | true/false | false |
+| v2_role_isolation | boolean | true/false | false |
+| v2_two_phase_completion | boolean | true/false | false |
+| v2_token_budgets | boolean | true/false | false |
 
 ## Output Format
 

@@ -1,5 +1,5 @@
 ---
-name: vbw:todo
+name: todo
 disable-model-invocation: true
 description: Add an item to the persistent backlog in STATE.md.
 argument-hint: <todo-description> [--priority=high|normal|low]
@@ -21,7 +21,7 @@ Working directory: `!`pwd``
 
 1. **Resolve context:** ACTIVE → milestone-scoped STATE_PATH. Otherwise → .vbw-planning/STATE.md.
 2. **Parse args:** Description (non-flag text), --priority (default: normal). Format: high=`[HIGH]`, normal=plain, low=`[low]`. Append `(added {YYYY-MM-DD})`.
-3. **Add to STATE.md:** Find `## Todos`. If `### Pending Todos` exists, append there; otherwise create it under `## Todos`. Replace "None." or append after last item.
+3. **Add to STATE.md:** Find `## Todos` section (or `### Pending Todos` for legacy format). Replace "None." / placeholder or append after last item.
 4. **Confirm:** Display ✓ + formatted item + Next Up (/vbw:status).
 
 ## Output Format

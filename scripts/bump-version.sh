@@ -24,6 +24,7 @@ if [[ "${1:-}" == "--verify" ]]; then
   echo "  .claude-plugin/marketplace.json $V_MKT_PLUGIN"
   echo "  marketplace.json                $V_MKT_ROOT"
 
+  # shellcheck disable=SC2055 -- intentional: detect if ANY file differs from VERSION
   if [[ "$V_FILE" != "$V_PLUGIN" || "$V_FILE" != "$V_MKT_PLUGIN" || "$V_FILE" != "$V_MKT_ROOT" ]]; then
     echo ""
     echo "MISMATCH DETECTED — the following files differ:" >&2
@@ -40,11 +41,17 @@ fi
 
 LOCAL=$(tr -d '[:space:]' < "$ROOT/VERSION")
 
-# Fetch the authoritative version from GitHub (graceful fallback on failure)
-REMOTE=$(curl -sf --max-time 5 "$REPO_URL" 2>/dev/null | tr -d '[:space:]' || true)
-if [[ -z "$REMOTE" ]]; then
-  echo "Warning: Could not fetch version from GitHub. Using local VERSION as baseline." >&2
+# --offline: skip remote fetch entirely (useful in CI or air-gapped environments)
+if [[ "${1:-}" == "--offline" ]]; then
   REMOTE="$LOCAL"
+  echo "Offline mode: skipping GitHub fetch."
+else
+  # Fetch the authoritative version from GitHub (graceful fallback on failure)
+  REMOTE=$(curl -sf --max-time 5 "$REPO_URL" 2>/dev/null | tr -d '[:space:]' || true)
+  if [[ -z "$REMOTE" ]]; then
+    echo "Warning: Could not fetch version from GitHub. Using local VERSION as baseline." >&2
+    REMOTE="$LOCAL"
+  fi
 fi
 
 # Use whichever is higher as the base (protects against local being behind)

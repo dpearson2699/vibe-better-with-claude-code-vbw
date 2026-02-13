@@ -1,5 +1,5 @@
 ---
-name: vbw:update
+name: update
 disable-model-invocation: true
 description: Update VBW to the latest version with automatic cache refresh.
 argument-hint: "[--check]"
@@ -39,24 +39,33 @@ If remote == old: display "✓ Already at latest (v{old_version}). Refreshing ca
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/cache-nuke.sh
 ```
-Removes CLAUDE_DIR/plugins/cache/vbw-marketplace/vbw/ and /tmp/vbw-* for pristine update.
+Removes CLAUDE_DIR/plugins/cache/vbw-marketplace/vbw/, CLAUDE_DIR/commands/vbw/, /tmp/vbw-* for pristine update.
 
 ### Step 5: Perform update
 
 Same version: "Refreshing VBW v{old_version} cache..." Different: "Updating VBW v{old_version}..."
 
-**CRITICAL: Refresh marketplace FIRST** (stale checkout → plugin update re-caches old code):
+**CRITICAL: All `claude plugin` commands MUST be prefixed with `unset CLAUDECODE &&`** — without this, Claude Code detects the parent session's env var and blocks with "cannot be launched inside another Claude Code session."
+
+**Refresh marketplace FIRST** (stale checkout → plugin update re-caches old code):
 ```bash
-claude plugin marketplace update vbw-marketplace 2>&1
+unset CLAUDECODE && claude plugin marketplace update vbw-marketplace 2>&1
 ```
 If fails: "⚠ Marketplace refresh failed — trying update anyway..."
 
 Try in order (stop at first success):
-- **A) Platform update:** `claude plugin update vbw@vbw-marketplace 2>&1`
-- **B) Reinstall:** `claude plugin uninstall vbw@vbw-marketplace 2>&1 && claude plugin install vbw@vbw-marketplace 2>&1`
+- **A) Platform update:** `unset CLAUDECODE && claude plugin update vbw@vbw-marketplace 2>&1`
+- **B) Reinstall:** `unset CLAUDECODE && claude plugin uninstall vbw@vbw-marketplace 2>&1 && unset CLAUDECODE && claude plugin install vbw@vbw-marketplace 2>&1`
 - **C) Manual fallback:** display commands for user to run manually, STOP.
 
-### Step 6: Ensure VBW statusline
+**Clean stale global commands** (after A or B succeeds):
+```bash
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+rm -rf "$CLAUDE_DIR/commands/vbw" 2>/dev/null
+```
+This removes stale copies that break `${CLAUDE_PLUGIN_ROOT}` resolution. Commands load from the plugin cache where `${CLAUDE_PLUGIN_ROOT}` is guaranteed.
+
+### Step 5.5: Ensure VBW statusline
 
 Read `CLAUDE_DIR/settings.json`, check `statusLine` (string or object .command). If contains `vbw-statusline`: skip. Otherwise update to:
 ```json
@@ -64,14 +73,14 @@ Read `CLAUDE_DIR/settings.json`, check `statusLine` (string or object .command).
 ```
 Use jq to write (backup, update, restore on failure). Display `✓ Statusline restored (restart to activate)` if changed.
 
-### Step 7: Verify update
+### Step 6: Verify update
 
 ```bash
 NEW_CACHED=$(cat "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/plugins/cache/vbw-marketplace/vbw/*/VERSION 2>/dev/null | sort -V | tail -1)
 ```
 Use NEW_CACHED as authoritative version. If empty or equals old_version when it shouldn't: "⚠ Update may not have applied. Try /vbw:update again after restart."
 
-### Step 8: Display result
+### Step 7: Display result
 
 Use NEW_CACHED for all display. Same version = "VBW Cache Refreshed" banner. Different = "VBW Updated" banner with old→new + "Restart Claude Code" + "/vbw:whats-new" suggestion.
 

@@ -183,11 +183,7 @@ if ! cache_fresh "$FAST_CF" 5; then
       ] | join("|")' .vbw-planning/.execution-state.json 2>/dev/null)"
   fi
 
-  AGENT_DATA=""
-  AGENT_N=$(( $(pgrep -u "$_UID" -cf "claude" 2>/dev/null || echo 1) - 1 ))
-  if [ "$AGENT_N" -gt 0 ] 2>/dev/null; then
-    AGENT_DATA="${AGENT_N}"
-  fi
+  AGENT_DATA="0"
 
   printf '%s\n' "${PH:-0}|${TT:-0}|${EF}|${MP}|${BR}|${PD}|${PT}|${PPD}|${QA}|${GH_URL}|${GIT_STAGED:-0}|${GIT_MODIFIED:-0}|${GIT_AHEAD:-0}|${EXEC_STATUS:-}|${EXEC_WAVE:-0}|${EXEC_TWAVES:-0}|${EXEC_DONE:-0}|${EXEC_TOTAL:-0}|${EXEC_CURRENT:-}|${AGENT_DATA:-0}" > "$FAST_CF" 2>/dev/null
 fi
@@ -199,9 +195,6 @@ if [ -O "$FAST_CF" ]; then
 fi
 
 AGENT_LINE=""
-if [ "${AGENT_N:-0}" -gt 0 ] 2>/dev/null; then
-  AGENT_LINE="${C}◆${X} ${AGENT_N} agent$([ "$AGENT_N" -gt 1 ] && echo s) working"
-fi
 
 # --- Slow cache (60s TTL): usage limits + update check ---
 SLOW_CF="${_CACHE}-slow"
@@ -212,6 +205,19 @@ if ! cache_fresh "$SLOW_CF" 60; then
     CRED_JSON=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null)
     if [ -n "$CRED_JSON" ]; then
       OAUTH_TOKEN=$(echo "$CRED_JSON" | jq -r '.claudeAiOauth.accessToken // empty' 2>/dev/null)
+    fi
+  else
+    # Linux: try secret-tool (GNOME Keyring) then pass (password-store)
+    if command -v secret-tool &>/dev/null; then
+      CRED_JSON=$(secret-tool lookup service "Claude Code-credentials" 2>/dev/null)
+      if [ -n "$CRED_JSON" ]; then
+        OAUTH_TOKEN=$(echo "$CRED_JSON" | jq -r '.claudeAiOauth.accessToken // empty' 2>/dev/null)
+      fi
+    elif command -v pass &>/dev/null; then
+      CRED_JSON=$(pass show "claude-code/credentials" 2>/dev/null)
+      if [ -n "$CRED_JSON" ]; then
+        OAUTH_TOKEN=$(echo "$CRED_JSON" | jq -r '.claudeAiOauth.accessToken // empty' 2>/dev/null)
+      fi
     fi
   fi
 

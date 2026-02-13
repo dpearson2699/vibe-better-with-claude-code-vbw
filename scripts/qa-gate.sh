@@ -4,6 +4,9 @@ set -u
 # Exit 2 = block (keep working), Exit 0 = allow idle
 # Exit 0 on ANY error (fail-open: never block legitimate work)
 
+# Only apply to VBW contexts
+[ ! -d ".vbw-planning" ] && exit 0
+
 # Read stdin to get task context
 INPUT=$(cat 2>/dev/null) || exit 0
 
@@ -28,7 +31,12 @@ if [ "$PLANS_TOTAL" -eq 0 ] || [ "$SUMMARIES_TOTAL" -ge "$PLANS_TOTAL" ]; then
 fi
 
 NOW=$(date +%s 2>/dev/null) || exit 0
+# Configurable commit recency window (default: 2 hours)
 TWO_HOURS=7200
+if command -v jq &>/dev/null && [ -f ".vbw-planning/config.json" ]; then
+  _window=$(jq -r '.qa_commit_window_seconds // 7200' .vbw-planning/config.json 2>/dev/null)
+  [ "${_window:-0}" -gt 0 ] 2>/dev/null && TWO_HOURS="$_window"
+fi
 
 # Structural Check 2: Commit format
 # Check if recent commits (last 10, within 2 hours) match conventional format

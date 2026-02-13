@@ -1,6 +1,6 @@
 # Balanced Profile (EFRT-02)
 
-**Model:** Opus | **Use when:** Standard development work, most phases. The recommended default.
+**Recommended model profile:** Balanced | **Use when:** Standard development work, most phases. The recommended default.
 
 ## Effort vs Model Profile
 
