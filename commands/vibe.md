@@ -136,7 +136,45 @@ If `planning_dir_exists=false`: display "Run /vbw:init first to set up your proj
           - **Round 1 (Scenarios):** Generate scenario questions per protocol. Present as AskUserQuestion with descriptive options. **Scenario generation:** If RESEARCH_AVAILABLE=true, read `.vbw-planning/domain-research.md` and integrate findings: (a) Table Stakes → checklist questions in Round 2, (b) Common Pitfalls → scenario situations (e.g., 'What happens when [pitfall situation]?'), (c) Architecture Patterns → technical preference scenarios (e.g., 'Should the system use [pattern A] or [pattern B]?'), (d) Competitor Landscape → differentiation scenarios (e.g., '{Competitor X} does {feature}. Should yours work the same way or differently?'). If RESEARCH_AVAILABLE=false, use description analysis only per existing protocol.
           - **Round 2+ (Checklists - Thread-Following):** Generate checklist questions that BUILD ON previous round answers. Read discovery.json.answered[] for prior rounds. Identify gaps or follow-ups using these patterns: (1) If Round N-1 answer was vague: ask concrete follow-up, (2) If Round N-1 revealed complexity: ask edge case questions, (3) If Round N-1 mentioned integration: ask about auth, error handling, data flow, (4) If Round N-1 suggested scale: ask about performance, caching, limits. Check discovery.json.answered[] to avoid duplicate questions (skip categories already covered). Format: Generate targeted pick-many questions with `multiSelect: true`.
        b. Present questions via AskUserQuestion
-       c. **Vague answer handling:** After user responds, check for vague language patterns:
+       c. **Pitfall relevance scoring (Round 2 → Round 3 transition):** After Round 2 completes, if RESEARCH_AVAILABLE=true and domain-research.md contains ## Common Pitfalls section:
+          1. Read all pitfalls from domain-research.md
+          2. Score each pitfall for relevance to user's project based on prior answers in discovery.json:
+             - If pitfall mentions "scale" or "performance" AND user answered "thousands of users" → +2 relevance
+             - If pitfall mentions "offline" or "sync" AND user selected offline access in table stakes → +2 relevance
+             - If pitfall mentions "auth" or "security" AND user mentioned user accounts/login → +2 relevance
+             - If pitfall mentions "data" or "privacy" AND user has data-heavy features → +2 relevance
+             - If pitfall mentions "integration" or "API" AND user mentioned third-party tools → +2 relevance
+          3. Select top 2-3 pitfalls by relevance score (minimum score: 1)
+          4. If no pitfalls score >0: skip pitfall warnings entirely
+          5. Store selected pitfalls for presentation in Round 3
+       d. **Pitfall warnings presentation (Round 3 only):** If ROUND=3 and selected pitfalls exist (from step c):
+          1. Frame as proactive risk mitigation: "Most [domain] projects run into a few common issues. Here are the ones most relevant to yours..."
+          2. For each selected pitfall (2-3 max):
+             Present as AskUserQuestion with format:
+             "⚠ [Pitfall title from research]
+             [Brief explanation: 1-2 sentences from research Common Pitfalls section]
+
+             How should we handle this?"
+
+             Options:
+             - "Address it now — add requirement"
+             - "Note for later — add to phase planning"
+             - "Skip — not relevant to my project"
+          3. Record decision to discovery.json:
+             - "Address now" → add to inferred[] with priority "Must-have", category "risk_mitigation"
+             - "Note for later" → add to inferred[] with priority "Should-have", category "risk_mitigation"
+             - "Skip" → no action
+          4. Continue to next question (vague answer handling)
+
+          Example pitfall warning for recipe app:
+          "⚠ Over-complicated recipe format
+          Most recipe apps fail when they try to capture every possible cooking detail. Users get overwhelmed and abandon the app.
+
+          How should we handle this?
+            A) Address it now — keep recipe format simple
+            B) Note for later — we'll figure this out during planning
+            C) Skip — my format is already simple"
+       e. **Vague answer handling:** After user responds, check for vague language patterns:
           - Quality adjectives without specifics: "easy", "fast", "simple", "secure", "reliable", "powerful", "flexible"
           - Scope without boundaries: "everything", "lots of features", "comprehensive", "full-featured"
           - Time without metrics: "quick", "slow", "immediate", "later"
@@ -156,7 +194,7 @@ If `planning_dir_exists=false`: display "Run /vbw:init first to set up your proj
           3. If "Let me explain" chosen: record user's free-text explanation, then ask if they want to revisit the original question with their explanation as context
           4. Record disambiguated answer to discovery.json with extended schema including disambiguation metadata
           If no vague pattern: proceed to record answer as-is.
-       d. Record answers to discovery.json with round number (append to answered[] with fields: question, answer, category, phase='bootstrap', round=ROUND, date). **Extended schema for disambiguated answers:**
+       f. Record answers to discovery.json with round number (append to answered[] with fields: question, answer, category, phase='bootstrap', round=ROUND, date). **Extended schema for disambiguated answers:**
           ```json
           {
             "question": "...",
@@ -177,14 +215,41 @@ If `planning_dir_exists=false`: display "Run /vbw:init first to set up your proj
             }
           }
           ```
-          If answer was NOT disambiguated (no vague pattern), omit the `disambiguation` field entirely. This preserves the user's intent journey and enables future analysis of common vague→concrete patterns.
-       e. Increment ROUND, update QUESTIONS_ASKED count
-       f. **Keep-exploring gate:**
+          If answer was NOT disambiguated (no vague pattern), omit the `disambiguation` field entirely. **Extended schema for pitfall warnings (step d):**
+          ```json
+          {
+            "question": "⚠ Over-complicated recipe format - Most recipe apps fail...",
+            "answer": "Address it now — keep recipe format simple",
+            "category": "risk_mitigation",
+            "phase": "bootstrap",
+            "round": 3,
+            "date": "2026-02-13",
+            "pitfall": {
+              "title": "Over-complicated recipe format",
+              "source": "domain-research.md",
+              "relevance_score": 4,
+              "decision": "address_now"
+            }
+          }
+          ```
+          When adding to inferred[] (for "address now" or "note for later"):
+          ```json
+          {
+            "id": "REQ-XX",
+            "text": "Keep recipe format simple to prevent user overwhelm",
+            "tier": "risk_mitigation",
+            "priority": "Must-have",
+            "source": "pitfall warning: Over-complicated recipe format"
+          }
+          ```
+          This preserves the user's intent journey and enables future analysis of common vague→concrete patterns and risk mitigation decisions.
+       g. Increment ROUND, update QUESTIONS_ASKED count
+       h. **Keep-exploring gate:**
           - If ROUND <= 3: AskUserQuestion "We've covered [topic]. What would you like to do?" with options ["Keep exploring — I have more to share", "Move on — I'm ready for the next step"]
           - If ROUND > 3: AskUserQuestion "We've covered quite a bit about your project. What would you like to do?" with options ["Keep exploring — there's more I want to discuss", "Move on — I think we have enough", "Skip to requirements — I'm ready to build"]
           - If user chooses continue: loop to step 3a
           - If user chooses stop: proceed to synthesis (step 4)
-       g. **Profile depth as minimum:** quick=1-2 minimum rounds, standard=3-5 minimum, thorough=5-8 minimum. User can continue beyond minimum via keep-exploring gate.
+       i. **Profile depth as minimum:** quick=1-2 minimum rounds, standard=3-5 minimum, thorough=5-8 minimum. User can continue beyond minimum via keep-exploring gate.
     4. Synthesize answers into `.vbw-planning/discovery.json` with `answered[]` and `inferred[]`. Append each question+answer to `answered[]` with fields: question (friendly wording), answer (user's choice), category (scope/users/scale/data/edge_cases/integrations/priorities/boundaries), phase ('bootstrap'), round (current ROUND value), date (today). Extract inferences to `inferred[]` (questions=friendly, requirements=precise).
   - **Wording rules (all depths):** No jargon. Plain language. Concrete situations. Cause and effect. Assume user is not a developer.
   - **After discovery (all depths):** Call:
