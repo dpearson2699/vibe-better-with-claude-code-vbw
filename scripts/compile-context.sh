@@ -41,7 +41,7 @@ PHASE_REQS="Not available"
 PHASE_SUCCESS="Not available"
 
 if [ -f "$ROADMAP" ]; then
-  PHASE_SECTION=$(sed -n "/^### Phase ${PHASE_NUM}:/,/^### Phase [0-9]/p" "$ROADMAP" 2>/dev/null | sed '$d') || true
+  PHASE_SECTION=$(sed -n "/^## Phase ${PHASE_NUM}:/,/^## Phase [0-9]/p" "$ROADMAP" 2>/dev/null | sed '$d') || true
   if [ -n "$PHASE_SECTION" ]; then
     PHASE_GOAL=$(echo "$PHASE_SECTION" | grep '^\*\*Goal:\*\*' 2>/dev/null | sed 's/\*\*Goal:\*\* *//' ) || PHASE_GOAL="Not available"
     PHASE_REQS=$(echo "$PHASE_SECTION" | grep '^\*\*Reqs:\*\*' 2>/dev/null | sed 's/\*\*Reqs:\*\* *//' ) || PHASE_REQS="Not available"
