@@ -249,6 +249,23 @@ build_comparison() {
   d_opt_int=$(awk "BEGIN {d = ${c_opt} - ${b_opt}; if (d > 0.0005) print 1; else if (d < -0.0005) print -1; else print 0}")
   dir_opt=$(get_delta_direction "$d_opt_int")
 
+  # Detect phase changes (new/removed phases)
+  local phase_changes="{}"
+  local baseline_phases current_phases
+  baseline_phases=$(echo "$baseline" | jq -r '.phases | keys[]' 2>/dev/null || echo "")
+  current_phases=$(echo "$current" | jq -r '.phases | keys[]' 2>/dev/null || echo "")
+
+  for bp in $baseline_phases; do
+    if ! echo "$current_phases" | grep -qw "$bp"; then
+      phase_changes=$(echo "$phase_changes" | jq --arg p "$bp" '. + {($p): "removed"}' 2>/dev/null) || true
+    fi
+  done
+  for cp in $current_phases; do
+    if ! echo "$baseline_phases" | grep -qw "$cp"; then
+      phase_changes=$(echo "$phase_changes" | jq --arg p "$cp" '. + {($p): "new"}' 2>/dev/null) || true
+    fi
+  done
+
   jq -n \
     --arg b_ts "$b_ts" \
     --arg c_ts "$c_ts" \
@@ -256,6 +273,7 @@ build_comparison() {
     --argjson b_tr "$b_tr" --argjson c_tr "$c_tr" --argjson d_tr "$d_tr" --arg dir_tr "$dir_tr" \
     --argjson b_es "$b_es" --argjson c_es "$c_es" --argjson d_es "$d_es" --arg dir_es "$dir_es" \
     --arg b_opt "$b_opt" --arg c_opt "$c_opt" --arg d_opt "$d_opt" --arg dir_opt "$dir_opt" \
+    --argjson pc "$phase_changes" \
     '{
       baseline_timestamp: $b_ts,
       current_timestamp: $c_ts,
@@ -264,7 +282,8 @@ build_comparison() {
         truncated_lines: {baseline: $b_tr, current: $c_tr, delta: $d_tr, direction: $dir_tr},
         escalations: {baseline: $b_es, current: $c_es, delta: $d_es, direction: $dir_es},
         overages_per_task: {baseline: ($b_opt | tonumber), current: ($c_opt | tonumber), delta: ($d_opt | tonumber), direction: $dir_opt}
-      }
+      },
+      phase_changes: $pc
     }' 2>/dev/null || echo "{}"
 }
 
