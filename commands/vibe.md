@@ -136,7 +136,7 @@ If `planning_dir_exists=false`: display "Run /vbw:init first to set up your proj
   - **Wording rules (all depths):** No jargon. Plain language. Concrete situations. Cause and effect. Assume user is not a developer.
   - **After discovery (all depths):** Call:
     ```
-    bash ${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap/bootstrap-requirements.sh .vbw-planning/REQUIREMENTS.md .vbw-planning/discovery.json
+    bash ${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap/bootstrap-requirements.sh .vbw-planning/REQUIREMENTS.md .vbw-planning/discovery.json .vbw-planning/domain-research.md
     ```
 
 - **B3: ROADMAP.md** -- Suggest 3-5 phases from requirements. If `.vbw-planning/codebase/` exists, read INDEX.md, PATTERNS.md, ARCHITECTURE.md, CONCERNS.md. Each phase: name, goal, mapped reqs, success criteria. Write phases JSON to temp file, then call:
