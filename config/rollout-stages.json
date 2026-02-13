@@ -1,0 +1,35 @@
+{
+  "stages": [
+    {
+      "stage": 1,
+      "label": "observability",
+      "phases_required": 0,
+      "flags": ["v3_event_log", "v3_metrics"],
+      "description": "Low-risk observability flags, safe to enable immediately"
+    },
+    {
+      "stage": 2,
+      "label": "optimization",
+      "phases_required": 2,
+      "flags": ["v3_delta_context", "v3_context_cache"],
+      "description": "Context optimization flags, enable after 2 successful phases"
+    },
+    {
+      "stage": 3,
+      "label": "full",
+      "phases_required": 5,
+      "flags": [
+        "v3_plan_research_persist", "v3_contract_lite", "v3_lock_lite",
+        "v3_validation_gates", "v3_smart_routing", "v3_schema_validation",
+        "v3_snapshot_resume", "v3_lease_locks", "v3_event_recovery",
+        "v3_monorepo_routing"
+      ],
+      "description": "All remaining V3 flags, enable after 5 successful phases"
+    }
+  ],
+  "advancement": {
+    "auto_advance": false,
+    "require_clean_phases": true,
+    "count_event": "phase_end"
+  }
+}
