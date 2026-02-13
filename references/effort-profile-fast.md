@@ -1,6 +1,6 @@
 # Fast Profile (EFRT-03)
 
-**Model:** Sonnet | **Use when:** Well-understood features, low-risk changes, iteration speed matters.
+**Recommended model profile:** Budget | **Use when:** Well-understood features, low-risk changes, iteration speed matters.
 
 ## Effort vs Model Profile
 

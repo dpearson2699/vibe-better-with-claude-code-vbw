@@ -6,7 +6,6 @@ disallowedTools: Edit
 model: inherit
 maxTurns: 50
 permissionMode: acceptEdits
-memory: project
 ---
 
 # VBW Lead

@@ -1,5 +1,6 @@
 #!/bin/bash
 set -u
+trap 'exit 0' EXIT
 # Pre-compute all project state for implement.md and other commands.
 # Output: key=value pairs on stdout, one per line. Exit 0 always.
 
@@ -152,7 +153,7 @@ CFG_COMPACTION="130000"
 CFG_CONTEXT_COMPILER="true"
 
 if [ "$JQ_AVAILABLE" = true ] && [ -f "$CONFIG_FILE" ]; then
-  # Single jq call to extract all config values (reduces 7 subprocesses to 1)
+  # Single jq call to extract all config values (reduces subprocesses to 1)
   eval "$(jq -r '
     "CFG_EFFORT=\(.effort // "balanced")",
     "CFG_AUTONOMY=\(.autonomy // "standard")",
@@ -160,7 +161,8 @@ if [ "$JQ_AVAILABLE" = true ] && [ -f "$CONFIG_FILE" ]; then
     "CFG_VERIFICATION_TIER=\(.verification_tier // "standard")",
     "CFG_AGENT_TEAMS=\(if .agent_teams == null then true else .agent_teams end)",
     "CFG_MAX_TASKS=\(.max_tasks_per_plan // 5)",
-    "CFG_CONTEXT_COMPILER=\(if .context_compiler == null then true else .context_compiler end)"
+    "CFG_CONTEXT_COMPILER=\(if .context_compiler == null then true else .context_compiler end)",
+    "CFG_COMPACTION=\(.compaction_threshold // 130000)"
   ' "$CONFIG_FILE" 2>/dev/null)" || true
 fi
 
@@ -171,6 +173,7 @@ echo "config_verification_tier=$CFG_VERIFICATION_TIER"
 echo "config_agent_teams=$CFG_AGENT_TEAMS"
 echo "config_max_tasks_per_plan=$CFG_MAX_TASKS"
 echo "config_context_compiler=$CFG_CONTEXT_COMPILER"
+echo "config_compaction_threshold=$CFG_COMPACTION"
 
 # --- Codebase map status ---
 if [ -f "$PLANNING_DIR/codebase/META.md" ]; then
@@ -181,7 +184,7 @@ fi
 
 # --- Brownfield detection ---
 BROWNFIELD=false
-if git ls-files --error-unmatch . 2>/dev/null | head -1 | grep -q .; then
+if git ls-files . 2>/dev/null | head -1 | grep -q .; then
   BROWNFIELD=true
 fi
 echo "brownfield=$BROWNFIELD"

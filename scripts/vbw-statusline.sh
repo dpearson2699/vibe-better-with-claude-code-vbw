@@ -184,7 +184,9 @@ if ! cache_fresh "$FAST_CF" 5; then
   fi
 
   AGENT_DATA=""
-  AGENT_N=$(( $(pgrep -u "$_UID" -cf "claude" 2>/dev/null || echo 1) - 1 ))
+  # Count Claude processes owned by this user, subtract 1 for the main session.
+  # Use ps + grep to avoid pgrep -c portability issues (counts all "claude" matches).
+  AGENT_N=$(( $(ps -u "$_UID" -o comm= 2>/dev/null | grep -c '^claude' 2>/dev/null || echo 1) - 1 ))
   if [ "$AGENT_N" -gt 0 ] 2>/dev/null; then
     AGENT_DATA="${AGENT_N}"
   fi
@@ -212,6 +214,19 @@ if ! cache_fresh "$SLOW_CF" 60; then
     CRED_JSON=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null)
     if [ -n "$CRED_JSON" ]; then
       OAUTH_TOKEN=$(echo "$CRED_JSON" | jq -r '.claudeAiOauth.accessToken // empty' 2>/dev/null)
+    fi
+  else
+    # Linux: try secret-tool (GNOME Keyring) then pass (password-store)
+    if command -v secret-tool &>/dev/null; then
+      CRED_JSON=$(secret-tool lookup service "Claude Code-credentials" 2>/dev/null)
+      if [ -n "$CRED_JSON" ]; then
+        OAUTH_TOKEN=$(echo "$CRED_JSON" | jq -r '.claudeAiOauth.accessToken // empty' 2>/dev/null)
+      fi
+    elif command -v pass &>/dev/null; then
+      CRED_JSON=$(pass show "claude-code/credentials" 2>/dev/null)
+      if [ -n "$CRED_JSON" ]; then
+        OAUTH_TOKEN=$(echo "$CRED_JSON" | jq -r '.claudeAiOauth.accessToken // empty' 2>/dev/null)
+      fi
     fi
   fi
 

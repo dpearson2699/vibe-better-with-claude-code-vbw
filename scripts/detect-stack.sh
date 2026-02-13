@@ -40,55 +40,36 @@ fi
 ALL_INSTALLED="$INSTALLED_GLOBAL,$INSTALLED_PROJECT,$INSTALLED_AGENTS"
 
 # --- Read manifest files once ---
-PKG_JSON=""
-if [ -f "$PROJECT_DIR/package.json" ]; then
-  PKG_JSON=$(cat "$PROJECT_DIR/package.json" 2>/dev/null)
-fi
+# Reads root manifest first, then appends subdirectory manifests (depth 2-3)
+# for monorepo support. This catches dependencies in packages/*/package.json etc.
+read_manifest() {
+  local filename="$1"
+  local content=""
+  # Root manifest
+  if [ -f "$PROJECT_DIR/$filename" ]; then
+    content=$(cat "$PROJECT_DIR/$filename" 2>/dev/null)
+  fi
+  # Subdirectory manifests (monorepo patterns: packages/*, apps/*, src/*)
+  while IFS= read -r subfile; do
+    [ -z "$subfile" ] && continue
+    content="$content"$'\n'"$(cat "$subfile" 2>/dev/null)"
+  done < <(find "$PROJECT_DIR" -maxdepth 3 -name "$filename" \
+    -not -path '*/node_modules/*' -not -path '*/.git/*' \
+    -not -path '*/vendor/*' -not -path '*/target/*' \
+    -not -path "$PROJECT_DIR/$filename" 2>/dev/null | head -10)
+  echo "$content"
+}
 
-REQUIREMENTS_TXT=""
-if [ -f "$PROJECT_DIR/requirements.txt" ]; then
-  REQUIREMENTS_TXT=$(cat "$PROJECT_DIR/requirements.txt" 2>/dev/null)
-fi
-
-PYPROJECT_TOML=""
-if [ -f "$PROJECT_DIR/pyproject.toml" ]; then
-  PYPROJECT_TOML=$(cat "$PROJECT_DIR/pyproject.toml" 2>/dev/null)
-fi
-
-GEMFILE=""
-if [ -f "$PROJECT_DIR/Gemfile" ]; then
-  GEMFILE=$(cat "$PROJECT_DIR/Gemfile" 2>/dev/null)
-fi
-
-CARGO_TOML=""
-if [ -f "$PROJECT_DIR/Cargo.toml" ]; then
-  CARGO_TOML=$(cat "$PROJECT_DIR/Cargo.toml" 2>/dev/null)
-fi
-
-GO_MOD=""
-if [ -f "$PROJECT_DIR/go.mod" ]; then
-  GO_MOD=$(cat "$PROJECT_DIR/go.mod" 2>/dev/null)
-fi
-
-COMPOSER_JSON=""
-if [ -f "$PROJECT_DIR/composer.json" ]; then
-  COMPOSER_JSON=$(cat "$PROJECT_DIR/composer.json" 2>/dev/null)
-fi
-
-MIX_EXS=""
-if [ -f "$PROJECT_DIR/mix.exs" ]; then
-  MIX_EXS=$(cat "$PROJECT_DIR/mix.exs" 2>/dev/null)
-fi
-
-POM_XML=""
-if [ -f "$PROJECT_DIR/pom.xml" ]; then
-  POM_XML=$(cat "$PROJECT_DIR/pom.xml" 2>/dev/null)
-fi
-
-BUILD_GRADLE=""
-if [ -f "$PROJECT_DIR/build.gradle" ]; then
-  BUILD_GRADLE=$(cat "$PROJECT_DIR/build.gradle" 2>/dev/null)
-fi
+PKG_JSON=$(read_manifest "package.json")
+REQUIREMENTS_TXT=$(read_manifest "requirements.txt")
+PYPROJECT_TOML=$(read_manifest "pyproject.toml")
+GEMFILE=$(read_manifest "Gemfile")
+CARGO_TOML=$(read_manifest "Cargo.toml")
+GO_MOD=$(read_manifest "go.mod")
+COMPOSER_JSON=$(read_manifest "composer.json")
+MIX_EXS=$(read_manifest "mix.exs")
+POM_XML=$(read_manifest "pom.xml")
+BUILD_GRADLE=$(read_manifest "build.gradle")
 
 # --- Check a single detect pattern ---
 # Returns 0 (true) if pattern matches, 1 (false) if not.
@@ -118,10 +99,17 @@ check_pattern() {
     if [ -n "$content" ] && echo "$content" | grep -qF "\"$dep\""; then
       return 0
     fi
-    # Also check without quotes (requirements.txt, go.mod, etc.)
-    if [ -n "$content" ] && echo "$content" | grep -qiw "$dep"; then
-      return 0
-    fi
+    # Fallback for non-JSON formats (requirements.txt, go.mod, Gemfile, etc.)
+    # Skip for JSON files — quoted match above is sufficient and avoids false
+    # positives (e.g., "react" word-matching inside "react-native").
+    case "$file" in
+      *.json) ;;
+      *)
+        if [ -n "$content" ] && echo "$content" | grep -qiw "$dep"; then
+          return 0
+        fi
+        ;;
+    esac
     return 1
   else
     # File/directory pattern

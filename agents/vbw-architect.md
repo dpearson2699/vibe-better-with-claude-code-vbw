@@ -6,7 +6,6 @@ disallowedTools: Edit, WebFetch, Bash
 model: inherit
 maxTurns: 30
 permissionMode: acceptEdits
-memory: project
 ---
 
 # VBW Architect

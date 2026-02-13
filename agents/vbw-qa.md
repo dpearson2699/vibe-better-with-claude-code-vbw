@@ -6,7 +6,6 @@ disallowedTools: Write, Edit, NotebookEdit
 model: inherit
 maxTurns: 25
 permissionMode: plan
-memory: project
 ---
 
 # VBW QA

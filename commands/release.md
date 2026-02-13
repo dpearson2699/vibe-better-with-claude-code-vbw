@@ -85,7 +85,7 @@ Otherwise: `git push` + `git push --tags`. Display ✓.
 
 ### Step 8: GitHub Release
 
---no-push: skip. Otherwise: extract changelog for this version. Auth: extract token from git remote URL (https://user:TOKEN@github.com/...), use as GH_TOKEN env prefix. Run `gh release create v{new-version} --title "v{new-version}" --notes "{content}"`. Fallback to gh auth. If gh unavailable/fails: "⚠ GitHub release failed -- create manually."
+--no-push: skip. Otherwise: extract changelog for this version. Auth resolution (try in order): (1) `gh auth token` — preferred, uses gh CLI's native auth; (2) extract token from git remote URL (`https://user:TOKEN@github.com/...`), set as `GH_TOKEN` env prefix; (3) existing `GH_TOKEN` env var. Run `gh release create v{new-version} --title "v{new-version}" --notes "{content}"`. If gh unavailable/fails: "⚠ GitHub release failed -- create manually."
 
 ### Step 9: Present summary
 

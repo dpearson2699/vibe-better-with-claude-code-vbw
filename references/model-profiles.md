@@ -79,7 +79,7 @@ Switch to a different profile and back, or manually edit .vbw-planning/config.js
 | Balanced | sonnet | sonnet | sonnet | haiku | $1.40 | 50% |
 | Budget | sonnet | sonnet | haiku | haiku | $0.70 | 25% |
 
-*Estimates based on typical 3-plan phase with 2 Dev teammates, 1 QA run, Lead planning. Actual costs vary by phase complexity and plan count.*
+*Estimates based on typical 3-plan phase with 2 Dev teammates, 1 QA run, Lead planning. Assumes ~15K input + ~5K output tokens per agent turn. Opus ~$15/$75 per MTok, Sonnet ~$3/$15, Haiku ~$0.25/$1.25 (input/output). Actual costs vary by phase complexity and plan count.*
 
 ## Configuration
 

@@ -6,7 +6,6 @@ disallowedTools: Write, Edit, NotebookEdit, Bash
 model: inherit
 maxTurns: 15
 permissionMode: plan
-memory: project
 ---
 
 # VBW Scout

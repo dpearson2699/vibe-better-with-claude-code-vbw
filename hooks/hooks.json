@@ -122,6 +122,7 @@
     ],
     "TeammateIdle": [
       {
+        "matcher": "vbw-lead|vbw-dev|vbw-qa|vbw-scout|vbw-debugger|vbw-architect",
         "hooks": [
           {
             "type": "command",
@@ -133,6 +134,7 @@
     ],
     "TaskCompleted": [
       {
+        "matcher": "vbw-lead|vbw-dev|vbw-qa|vbw-scout|vbw-debugger|vbw-architect",
         "hooks": [
           {
             "type": "command",

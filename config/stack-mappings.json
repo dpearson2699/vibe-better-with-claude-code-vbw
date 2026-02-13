@@ -31,6 +31,31 @@
       "detect": ["*.csproj", "*.sln"],
       "skills": ["dotnet-skill"],
       "description": ".NET project"
+    },
+    "deno": {
+      "detect": ["deno.json", "deno.jsonc", "deno.lock"],
+      "skills": ["deno-skill"],
+      "description": "Deno runtime"
+    },
+    "bun": {
+      "detect": ["bun.lockb", "bunfig.toml"],
+      "skills": ["bun-skill"],
+      "description": "Bun runtime"
+    },
+    "ruby": {
+      "detect": ["Gemfile", "*.gemspec"],
+      "skills": ["ruby-skill"],
+      "description": "Ruby project"
+    },
+    "php": {
+      "detect": ["composer.json", "composer.lock"],
+      "skills": ["php-skill"],
+      "description": "PHP project"
+    },
+    "kotlin": {
+      "detect": ["build.gradle.kts"],
+      "skills": ["kotlin-skill"],
+      "description": "Kotlin project"
     }
   },
   "frameworks": {
@@ -113,6 +138,31 @@
       "detect": ["pom.xml:spring-boot", "build.gradle:spring-boot"],
       "skills": ["spring-skill"],
       "description": "Spring Boot Java framework"
+    },
+    "angular": {
+      "detect": ["angular.json", "package.json:@angular/core"],
+      "skills": ["angular-skill"],
+      "description": "Angular framework"
+    },
+    "nestjs": {
+      "detect": ["nest-cli.json", "package.json:@nestjs/core"],
+      "skills": ["nestjs-skill"],
+      "description": "NestJS server framework"
+    },
+    "flask": {
+      "detect": ["requirements.txt:flask", "pyproject.toml:flask"],
+      "skills": ["python-skill"],
+      "description": "Flask Python framework"
+    },
+    "solidjs": {
+      "detect": ["package.json:solid-js"],
+      "skills": ["solidjs-skill"],
+      "description": "SolidJS reactive framework"
+    },
+    "phoenix": {
+      "detect": ["mix.exs:phoenix"],
+      "skills": ["elixir-skill"],
+      "description": "Phoenix Elixir framework"
     }
   },
   "testing": {

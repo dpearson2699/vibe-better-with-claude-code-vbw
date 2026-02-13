@@ -6,6 +6,9 @@ All notable changes to VBW will be documented in this file.
 
 ### Added
 
+- **`doctor`** -- `/vbw:doctor` health check command with 10 diagnostic checks: jq installed, VERSION file, version sync, plugin cache, hooks.json validity, agent files, config validation, script permissions, gh CLI, sort -V support. `disable-model-invocation: true`.
+- **`templates`** -- CONTEXT.md and RESEARCH.md templates for agent context compilation and research output structure.
+- **`blocker-notify`** -- TaskCompleted hook auto-notifies blocked agents when their blockers resolve, preventing teammate deadlocks.
 - **`control-plane`** -- lightweight Control Plane dispatcher (`scripts/control-plane.sh`, 328 lines) that sequences all enforcement scripts into a unified flow. Four actions: pre-task (contract → lease → gate), post-task (gate → release), compile (context compilation), full (all-in-one). Fail-open on script errors, JSON result output, lease conflict retry with 2s wait. 15 unit tests + 3 integration tests.
 - **`rollout-stage`** -- 3-stage progressive flag rollout automation (`scripts/rollout-stage.sh`). Stages: observability (threshold 0), optimization (threshold 2), full (threshold 5). Actions: check prerequisites, advance flags atomically, status report with all 14 v3_ flags. Stage definitions in `config/rollout-stages.json`. Supports `--dry-run`. 10 tests.
 - **`token-baseline`** -- per-phase token usage measurement and comparison (`scripts/token-baseline.sh`). Actions: measure (aggregate from event log), compare (delta with direction indicators), report (markdown with budget utilization by role). Baselines saved to `.baselines/token-baseline.json`. 10 tests.
@@ -15,6 +18,10 @@ All notable changes to VBW will be documented in this file.
 
 ### Changed
 
+- **`isolation`** -- consolidated to single root CLAUDE.md with context isolation rules for both VBW and GSD plugins.
+- **`agents`** -- removed dead `memory: project` from all 6 agent frontmatters. Clarified standalone vs teammate session scope in debugger.
+- **`references`** -- fixed internal references in verification-protocol.md (S5→§5/VRFY-06). Added per-model cost basis to model-profiles.md methodology note.
+- **`README`** -- token efficiency section updated with v1.20.0 numbers (8,807 lines bash, 63 scripts, 21 commands, 11 references). Command/hook counts updated to 21. Typo and incomplete sentence fixes.
 - **`compile-context`** -- ROADMAP metadata parser fixed (`### Phase` → `## Phase` to match actual format). Scout, Debugger, and Architect roles extended with conventions, research, and delta files. Code slices added to Debugger and Dev contexts.
 - **`token-budget`** -- extended argument parsing for contract path and task number. Per-task budget computation with complexity scoring. Escalation config added to `config/token-budgets.json`.
 - **`detect-stack`** -- expanded coverage for Python, Rust, Go, Elixir, Java, .NET, Rails, Laravel, Spring. 4 new manifest file detections.
@@ -23,10 +30,22 @@ All notable changes to VBW will be documented in this file.
 
 ### Fixed
 
+- **`task-verify`** -- bash 3.2 compatibility: replaced `case...esac` inside piped command substitution with `grep -Ev` stop word filter. macOS bash 3.2.57 parsing bug.
+- **`bump-version`** -- added `--offline` flag to skip remote GitHub fetch for CI/air-gapped environments.
+- **`phase-detect`** -- compaction threshold now configurable via `compaction_threshold` in config.json (default: 130000).
+- **`scope`** -- prevent lifecycle actions from polluting Todos.
+- **`init`** -- remove `*.sln` glob that crashes zsh on macOS.
+- **`teams`** -- auto-notify blocked agents when blockers clear.
+- **`defaults`** -- harmonize model_profile fallback to quality across all scripts.
+- **`migration`** -- comprehensive flag migration and jq boolean bug fix.
+- **`release`** -- resolve 8 findings from 6-agent pre-release verification.
 - **`validate-commit`** -- heredoc commit messages no longer overwritten by `-m` flag extraction. macOS sed compatibility fix.
 - **`session-start`** -- zsh glob compatibility across session-start, snapshot-resume, lock-lite, and file-guard scripts.
 - **`security-filter`** -- stale marker detection (24h threshold) prevents false positive blocks on old markers.
-- **`CLAUDE.md`** -- Active Context updated to reflect shipped Full Spec Compliance milestone.
+
+### Documentation
+
+- **`tokens`** -- v1.20.0 Full Spec Token Analysis (664 lines): 258 commits, 6 milestones, per-request -7.3%, ~85% coordination overhead reduction maintained despite 33% codebase growth.
 
 ### Tests
 
