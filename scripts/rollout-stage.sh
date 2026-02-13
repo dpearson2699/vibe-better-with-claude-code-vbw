@@ -190,3 +190,54 @@ if [ "$ACTION" = "advance" ]; then
     || echo '{"action":"advance","dry_run":false}'
   exit 0
 fi
+
+# --- Action: status ---
+if [ "$ACTION" = "status" ]; then
+  echo "# V3 Rollout Status"
+  echo ""
+  echo "Current stage: ${CURRENT_STAGE} (${CURRENT_LABEL})"
+  echo "Completed phases: ${COMPLETED_PHASES}"
+  if [ -n "$NEXT_STAGE" ]; then
+    echo "Next stage: ${NEXT_STAGE} (requires ${NEXT_THRESHOLD} phases)"
+  else
+    echo "Next stage: none (all stages unlocked)"
+  fi
+  echo ""
+
+  echo "## Flag Status"
+  echo "| Flag | Stage | Enabled |"
+  echo "|------|-------|---------|"
+
+  # Build flag-to-stage mapping and print managed flags
+  MANAGED_FLAGS="[]"
+  for i in $(seq 0 $((STAGE_COUNT - 1))); do
+    STAGE_NUM=$(jq -r ".stages[$i].stage" "$STAGES_PATH" 2>/dev/null || echo "0")
+    LABEL=$(jq -r ".stages[$i].label" "$STAGES_PATH" 2>/dev/null || echo "")
+    STAGE_FLAGS=$(jq -r ".stages[$i].flags[]" "$STAGES_PATH" 2>/dev/null || echo "")
+    for FLAG in $STAGE_FLAGS; do
+      VALUE=$(jq -r ".${FLAG} // false" "$CONFIG_PATH" 2>/dev/null || echo "false")
+      echo "| ${FLAG} | ${STAGE_NUM} (${LABEL}) | ${VALUE} |"
+      MANAGED_FLAGS=$(echo "$MANAGED_FLAGS" | jq --arg f "$FLAG" '. + [$f]' 2>/dev/null || echo "$MANAGED_FLAGS")
+    done
+  done
+
+  # Find unmanaged v3_ flags
+  ALL_V3_FLAGS=$(jq -r 'keys[] | select(startswith("v3_"))' "$CONFIG_PATH" 2>/dev/null || echo "")
+  UNMANAGED=""
+  for FLAG in $ALL_V3_FLAGS; do
+    IS_MANAGED=$(echo "$MANAGED_FLAGS" | jq --arg f "$FLAG" 'any(. == $f)' 2>/dev/null || echo "false")
+    if [ "$IS_MANAGED" = "false" ]; then
+      VALUE=$(jq -r ".${FLAG} // false" "$CONFIG_PATH" 2>/dev/null || echo "false")
+      if [ -z "$UNMANAGED" ]; then
+        UNMANAGED="yes"
+        echo ""
+        echo "## Unmanaged Flags"
+        echo "| Flag | Enabled |"
+        echo "|------|---------|"
+      fi
+      echo "| ${FLAG} | ${VALUE} |"
+    fi
+  done
+
+  exit 0
+fi
