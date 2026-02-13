@@ -308,6 +308,9 @@ case "$ROLE" in
       echo "### Goal"
       echo "$PHASE_GOAL"
       echo ""
+      echo "### Success Criteria"
+      echo "$PHASE_SUCCESS"
+      echo ""
       echo "### Recent Activity"
       if [ -f "$PLANNING_DIR/STATE.md" ]; then
         ACTIVITY=$(sed -n '/^## Activity/,/^## [A-Z]/p' "$PLANNING_DIR/STATE.md" 2>/dev/null | sed '$d' | tail -n +2) || true
@@ -318,6 +321,53 @@ case "$ROLE" in
         fi
       else
         echo "None"
+      fi
+      if [ -f "$PLANNING_DIR/conventions.json" ] && command -v jq &>/dev/null; then
+        CONVENTIONS=$(jq -r '.conventions[] | "- [\(.tag)] \(.rule)"' "$PLANNING_DIR/conventions.json" 2>/dev/null) || true
+        if [ -n "$CONVENTIONS" ]; then
+          echo ""
+          echo "### Conventions"
+          echo "$CONVENTIONS"
+        fi
+      fi
+      # --- V3: Include RESEARCH.md if present ---
+      RESEARCH_FILE=$(find "$PHASE_DIR" -maxdepth 1 -name "*-RESEARCH.md" -print -quit 2>/dev/null || true)
+      if [ -n "$RESEARCH_FILE" ] && [ -f "$RESEARCH_FILE" ]; then
+        echo ""
+        echo "### Research Findings"
+        cat "$RESEARCH_FILE"
+      fi
+      # --- V3: Delta context with code slices (debugger needs code for diagnosis) ---
+      if [ "$V3_DELTA_ENABLED" = "true" ] && [ -f "${SCRIPT_DIR}/delta-files.sh" ]; then
+        DELTA_FILES=$(bash "${SCRIPT_DIR}/delta-files.sh" "$PHASE_DIR" "$PLAN_PATH" 2>/dev/null || true)
+        if [ -n "$DELTA_FILES" ]; then
+          echo ""
+          echo "### Changed Files (Delta)"
+          echo "$DELTA_FILES" | while IFS= read -r f; do
+            echo "- \`$f\`"
+          done
+          echo ""
+          echo "### Code Slices"
+          echo "$DELTA_FILES" | while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            if [ -f "$f" ]; then
+              LINES=$(wc -l < "$f" 2>/dev/null | tr -d ' ' || echo "0")
+              if [ "$LINES" -le 50 ]; then
+                echo ""
+                echo "#### \`$f\` (${LINES} lines)"
+                echo '```'
+                cat "$f" 2>/dev/null || true
+                echo '```'
+              else
+                echo ""
+                echo "#### \`$f\` (${LINES} lines, first 30 shown)"
+                echo '```'
+                head -30 "$f" 2>/dev/null || true
+                echo '```'
+              fi
+            fi
+          done
+        fi
       fi
     } > "${PHASE_DIR}/.context-debugger.md"
     ;;
@@ -337,6 +387,21 @@ case "$ROLE" in
         cat "$PLANNING_DIR/REQUIREMENTS.md"
       else
         echo "No requirements file found"
+      fi
+      if [ -f "$PLANNING_DIR/conventions.json" ] && command -v jq &>/dev/null; then
+        CONVENTIONS=$(jq -r '.conventions[] | "- [\(.tag)] \(.rule)"' "$PLANNING_DIR/conventions.json" 2>/dev/null) || true
+        if [ -n "$CONVENTIONS" ]; then
+          echo ""
+          echo "### Conventions"
+          echo "$CONVENTIONS"
+        fi
+      fi
+      # --- V3: Include RESEARCH.md if present ---
+      RESEARCH_FILE=$(find "$PHASE_DIR" -maxdepth 1 -name "*-RESEARCH.md" -print -quit 2>/dev/null || true)
+      if [ -n "$RESEARCH_FILE" ] && [ -f "$RESEARCH_FILE" ]; then
+        echo ""
+        echo "### Research Findings"
+        cat "$RESEARCH_FILE"
       fi
     } > "${PHASE_DIR}/.context-architect.md"
     ;;
