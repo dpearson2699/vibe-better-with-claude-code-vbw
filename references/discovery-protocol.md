@@ -143,6 +143,41 @@ Format as AskUserQuestion with `multiSelect: true`.
 5. **No jargon in questions:** Terms like REST, GraphQL, microservices, CI/CD, Docker, etc. should never appear in questions. Use their effects instead.
 6. **Jargon in requirements:** The answers GET translated to technical requirements in REQUIREMENTS.md. Questions are friendly, outputs are precise.
 
+## Disambiguation Pattern
+
+When a user gives a vague answer, present 3-4 concrete interpretations rather than accepting it as-is.
+
+### Vague Answer Triggers
+
+Detect these patterns:
+- **Quality adjectives:** easy, fast, simple, secure, reliable, powerful, flexible (without specifics)
+- **Scope terms:** everything, lots, comprehensive, full-featured (without boundaries)
+- **Time terms:** quick, slow, immediate, later (without metrics)
+- **Scale terms:** big, small, many, few (without numbers)
+
+### Disambiguation Flow
+
+1. User gives vague answer (e.g., "I want it to be easy to use")
+2. Generate 3-4 concrete domain-specific interpretations:
+   - "Works on mobile devices?"
+   - "No signup required?"
+   - "Loads in under 2 seconds?"
+   - "Let me explain..." (escape hatch)
+3. Present as AskUserQuestion with descriptive options
+4. If "Let me explain" chosen: capture free-text, offer to revisit question with context
+5. Record disambiguated answer to discovery.json with metadata
+
+### Example Patterns
+
+| Vague Term | Concrete Interpretations |
+|------------|-------------------------|
+| "Easy to use" | Mobile support? / No signup? / Fast load? |
+| "Fast" | <1s page load? / Instant search? / 1000+ concurrent users? |
+| "Secure" | Encrypted passwords? / Two-factor auth? / Data deletion? |
+| "Lots of features" | 10+ features? / Match competitors? / Cover all use cases? |
+
+The goal: convert vague intent into testable, actionable requirements.
+
 ## Question Categories
 
 Use these to ensure coverage. Not every category applies to every project — select based on the user's description.
