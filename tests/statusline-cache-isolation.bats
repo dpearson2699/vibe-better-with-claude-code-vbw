@@ -9,6 +9,11 @@ STATUSLINE="$SCRIPTS_DIR/vbw-statusline.sh"
 setup() {
   setup_temp_dir
   export ORIG_UID=$(id -u)
+  # Ensure git identity is available (CI runners may not have global config)
+  export GIT_AUTHOR_NAME="test"
+  export GIT_AUTHOR_EMAIL="test@test.local"
+  export GIT_COMMITTER_NAME="test"
+  export GIT_COMMITTER_EMAIL="test@test.local"
   # Clean any existing caches
   rm -f /tmp/vbw-*-"${ORIG_UID}"-* /tmp/vbw-*-"${ORIG_UID}" 2>/dev/null || true
 }
@@ -96,12 +101,14 @@ teardown() {
   git -C "$repo" commit --allow-empty -m "test(init): seed" -q
 
   cd "$repo"
+  local branch
+  branch=$(git branch --show-current)
   local output
   output=$(echo '{}' | bash "$STATUSLINE" 2>&1 | head -1)
   cd "$PROJECT_ROOT"
 
-  # Should contain directory name and branch
-  echo "$output" | grep -q "my-local-project:main"
+  # Should contain directory name and branch (branch varies: main or master)
+  echo "$output" | grep -q "my-local-project:${branch}"
 }
 
 @test "no-remote repo does not show another repo's name" {
