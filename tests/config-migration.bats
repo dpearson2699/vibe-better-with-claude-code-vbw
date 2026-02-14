@@ -13,7 +13,7 @@ teardown() {
 # Helper: Run the migration logic extracted from session-start.sh
 run_migration() {
   local config_file="$TEST_TEMP_DIR/.vbw-planning/config.json"
-  local EXPECTED_FLAG_COUNT=22
+  local EXPECTED_FLAG_COUNT=23
 
   # Check if migration is needed
   CURRENT_FLAG_COUNT=$(jq '[
@@ -24,7 +24,7 @@ run_migration() {
     has("v3_lease_locks"), has("v3_event_recovery"), has("v3_monorepo_routing"),
     has("v2_hard_contracts"), has("v2_hard_gates"), has("v2_typed_protocol"),
     has("v2_role_isolation"), has("v2_two_phase_completion"), has("v2_token_budgets"),
-    has("model_overrides")
+    has("model_overrides"), has("prefer_teams")
   ] | map(select(.)) | length' "$config_file" 2>/dev/null)
 
   if [ "${CURRENT_FLAG_COUNT:-0}" -lt "$EXPECTED_FLAG_COUNT" ]; then
@@ -51,7 +51,8 @@ run_migration() {
       (if has("v2_typed_protocol") then {} else {v2_typed_protocol: false} end) +
       (if has("v2_role_isolation") then {} else {v2_role_isolation: false} end) +
       (if has("v2_two_phase_completion") then {} else {v2_two_phase_completion: false} end) +
-      (if has("v2_token_budgets") then {} else {v2_token_budgets: false} end)
+      (if has("v2_token_budgets") then {} else {v2_token_budgets: false} end) +
+      (if has("prefer_teams") then {} else {prefer_teams: "always"} end)
     ' "$config_file" > "$TMP" 2>/dev/null; then
       mv "$TMP" "$config_file"
       return 0
@@ -74,7 +75,7 @@ EOF
 
   run_migration
 
-  # Verify all 22 flags were added
+  # Verify all 23 flags were added
   run jq '[
     has("context_compiler"), has("v3_delta_context"), has("v3_context_cache"),
     has("v3_plan_research_persist"), has("v3_metrics"), has("v3_contract_lite"),
@@ -83,10 +84,10 @@ EOF
     has("v3_lease_locks"), has("v3_event_recovery"), has("v3_monorepo_routing"),
     has("v2_hard_contracts"), has("v2_hard_gates"), has("v2_typed_protocol"),
     has("v2_role_isolation"), has("v2_two_phase_completion"), has("v2_token_budgets"),
-    has("model_overrides")
+    has("model_overrides"), has("prefer_teams")
   ] | map(select(.)) | length' "$TEST_TEMP_DIR/.vbw-planning/config.json"
   [ "$status" -eq 0 ]
-  [ "$output" = "22" ]
+  [ "$output" = "23" ]
 
   # Verify context_compiler defaults to true
   run jq -r '.context_compiler' "$TEST_TEMP_DIR/.vbw-planning/config.json"
@@ -112,7 +113,7 @@ EOF
 
   run_migration
 
-  # Verify all 22 flags exist
+  # Verify all 23 flags exist
   run jq '[
     has("context_compiler"), has("v3_delta_context"), has("v3_context_cache"),
     has("v3_plan_research_persist"), has("v3_metrics"), has("v3_contract_lite"),
@@ -121,10 +122,10 @@ EOF
     has("v3_lease_locks"), has("v3_event_recovery"), has("v3_monorepo_routing"),
     has("v2_hard_contracts"), has("v2_hard_gates"), has("v2_typed_protocol"),
     has("v2_role_isolation"), has("v2_two_phase_completion"), has("v2_token_budgets"),
-    has("model_overrides")
+    has("model_overrides"), has("prefer_teams")
   ] | map(select(.)) | length' "$TEST_TEMP_DIR/.vbw-planning/config.json"
   [ "$status" -eq 0 ]
-  [ "$output" = "22" ]
+  [ "$output" = "23" ]
 
   # Verify existing values were preserved
   run jq -r '.context_compiler' "$TEST_TEMP_DIR/.vbw-planning/config.json"
@@ -182,10 +183,10 @@ EOF
     has("v3_lease_locks"), has("v3_event_recovery"), has("v3_monorepo_routing"),
     has("v2_hard_contracts"), has("v2_hard_gates"), has("v2_typed_protocol"),
     has("v2_role_isolation"), has("v2_two_phase_completion"), has("v2_token_budgets"),
-    has("model_overrides")
+    has("model_overrides"), has("prefer_teams")
   ] | map(select(.)) | length' "$TEST_TEMP_DIR/.vbw-planning/config.json"
   [ "$status" -eq 0 ]
-  [ "$output" = "22" ]
+  [ "$output" = "23" ]
 }
 
 @test "migration detects malformed JSON" {
@@ -206,8 +207,8 @@ EOF
 
 @test "EXPECTED_FLAG_COUNT matches defaults.json" {
   # Count actual v3/v2 flags in defaults.json
-  # Flags: v3_*, v2_*, context_compiler, model_overrides
-  DEFAULTS_COUNT=$(jq '[keys[] | select(startswith("v3_") or startswith("v2_") or . == "context_compiler" or . == "model_overrides")] | length' "$CONFIG_DIR/defaults.json")
+  # Flags: v3_*, v2_*, context_compiler, model_overrides, prefer_teams
+  DEFAULTS_COUNT=$(jq '[keys[] | select(startswith("v3_") or startswith("v2_") or . == "context_compiler" or . == "model_overrides" or . == "prefer_teams")] | length' "$CONFIG_DIR/defaults.json")
 
   # Extract EXPECTED_FLAG_COUNT from session-start.sh
   SCRIPT_COUNT=$(grep 'EXPECTED_FLAG_COUNT=' "$SCRIPTS_DIR/session-start.sh" | grep -oE '[0-9]+' | head -1)
