@@ -2,6 +2,14 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.20.7] - 2026-02-14
+
+### Fixed
+
+- **`vbw-statusline.sh`** -- OAuth token lookup now detects keychain access denial vs API key usage. Users with OAuth (Pro/Max) whose keychain blocks terminal access now see an actionable diagnostic message instead of misleading "N/A (using API key)". Added `VBW_OAUTH_TOKEN` env var as escape hatch. Uses `claude auth status` to distinguish auth methods when credential store fails.
+
+---
+
 ## [1.20.6] - 2026-02-14
 
 ### Community Contributions
