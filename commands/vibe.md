@@ -608,12 +608,23 @@ If `planning_dir_exists=false`: display "Run /vbw:init first to set up your proj
        exit 1
      fi
      ```
-   - **Team creation (Scout+Lead only):** If `v3_plan_research_persist=true` AND effort != turbo AND Scout was spawned in step 3 (research needed):
+   - **Team creation:** Read prefer_teams config:
+     ```bash
+     PREFER_TEAMS=$(jq -r '.prefer_teams // "always"' .vbw-planning/config.json 2>/dev/null)
+     ```
+     Decision tree:
+     - `prefer_teams='always'`: Create team even for Lead-only (no Scout)
+     - `prefer_teams='when_parallel'`: Create team only if Scout was spawned (research needed), else no team
+     - `prefer_teams='auto'`: Same as when_parallel (Lead-only is low-risk)
+
+     When team should be created (based on prefer_teams):
      - Create team via TeamCreate: `team_name="vbw-plan-{NN}"`, `description="Planning Phase {N}: {phase-name}"`
-     - Spawn Scout with `team_name: "vbw-plan-{NN}"`, `name: "scout"` parameters on the Task tool invocation.
+     - Spawn Scout (if spawned in step 3) with `team_name: "vbw-plan-{NN}"`, `name: "scout"` parameters on the Task tool invocation.
      - Spawn Lead with `team_name: "vbw-plan-{NN}"`, `name: "lead"` parameters on the Task tool invocation.
      - After both complete: send shutdown to each teammate, then TeamDelete team "vbw-plan-{NN}".
-   - **Lead only (no research):** If Scout was NOT spawned (research exists or disabled): spawn vbw-lead as subagent via Task tool without team (single agent, no team overhead).
+
+     When team should NOT be created (Lead-only with when_parallel/auto):
+     - Spawn vbw-lead as subagent via Task tool without team (single agent, no team overhead).
    - Spawn vbw-lead as subagent via Task tool with compiled context (or full file list as fallback).
    - **CRITICAL:** Add `model: "${LEAD_MODEL}"` parameter to the Task tool invocation.
    - Display `◆ Spawning Lead agent...` -> `✓ Lead agent complete`.
