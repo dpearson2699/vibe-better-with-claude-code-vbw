@@ -9,6 +9,7 @@ All notable changes to VBW will be documented in this file.
 - **`prompt-preflight`** -- Stop deleting `.vbw-session` marker on non-`/vbw:` prompts. The marker was being removed mid-workflow when users sent follow-up messages (plan approvals, answers), causing `security-filter.sh` to block Write/Edit calls to `.vbw-planning/`. Cleanup now only happens at session end via `session-stop.sh`.
 - **`hook-wrapper`** -- Add `CLAUDE_CONFIG_DIR` fallback in SIGHUP handler. Previously used bare `$HOME/.claude` without respecting custom config directory.
 - **`shellcheck`** -- Fix SC2155 warnings (declare and assign separately) in `tmux-watchdog.sh`, `session-start.sh`, `clean-stale-teams.sh`, `doctor-cleanup.sh`. Fix SC2034 unused variable in `doctor-cleanup.sh`.
+- **`security-filter`** -- Remove `.vbw-planning/` self-blocking. The marker-based isolation (`.gsd-isolation` + `.active-agent` + `.vbw-session`) caused false blocks in too many scenarios: orchestrator after team deletion, agents before markers set, Read calls before prompt-preflight runs. GSD isolation is enforced by CLAUDE.md instructions + `.planning/` block (VBW→GSD direction).
 
 ## [1.21.11] - 2026-02-15
 
