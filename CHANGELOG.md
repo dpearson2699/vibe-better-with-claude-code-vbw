@@ -2,6 +2,19 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.21.8] - 2026-02-15
+
+### Added
+
+- **`readme`** -- Feature Flags Reference documenting all 20 v2/v3 flags with descriptions, dependencies, and toggle instructions. Settings Reference for all config keys. Planning & Git section for `planning_tracking` and `auto_push`. (PR #62, @dpearson2699)
+- **`readme`** -- Contributors section now uses [contrib.rocks](https://contrib.rocks/) auto-updating image.
+
+### Changed
+
+- **`config`** -- `/vbw:config` feature flags display uses human-friendly labels instead of raw `v2_`/`v3_` prefixed keys. (PR #62, @dpearson2699)
+
+---
+
 ## [1.21.7] - 2026-02-15
 
 ### Added
