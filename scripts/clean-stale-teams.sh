@@ -13,6 +13,8 @@ set -euo pipefail
 TEAMS_DIR="$CLAUDE_DIR/teams"
 TASKS_DIR="$CLAUDE_DIR/tasks"
 STALE_THRESHOLD_SECONDS=7200  # 2 hours
+PLANNING_DIR="${VBW_PLANNING_DIR:-$(pwd)/.vbw-planning}"
+LOG_FILE="$PLANNING_DIR/.hook-errors.log"
 
 # Graceful exit if teams directory doesn't exist
 if [ ! -d "$TEAMS_DIR" ]; then
@@ -22,6 +24,17 @@ fi
 # Temporary directory for atomic cleanup
 TEMP_DIR="/tmp/vbw-stale-teams-$$"
 mkdir -p "$TEMP_DIR"
+
+# Logging helper (fail-silent)
+log_cleanup() {
+  local msg="$1"
+  local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date +"%Y-%m-%dT%H:%M:%SZ")
+  echo "[$timestamp] $msg" >> "$LOG_FILE" 2>/dev/null || true
+}
+
+# Counters
+teams_cleaned=0
+tasks_cleaned=0
 
 # Platform-specific stat command for modification time
 get_mtime() {
@@ -58,17 +71,31 @@ for team_dir in "$TEAMS_DIR"/*; do
   age=$((NOW - inbox_mtime))
   [ "$age" -lt "$STALE_THRESHOLD_SECONDS" ] && continue
 
+  # Calculate stale duration in hours
+  stale_hours=$((age / 3600))
+
   # Stale team detected — atomic cleanup
-  mv "$team_dir" "$TEMP_DIR/$team_name" 2>/dev/null || true
+  if mv "$team_dir" "$TEMP_DIR/$team_name" 2>/dev/null; then
+    teams_cleaned=$((teams_cleaned + 1))
+    log_cleanup "Stale team cleanup: $team_name (stale for ${stale_hours}h)"
+  fi
 
   # Also remove paired tasks directory if it exists
   tasks_dir="$TASKS_DIR/$team_name"
   if [ -d "$tasks_dir" ]; then
-    mv "$tasks_dir" "$TEMP_DIR/${team_name}-tasks" 2>/dev/null || true
+    if mv "$tasks_dir" "$TEMP_DIR/${team_name}-tasks" 2>/dev/null; then
+      tasks_cleaned=$((tasks_cleaned + 1))
+      log_cleanup "Stale tasks cleanup: $team_name (paired with team)"
+    fi
   fi
 done
 
 # Remove temp directory
 rm -rf "$TEMP_DIR" 2>/dev/null || true
+
+# Log summary
+if [ "$teams_cleaned" -gt 0 ] || [ "$tasks_cleaned" -gt 0 ]; then
+  log_cleanup "Summary: $teams_cleaned teams cleaned, $tasks_cleaned tasks removed"
+fi
 
 exit 0
