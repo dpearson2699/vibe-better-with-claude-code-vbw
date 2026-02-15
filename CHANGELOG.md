@@ -2,6 +2,20 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.21.9] - 2026-02-15
+
+### Added
+
+- **`security`** -- Database safety guard. PreToolUse hook (`bash-guard.sh`) intercepts every Bash command and blocks 40+ destructive patterns across Laravel, Rails, Django, Prisma, Knex, Sequelize, TypeORM, Drizzle, Diesel, SQLx, Ecto, raw SQL clients, Redis, MongoDB, and Docker volumes. Fires on all agents with Bash access (Dev, QA, Lead, Debugger). Override with `VBW_ALLOW_DESTRUCTIVE=1` or `bash_guard=false` config.
+- **`security`** -- `config/destructive-commands.txt` blocklist file, extensible per-project via `.vbw-planning/destructive-commands.local.txt`.
+- **`agents`** -- `## Database Safety` prompt sections added to vbw-qa, vbw-dev, vbw-debugger, and vbw-lead agents.
+- **`contracts`** -- `forbidden_commands` gate type in `hard-gate.sh` for per-plan command restrictions.
+- **`templates`** -- `forbidden_commands: []` field added to PLAN.md template.
+- **`docs`** -- `docs/database-safety-guard.md` — full design document with flowchart, pattern table, override guide, and architecture decisions.
+- **`readme`** -- Database safety guard in Features section, Settings Reference (`bash_guard`), Security hook diagram updated.
+
+---
+
 ## [1.21.8] - 2026-02-15
 
 ### Added
