@@ -133,7 +133,9 @@ Think of it as project management for the post-dignity era of software developme
 - [Effort Profiles](#effort-profiles)
 - [Autonomy Levels](#autonomy-levels)
 - [Planning & Git](#planning--git)
+- [Settings Reference](#settings-reference)
 - [Feature Flags Reference](#feature-flags-reference)
+- [Cost Optimization](#cost-optimization)
 - [Project Structure](#project-structure)
 - [Requirements](#requirements)
 - [Contributing](#contributing)
@@ -653,6 +655,90 @@ Controls whether VBW pushes commits automatically, and when.
 | **`never`** | Default. Never pushes. Commits stay local until you explicitly run `git push`. Follows the "do not push until asked" rule. | When you review commits before sharing, or work on protected branches. |
 | **`after_phase`** | Pushes once after phase execution completes, batching all task commits from that phase into a single push. | Power users who want remote backup after each phase without per-commit noise. |
 | **`always`** | Pushes after every commit — both source-task commits and planning commits (if `planning_tracking=commit`). | CI/CD pipelines, pair programming setups, or when you want real-time remote visibility. |
+
+<br>
+
+---
+
+<br>
+
+## Settings Reference
+
+Every setting below lives in `.vbw-planning/config.json` and can be changed with `/vbw:config <key> <value>`. Settings are created during `/vbw:init` and backfilled automatically when new ones are added in plugin updates.
+
+### Core workflow
+
+| Setting | Type | Default | Values |
+| :--- | :--- | :--- | :--- |
+| `effort` | string | `balanced` | `thorough` / `balanced` / `fast` / `turbo` |
+| `autonomy` | string | `standard` | `cautious` / `standard` / `confident` / `pure-vibe` |
+| `verification_tier` | string | `standard` | `quick` / `standard` / `deep` |
+
+- **`effort`** — Controls how deeply agents plan, execute, and verify. See [Effort Profiles](#effort-profiles).
+- **`autonomy`** — Controls how often agents stop to ask for confirmation. See [Autonomy Levels](#autonomy-levels).
+- **`verification_tier`** — Controls QA depth. `quick` runs 5–10 checks (artifact existence, frontmatter validity). `standard` runs 15–25 (structure, imports, cross-consistency). `deep` runs 30+ (anti-patterns, requirement mapping, completeness audit). Effort profiles map to tiers automatically (`turbo`→skip, `fast`→quick, `balanced`→standard, `thorough`→deep), but this setting overrides that default. Forced to `deep` when >15 requirements or on the final phase.
+
+### Commit and push
+
+| Setting | Type | Default | Values |
+| :--- | :--- | :--- | :--- |
+| `auto_commit` | boolean | `true` | `true` / `false` |
+| `planning_tracking` | string | `manual` | `manual` / `ignore` / `commit` |
+| `auto_push` | string | `never` | `never` / `after_phase` / `always` |
+
+- **`auto_commit`** — When `true`, the Dev agent auto-commits after each task with format `{type}({phase}-{plan}): {task-name}`, staging files individually. When `false`, changes accumulate uncommitted. **This only controls source-code commits during execution** — planning artifact commits are controlled by `planning_tracking`.
+- **`planning_tracking`** — Controls `.vbw-planning/` artifact handling. See [Planning & Git](#planning--git).
+- **`auto_push`** — Controls automatic pushing. See [Planning & Git](#planning--git).
+
+### Agent behavior
+
+| Setting | Type | Default | Values |
+| :--- | :--- | :--- | :--- |
+| `prefer_teams` | string | `always` | `always` / `when_parallel` / `auto` |
+| `max_tasks_per_plan` | number | `5` | `1`–`7` |
+| `context_compiler` | boolean | `true` | `true` / `false` |
+| `plain_summary` | boolean | `true` | `true` / `false` |
+
+- **`prefer_teams`** — Controls when VBW creates Agent Teams (multiple color-coded agents working together) vs spawning a single subagent. `always` creates teams for every operation — maximum agent visibility but higher token cost. `when_parallel` (and `auto`, which behaves identically) creates teams only when parallelism adds value: 2+ plans in execute, Scout needed in planning, ambiguous bugs in debug. Use `always` unless you're optimizing for token cost.
+- **`max_tasks_per_plan`** — Maximum number of tasks the Lead agent should include in a single plan. Communicated to agents via session context. Lower values (2–3) produce more focused, easier-to-verify plans. Higher values (5–7) reduce planning overhead but increase blast radius per plan. Not enforced by a hard gate — it's an advisory constraint.
+- **`context_compiler`** — When `true`, runs `compile-context.sh` to produce role-specific `.context-{role}.md` files so each agent gets curated context (Lead gets requirements, Dev gets phase goal + conventions, QA gets verification targets). When `false`, agents read project files directly without curation. Leave this on unless you're debugging context issues.
+- **`plain_summary`** — When `true`, appends 2–4 plain-English sentences after QA completes in Execute mode, summarizing what happened in the phase without jargon. When `false`, output shows only the structured QA result.
+
+### Skills and discovery
+
+| Setting | Type | Default | Values |
+| :--- | :--- | :--- | :--- |
+| `skill_suggestions` | boolean | `true` | `true` / `false` |
+| `auto_install_skills` | boolean | `false` | `true` / `false` |
+| `discovery_questions` | boolean | `true` | `true` / `false` |
+
+- **`skill_suggestions`** — When `true`, `/vbw:init` detects your tech stack and suggests relevant skills to install. When `false`, the entire skill suggestion flow is skipped during init.
+- **`auto_install_skills`** — When `true`, suggested skills are installed automatically without asking. When `false`, VBW shows the install commands but lets you run them yourself. Has no effect if `skill_suggestions` is `false`.
+- **`discovery_questions`** — When `true`, Bootstrap discovery depth is determined by your active profile (`default`→3–5 questions, `production`→5–8, `prototype`→1–2, `yolo`→skip). When `false`, forces discovery to skip regardless of profile — asks only 2 minimal static questions and moves on. Set this to `false` if you're bootstrapping projects where you already know what you want.
+
+### Model routing
+
+| Setting | Type | Default | Values |
+| :--- | :--- | :--- | :--- |
+| `model_profile` | string | `quality` | `quality` / `balanced` / `budget` |
+| `model_overrides` | object | `{}` | `{"dev": "opus", "qa": "haiku", ...}` |
+| `active_profile` | string | `default` | `default` / `prototype` / `production` / `yolo` / `custom` |
+| `custom_profiles` | object | `{}` | User-defined profile presets |
+
+- **`model_profile`** — Which Claude models agents use. See [Cost Optimization](#cost-optimization).
+- **`model_overrides`** — Per-agent model overrides that take precedence over the profile. See [Per-Agent Overrides](#per-agent-overrides).
+- **`active_profile`** — Bundles effort, autonomy, and verification tier into a switchable preset. `default` (balanced/standard/standard), `prototype` (fast/confident/quick), `production` (thorough/cautious/deep), `yolo` (turbo/pure-vibe/skip). Set automatically to `custom` when individual settings drift from their profile. Manage with `/vbw:profile`.
+- **`custom_profiles`** — Stores user-created profile presets (name → effort/autonomy/verification_tier). Create, list, switch, and delete via `/vbw:profile`.
+
+### Display
+
+| Setting | Type | Default | Values |
+| :--- | :--- | :--- | :--- |
+| `visual_format` | string | `unicode` | `unicode` / `ascii` |
+| `branch_per_milestone` | boolean | `false` | `true` / `false` |
+
+- **`visual_format`** — Intended to switch between Unicode symbols (✓ ✗ ◆ ○ ⚡ ➜, box-drawing characters) and ASCII equivalents. Currently declared but not yet wired into agent output — agents always use Unicode.
+- **`branch_per_milestone`** — Intended to auto-create a git branch per milestone during Bootstrap. Currently declared but not yet implemented — has no runtime effect.
 
 <br>
 
