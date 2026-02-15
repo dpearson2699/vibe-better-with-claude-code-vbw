@@ -35,11 +35,24 @@ cleanup_on_sighup() {
     exit 1
   fi
 
-  # Get active PIDs and terminate
+  # Log SIGHUP trigger
+  LOG="$PLANNING_DIR/.hook-errors.log"
+  TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date +"%s")
+  echo "[$TS] SIGHUP received, cleaning up agent PIDs" >> "$LOG" 2>/dev/null || true
+
+  # Get active PIDs and terminate with escalation
   PIDS=$(bash "$TRACKER" list 2>/dev/null || true)
   if [ -n "$PIDS" ]; then
     for pid in $PIDS; do
       kill -TERM "$pid" 2>/dev/null || true
+    done
+
+    # Wait 3s for graceful shutdown, then SIGKILL survivors
+    sleep 3
+    for pid in $PIDS; do
+      if kill -0 "$pid" 2>/dev/null; then
+        kill -KILL "$pid" 2>/dev/null || true
+      fi
     done
   fi
 

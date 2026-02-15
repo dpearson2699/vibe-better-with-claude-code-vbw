@@ -22,6 +22,7 @@ case "$AGENT_TYPE" in
     fi
     if [ -n "$AGENT_PID" ] && [ -f "$SCRIPT_DIR/agent-pid-tracker.sh" ]; then
       bash "$SCRIPT_DIR/agent-pid-tracker.sh" register "$AGENT_PID" 2>/dev/null || true
+      echo "Registered agent PID=$AGENT_PID type=$AGENT_TYPE" >&2
     fi
     ;;
 esac
