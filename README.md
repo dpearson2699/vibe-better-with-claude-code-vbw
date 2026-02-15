@@ -135,6 +135,7 @@ Think of it as project management for the post-dignity era of software developme
 - [Project Structure](#project-structure)
 - [Requirements](#requirements)
 - [Contributing](#contributing)
+- [Contributors](#contributors)
 - [License](#license)
 
 <br>
@@ -738,6 +739,14 @@ That last one is the real barrier to entry.
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on local development, project structure, and pull requests.
+
+<br>
+
+## Contributors
+
+- [@dpearson2699](https://github.com/dpearson2699) — config migration, CI hardening, hook resolution, planning artifact tracking
+- [@halindrome](https://github.com/halindrome) — statusline cache isolation
+- [@navin-moorthy](https://github.com/navin-moorthy) — human UAT verification gate
 
 <br>
 
