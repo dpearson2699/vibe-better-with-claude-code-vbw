@@ -1,5 +1,6 @@
 ---
 name: vbw:resume
+category: supporting
 disable-model-invocation: true
 description: Restore project context from .vbw-planning/ state.
 argument-hint:

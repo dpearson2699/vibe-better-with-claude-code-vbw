@@ -1,5 +1,6 @@
 ---
 name: vbw:update
+category: advanced
 disable-model-invocation: true
 description: Update VBW to the latest version with automatic cache refresh.
 argument-hint: "[--check]"

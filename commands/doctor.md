@@ -1,5 +1,6 @@
 ---
 name: vbw:doctor
+category: supporting
 disable-model-invocation: true
 description: Run health checks on VBW installation and project setup.
 allowed-tools: Read, Bash, Glob, Grep

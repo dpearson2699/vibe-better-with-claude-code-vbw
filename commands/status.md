@@ -1,5 +1,6 @@
 ---
 name: vbw:status
+category: monitoring
 description: Display project progress dashboard with phase status, velocity metrics, and next action.
 argument-hint: [--verbose] [--metrics]
 allowed-tools: Read, Glob, Grep, Bash
