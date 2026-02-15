@@ -43,6 +43,15 @@ if [ -d ".vbw-planning" ]; then
   date +%s > .vbw-planning/.compaction-marker 2>/dev/null || true
 fi
 
+# --- Save agent state snapshot ---
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [ -f ".vbw-planning/.execution-state.json" ] && [ -f "$SCRIPT_DIR/snapshot-resume.sh" ]; then
+  SNAP_PHASE=$(jq -r '.phase // ""' ".vbw-planning/.execution-state.json" 2>/dev/null)
+  if [ -n "$SNAP_PHASE" ]; then
+    bash "$SCRIPT_DIR/snapshot-resume.sh" save "$SNAP_PHASE" 2>/dev/null || true
+  fi
+fi
+
 jq -n --arg ctx "$PRIORITIES" '{
   "hookEventName": "PreCompact",
   "hookSpecificOutput": {
