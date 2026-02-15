@@ -156,9 +156,11 @@ Most Claude Code plugins were built for the subagent era, one main session spawn
 
 - **Agent Teams for real parallelism.** `/vbw:vibe` creates a team of Dev teammates that execute tasks concurrently, each in their own context window. `/vbw:map` runs 4 Scout teammates in parallel to analyze your codebase. This isn't "spawn a subagent and wait" -- it's coordinated teamwork with a shared task list and direct inter-agent communication.
 
-- **Native hooks for continuous verification.** 20 hooks across 11 event types run automatically -- validating SUMMARY.md structure, checking commit format, validating frontmatter descriptions, gating task completion, blocking sensitive file access, enforcing plan file boundaries, managing session lifecycle, tracking agent lifecycle and cost attribution, tracking session metrics, pre-flight prompt validation, and post-compaction context verification. No more spawning a QA agent after every task. The platform enforces it, not the prompt.
+- **Native hooks for continuous verification.** 21 hooks across 11 event types run automatically -- validating SUMMARY.md structure, checking commit format, validating frontmatter descriptions, gating task completion, blocking sensitive file access, enforcing plan file boundaries, managing session lifecycle, tracking agent lifecycle and cost attribution, tracking session metrics, pre-flight prompt validation, and post-compaction context verification. No more spawning a QA agent after every task. The platform enforces it, not the prompt.
 
 - **Platform-enforced tool permissions.** Each agent has `tools`/`disallowedTools` in their YAML frontmatter -- 4 of 6 agents have platform-enforced deny lists. Scout and QA literally cannot write files. Sensitive file access (`.env`, credentials) is intercepted by the `security-filter` hook. `disallowedTools` is enforced by Claude Code itself, not by instructions an agent might ignore during compaction.
+
+- **Database safety guard.** A PreToolUse hook (`bash-guard.sh`) intercepts every Bash command before it reaches the shell and blocks known destructive patterns -- `migrate:fresh`, `db:drop`, `TRUNCATE TABLE`, `FLUSHALL`, and 40+ patterns across Laravel, Rails, Django, Prisma, Knex, Sequelize, TypeORM, Drizzle, Diesel, SQLx, Ecto, raw SQL clients, Redis, MongoDB, and Docker volumes. All four agents with Bash access (Dev, QA, Lead, Debugger) are filtered equally. Override with `VBW_ALLOW_DESTRUCTIVE=1` env var or `bash_guard=false` in config. Extend with `.vbw-planning/destructive-commands.local.txt` for project-specific patterns. See **[Database Safety Guard](docs/database-safety-guard.md)** for the full design, flowchart, and pattern list.
 
 - **Structured handoff schemas.** Agents communicate via JSON-structured SendMessage with typed schemas (`scout_findings`, `dev_progress`, `dev_blocker`, `qa_result`, `debugger_report`). No more hoping the receiving agent can parse free-form markdown. Schema definitions live in a single reference document with backward-compatible fallback to plain text.
 
@@ -513,7 +515,7 @@ Here's when each one shows up to work:
   │(subagt)  │   (scope creep is for amateurs)                         │ verify
   └──────────┘                                                         │
                                                                        ▼
-  HOOKS (11 event types, 20 handlers)                              VERIFICATION.md
+  HOOKS (11 event types, 21 handlers)                              VERIFICATION.md
   ┌───────────────────────────────────────────────────────────────────────────────┐
   │  Verification                                                                 │
   │    PostToolUse ──── Validates SUMMARY.md on write, checks commit format,      │
@@ -525,7 +527,9 @@ Here's when each one shows up to work:
   │    TaskCompleted ── Verifies task-related commit via keyword matching         │
   │                                                                               │
   │  Security                                                                     │
-  │    PreToolUse ──── Blocks sensitive file access (.env, keys), enforces plan   │
+  │    PreToolUse ──── Blocks destructive Bash commands (migrate:fresh, db:drop,  │
+  │                    TRUNCATE, FLUSHALL, 40+ patterns across all frameworks),   │
+  │                    blocks sensitive file access (.env, keys), enforces plan   │
   │                    file boundaries, dispatches skill hooks                    │
   │                                                                               │
   │  Lifecycle                                                                    │
@@ -729,6 +733,14 @@ Every setting below lives in `.vbw-planning/config.json` and can be changed with
 - **`model_overrides`** — Per-agent model overrides that take precedence over the profile. See [Per-Agent Overrides](#per-agent-overrides).
 - **`active_profile`** — Bundles effort, autonomy, and verification tier into a switchable preset. `default` (balanced/standard/standard), `prototype` (fast/confident/quick), `production` (thorough/cautious/deep), `yolo` (turbo/pure-vibe/skip). Set automatically to `custom` when individual settings drift from their profile. Manage with `/vbw:profile`.
 - **`custom_profiles`** — Stores user-created profile presets (name → effort/autonomy/verification_tier). Create, list, switch, and delete via `/vbw:profile`.
+
+### Safety
+
+| Setting | Type | Default | Values |
+| :--- | :--- | :--- | :--- |
+| `bash_guard` | boolean | `true` | `true` / `false` |
+
+- **`bash_guard`** — When `true`, a PreToolUse hook blocks known destructive Bash commands (database drops, migration resets, volume wipes) before they execute. Covers 40+ patterns across all major frameworks and databases. Override per-command with `VBW_ALLOW_DESTRUCTIVE=1` env var, or disable entirely with `false`. Project-specific patterns can be added to `.vbw-planning/destructive-commands.local.txt`.
 
 ### Display
 
