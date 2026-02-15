@@ -11,6 +11,7 @@ set -euo pipefail
 . "$(dirname "$0")/resolve-claude-dir.sh"
 
 TEAMS_DIR="$CLAUDE_DIR/teams"
+TASKS_DIR="$CLAUDE_DIR/tasks"
 STALE_THRESHOLD_SECONDS=7200  # 2 hours
 
 # Graceful exit if teams directory doesn't exist
@@ -59,6 +60,12 @@ for team_dir in "$TEAMS_DIR"/*; do
 
   # Stale team detected — atomic cleanup
   mv "$team_dir" "$TEMP_DIR/$team_name" 2>/dev/null || true
+
+  # Also remove paired tasks directory if it exists
+  tasks_dir="$TASKS_DIR/$team_name"
+  if [ -d "$tasks_dir" ]; then
+    mv "$tasks_dir" "$TEMP_DIR/${team_name}-tasks" 2>/dev/null || true
+  fi
 done
 
 # Remove temp directory
