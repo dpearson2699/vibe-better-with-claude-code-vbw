@@ -2,6 +2,49 @@
 
 All notable changes to VBW will be documented in this file.
 
+## [1.21.5] - 2026-02-15
+
+### Fixed
+
+- **`hooks.json` + `hook-wrapper.sh`** — Hooks now resolve `CLAUDE_PLUGIN_ROOT` via dual fallback: cache path first, then `--plugin-dir` path. Previously, `--plugin-dir` installs had no `CLAUDE_PLUGIN_ROOT` set, causing all hook scripts to silently fail. New `resolve-claude-dir.bats` and `sessionstart-compact-hooks.bats` tests added. (PR #54, @dpearson2699)
+
+---
+
+## [1.21.4] - 2026-02-15
+
+### Fixed
+
+- **`statusline-cache-isolation.bats`** — CI runners now have git identity configured in test setup(), fixing "Author identity unknown" failures on GitHub Actions. Default branch detection is now dynamic instead of hardcoding "main". Statusline also renders repo label on detached HEAD. (PR #46, @dpearson2699)
+- **`commands/*.md`** — 15 commands now include `Plugin root: !` backtick preamble so `${CLAUDE_PLUGIN_ROOT}` resolves correctly in model-executed Bash blocks. Previously the variable expanded to empty string, silently breaking all path references. Regression test added. (PR #50, @dpearson2699)
+- **`research-persistence.bats`** — Tests now use tracked `templates/RESEARCH.md` as fixture instead of gitignored `.vbw-planning/` runtime state. CI no longer depends on local development artifacts existing at repo root. (PR #56, @dpearson2699)
+
+### Added
+
+- **`.github/CODEOWNERS`** — `* @yidakee` ensures all PRs auto-request code owner review.
+- **Branch protection** — main branch now requires passing CI and PR review before merge.
+
+---
+
+## [1.21.3] - 2026-02-14
+
+### Fixed
+
+- **`session-start.sh`** — Config migration now backfills `prefer_teams` for users who initialized before v1.20.8, defaulting to `"always"`. Previously these users had the old boolean `agent_teams` but no `prefer_teams` enum, causing silent config drift.
+- **`session-start.sh`** — jq migration failures now log a warning to stderr instead of failing silently. Users see a clear message when config migration encounters malformed JSON.
+
+### Testing
+
+- **16 new tests** across 2 new test files:
+  - `tests/config-migration.bats` (9 tests) — empty config, partial config, full config no-op, idempotent migration, malformed JSON handling, EXPECTED_FLAG_COUNT sync validation, prefer_teams migration, prefer_teams preservation, count=23 validation
+  - `tests/research-persistence.bats` (7 tests) — Phase 1 RESEARCH.md section format, research-warn.sh JSON schema (4 cases), compile-context RESEARCH.md inclusion, flag-disabled path verification
+- Test suite: 383 → 397 total tests (zero regressions)
+
+### Documentation
+
+- **`research-persistence`** — Documented Scout write path, test coverage, and known hook isolation limitation for RESEARCH.md creation
+
+---
+
 ## [1.21.2] - 2026-02-14
 
 ### Fixed
