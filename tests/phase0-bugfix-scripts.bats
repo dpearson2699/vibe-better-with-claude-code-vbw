@@ -106,3 +106,337 @@ load test_helper
   teardown_temp_dir
   [ "$status" -eq 0 ]
 }
+
+# --- Isolation marker lifecycle (fix/isolation-marker-lifecycle) ---
+
+@test "security-filter allows write with only .vbw-session (no .active-agent)" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  touch "$TEST_TEMP_DIR/.vbw-planning/.gsd-isolation"
+  echo "session" > "$TEST_TEMP_DIR/.vbw-planning/.vbw-session"
+  # No .active-agent
+  INPUT='{"tool_input":{"file_path":"'"$TEST_TEMP_DIR"'/.vbw-planning/milestones/default/STATE.md"}}'
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '$INPUT' | bash '$SCRIPTS_DIR/security-filter.sh'"
+  teardown_temp_dir
+  [ "$status" -eq 0 ]
+}
+
+@test "security-filter resolves markers from FILE_PATH project root" {
+  setup_temp_dir
+  local REPO_A="$TEST_TEMP_DIR/repo-a"
+  local REPO_B="$TEST_TEMP_DIR/repo-b"
+  mkdir -p "$REPO_A/.vbw-planning" "$REPO_B/.vbw-planning"
+  touch "$REPO_A/.vbw-planning/.gsd-isolation"
+  # Repo A has no markers — would block if CWD-based
+  # Repo B has .gsd-isolation AND .vbw-session — should allow
+  touch "$REPO_B/.vbw-planning/.gsd-isolation"
+  echo "session" > "$REPO_B/.vbw-planning/.vbw-session"
+  INPUT='{"tool_input":{"file_path":"'"$REPO_B"'/.vbw-planning/STATE.md"}}'
+  run bash -c "cd '$REPO_A' && echo '$INPUT' | bash '$SCRIPTS_DIR/security-filter.sh'"
+  teardown_temp_dir
+  [ "$status" -eq 0 ]
+}
+
+@test "security-filter blocks when target repo has isolation but no markers" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  touch "$TEST_TEMP_DIR/.vbw-planning/.gsd-isolation"
+  # No .active-agent, no .vbw-session
+  INPUT='{"tool_input":{"file_path":"'"$TEST_TEMP_DIR"'/.vbw-planning/STATE.md"}}'
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '$INPUT' | bash '$SCRIPTS_DIR/security-filter.sh'"
+  teardown_temp_dir
+  [ "$status" -eq 2 ]
+}
+
+@test "agent-start handles vbw: prefixed agent_type" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  INPUT='{"agent_type":"vbw:vbw-scout"}'
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '$INPUT' | bash '$SCRIPTS_DIR/agent-start.sh'"
+  [ "$status" -eq 0 ]
+  [ -f "$TEST_TEMP_DIR/.vbw-planning/.active-agent" ]
+  [ "$(cat "$TEST_TEMP_DIR/.vbw-planning/.active-agent")" = "scout" ]
+  teardown_temp_dir
+}
+
+@test "agent-start creates count file for reference counting" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  # Start two agents
+  echo '{"agent_type":"vbw-scout"}' | bash -c "cd '$TEST_TEMP_DIR' && bash '$SCRIPTS_DIR/agent-start.sh'"
+  echo '{"agent_type":"vbw-lead"}' | bash -c "cd '$TEST_TEMP_DIR' && bash '$SCRIPTS_DIR/agent-start.sh'"
+  [ -f "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count" ]
+  [ "$(cat "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count")" = "2" ]
+  teardown_temp_dir
+}
+
+@test "agent-stop decrements count and preserves marker when agents remain" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  echo "lead" > "$TEST_TEMP_DIR/.vbw-planning/.active-agent"
+  echo "2" > "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count"
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '{}' | bash '$SCRIPTS_DIR/agent-stop.sh'"
+  [ "$status" -eq 0 ]
+  # Marker should still exist (one agent remaining)
+  [ -f "$TEST_TEMP_DIR/.vbw-planning/.active-agent" ]
+  [ "$(cat "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count")" = "1" ]
+  teardown_temp_dir
+}
+
+@test "agent-stop removes marker when last agent stops" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  echo "scout" > "$TEST_TEMP_DIR/.vbw-planning/.active-agent"
+  echo "1" > "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count"
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '{}' | bash '$SCRIPTS_DIR/agent-stop.sh'"
+  [ "$status" -eq 0 ]
+  # Both marker and count should be gone
+  [ ! -f "$TEST_TEMP_DIR/.vbw-planning/.active-agent" ]
+  [ ! -f "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count" ]
+  teardown_temp_dir
+}
+
+@test "prompt-preflight creates .vbw-session for expanded command content" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  touch "$TEST_TEMP_DIR/.vbw-planning/.gsd-isolation"
+  # Simulate expanded slash command with YAML frontmatter containing name: vbw:vibe
+  INPUT='{"prompt":"---\nname: vbw:vibe\ndescription: Main entry point\n---\n# VBW Vibe\nPlan mode..."}'
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '$INPUT' | bash '$SCRIPTS_DIR/prompt-preflight.sh'"
+  [ "$status" -eq 0 ]
+  [ -f "$TEST_TEMP_DIR/.vbw-planning/.vbw-session" ]
+  teardown_temp_dir
+}
+
+@test "prompt-preflight does NOT delete .vbw-session on plain text follow-up" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  touch "$TEST_TEMP_DIR/.vbw-planning/.gsd-isolation"
+  echo "session" > "$TEST_TEMP_DIR/.vbw-planning/.vbw-session"
+  # Plain text follow-up (e.g., user answering a question)
+  INPUT='{"prompt":"yes, go ahead"}'
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '$INPUT' | bash '$SCRIPTS_DIR/prompt-preflight.sh'"
+  [ "$status" -eq 0 ]
+  # Marker should still exist
+  [ -f "$TEST_TEMP_DIR/.vbw-planning/.vbw-session" ]
+  teardown_temp_dir
+}
+
+@test "prompt-preflight removes .vbw-session on non-VBW slash command" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  touch "$TEST_TEMP_DIR/.vbw-planning/.gsd-isolation"
+  echo "session" > "$TEST_TEMP_DIR/.vbw-planning/.vbw-session"
+  # Non-VBW slash command
+  INPUT='{"prompt":"/gsd:status"}'
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '$INPUT' | bash '$SCRIPTS_DIR/prompt-preflight.sh'"
+  [ "$status" -eq 0 ]
+  # Marker should be removed
+  [ ! -f "$TEST_TEMP_DIR/.vbw-planning/.vbw-session" ]
+  teardown_temp_dir
+}
+
+@test "prompt-preflight does NOT create .vbw-session from plain text containing name: vbw:" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  touch "$TEST_TEMP_DIR/.vbw-planning/.gsd-isolation"
+  INPUT='{"prompt":"Please explain this YAML fragment: name: vbw:vibe"}'
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '$INPUT' | bash '$SCRIPTS_DIR/prompt-preflight.sh'"
+  [ "$status" -eq 0 ]
+  [ ! -f "$TEST_TEMP_DIR/.vbw-planning/.vbw-session" ]
+  teardown_temp_dir
+}
+
+@test "agent-start does nothing when agent fields are missing" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  INPUT='{}'
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '$INPUT' | bash '$SCRIPTS_DIR/agent-start.sh'"
+  [ "$status" -eq 0 ]
+  [ ! -f "$TEST_TEMP_DIR/.vbw-planning/.active-agent" ]
+  [ ! -f "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count" ]
+  teardown_temp_dir
+}
+
+@test "agent-start resets non-numeric count and increments safely" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  echo "abc" > "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count"
+  INPUT='{"agent_type":"vbw-scout"}'
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '$INPUT' | bash '$SCRIPTS_DIR/agent-start.sh'"
+  [ "$status" -eq 0 ]
+  [ "$(cat "$TEST_TEMP_DIR/.vbw-planning/.active-agent")" = "scout" ]
+  [ "$(cat "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count")" = "1" ]
+  teardown_temp_dir
+}
+
+@test "agent-start accepts team-lead alias when VBW session marker exists" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  echo "session" > "$TEST_TEMP_DIR/.vbw-planning/.vbw-session"
+  INPUT='{"agent_name":"team-lead"}'
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '$INPUT' | bash '$SCRIPTS_DIR/agent-start.sh'"
+  [ "$status" -eq 0 ]
+  [ "$(cat "$TEST_TEMP_DIR/.vbw-planning/.active-agent")" = "lead" ]
+  [ "$(cat "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count")" = "1" ]
+  teardown_temp_dir
+}
+
+@test "agent-start ignores team-lead alias without VBW context markers" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  INPUT='{"agent_name":"team-lead"}'
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '$INPUT' | bash '$SCRIPTS_DIR/agent-start.sh'"
+  [ "$status" -eq 0 ]
+  [ ! -f "$TEST_TEMP_DIR/.vbw-planning/.active-agent" ]
+  [ ! -f "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count" ]
+  teardown_temp_dir
+}
+
+@test "agent-stop cleans up when count is non-numeric" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  echo "scout" > "$TEST_TEMP_DIR/.vbw-planning/.active-agent"
+  echo "abc" > "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count"
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '{}' | bash '$SCRIPTS_DIR/agent-stop.sh'"
+  [ "$status" -eq 0 ]
+  [ ! -f "$TEST_TEMP_DIR/.vbw-planning/.active-agent" ]
+  [ ! -f "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count" ]
+  teardown_temp_dir
+}
+
+@test "agent-stop two sequential stops from count=2 fully clean up markers" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  echo "scout" > "$TEST_TEMP_DIR/.vbw-planning/.active-agent"
+  echo "2" > "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count"
+  # First stop: 2 -> 1, marker preserved
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '{}' | bash '$SCRIPTS_DIR/agent-stop.sh'"
+  [ "$status" -eq 0 ]
+  [ -f "$TEST_TEMP_DIR/.vbw-planning/.active-agent" ]
+  [ "$(cat "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count")" = "1" ]
+  # Second stop: 1 -> 0, full cleanup
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '{}' | bash '$SCRIPTS_DIR/agent-stop.sh'"
+  [ "$status" -eq 0 ]
+  [ ! -f "$TEST_TEMP_DIR/.vbw-planning/.active-agent" ]
+  [ ! -f "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count" ]
+  teardown_temp_dir
+}
+
+@test "security-filter resolves .planning marker checks from FILE_PATH root" {
+  setup_temp_dir
+  local REPO_A="$TEST_TEMP_DIR/repo-a"
+  local REPO_B="$TEST_TEMP_DIR/repo-b"
+  mkdir -p "$REPO_A/.vbw-planning" "$REPO_B/.planning" "$REPO_B/.vbw-planning"
+  touch "$REPO_A/.vbw-planning/.active-agent"
+  INPUT='{"tool_input":{"file_path":"'"$REPO_B"'/.planning/STATE.md"}}'
+  run bash -c "cd '$REPO_A' && echo '$INPUT' | bash '$SCRIPTS_DIR/security-filter.sh'"
+  [ "$status" -eq 0 ]
+  teardown_temp_dir
+}
+
+@test "security-filter blocks .planning write when target repo has active marker" {
+  setup_temp_dir
+  local REPO_A="$TEST_TEMP_DIR/repo-a"
+  local REPO_B="$TEST_TEMP_DIR/repo-b"
+  mkdir -p "$REPO_A/.vbw-planning" "$REPO_B/.planning" "$REPO_B/.vbw-planning"
+  touch "$REPO_B/.vbw-planning/.active-agent"
+  INPUT='{"tool_input":{"file_path":"'"$REPO_B"'/.planning/STATE.md"}}'
+  run bash -c "cd '$REPO_A' && echo '$INPUT' | bash '$SCRIPTS_DIR/security-filter.sh'"
+  [ "$status" -eq 2 ]
+  teardown_temp_dir
+}
+
+@test "security-filter ignores stale .vbw-session marker for .vbw-planning writes" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  touch "$TEST_TEMP_DIR/.vbw-planning/.gsd-isolation"
+  echo "session" > "$TEST_TEMP_DIR/.vbw-planning/.vbw-session"
+  touch -t 202401010101 "$TEST_TEMP_DIR/.vbw-planning/.vbw-session"
+  INPUT='{"tool_input":{"file_path":"'"$TEST_TEMP_DIR"'/.vbw-planning/STATE.md"}}'
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '$INPUT' | bash '$SCRIPTS_DIR/security-filter.sh'"
+  [ "$status" -eq 2 ]
+  teardown_temp_dir
+}
+
+@test "session-stop removes session and agent markers even without cost ledger" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  echo "session" > "$TEST_TEMP_DIR/.vbw-planning/.vbw-session"
+  echo "scout" > "$TEST_TEMP_DIR/.vbw-planning/.active-agent"
+  echo "2" > "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count"
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '{}' | bash '$SCRIPTS_DIR/session-stop.sh'"
+  [ "$status" -eq 0 ]
+  [ ! -f "$TEST_TEMP_DIR/.vbw-planning/.vbw-session" ]
+  [ ! -f "$TEST_TEMP_DIR/.vbw-planning/.active-agent" ]
+  [ ! -f "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count" ]
+  teardown_temp_dir
+}
+
+@test "task-verify allows role-only task subjects like Lead" {
+  setup_temp_dir
+  cd "$TEST_TEMP_DIR"
+  git init -q
+  git config user.email "test@test.com"
+  git config user.name "Test"
+  echo "hello" > file.txt
+  git add file.txt
+  git commit -q -m "chore(test): seed commit"
+  run bash -c "echo '{\"task_subject\":\"Lead\"}' | bash '$SCRIPTS_DIR/task-verify.sh'"
+  [ "$status" -eq 0 ]
+  teardown_temp_dir
+}
+
+@test "security-filter falls back to CWD for relative FILE_PATH" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  touch "$TEST_TEMP_DIR/.vbw-planning/.gsd-isolation"
+  echo "session" > "$TEST_TEMP_DIR/.vbw-planning/.vbw-session"
+  # Relative path — derive_project_root falls back to ".", CWD-relative marker check
+  INPUT='{"tool_input":{"file_path":".vbw-planning/STATE.md"}}'
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '$INPUT' | bash '$SCRIPTS_DIR/security-filter.sh'"
+  teardown_temp_dir
+  [ "$status" -eq 0 ]
+}
+
+@test "security-filter blocks relative FILE_PATH without markers" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  touch "$TEST_TEMP_DIR/.vbw-planning/.gsd-isolation"
+  # No markers — should block
+  INPUT='{"tool_input":{"file_path":".vbw-planning/STATE.md"}}'
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '$INPUT' | bash '$SCRIPTS_DIR/security-filter.sh'"
+  teardown_temp_dir
+  [ "$status" -eq 2 ]
+}
+
+@test "prompt-preflight does NOT delete .vbw-session when prompt is a file path" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning"
+  touch "$TEST_TEMP_DIR/.vbw-planning/.gsd-isolation"
+  echo "session" > "$TEST_TEMP_DIR/.vbw-planning/.vbw-session"
+  INPUT='{"prompt":"/home/user/project/file.txt"}'
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '$INPUT' | bash '$SCRIPTS_DIR/prompt-preflight.sh'"
+  [ "$status" -eq 0 ]
+  [ -f "$TEST_TEMP_DIR/.vbw-planning/.vbw-session" ]
+  teardown_temp_dir
+}
+
+@test "session-stop cleans up stale lock directory" {
+  setup_temp_dir
+  mkdir -p "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count.lock"
+  run bash -c "cd '$TEST_TEMP_DIR' && echo '{}' | bash '$SCRIPTS_DIR/session-stop.sh'"
+  [ "$status" -eq 0 ]
+  [ ! -d "$TEST_TEMP_DIR/.vbw-planning/.active-agent-count.lock" ]
+  teardown_temp_dir
+}
+
+@test "hooks matcher includes prefixed VBW agent names" {
+  run bash -c "grep -q 'vbw:vbw-scout' '$PROJECT_ROOT/hooks/hooks.json'"
+  [ "$status" -eq 0 ]
+}
+
+@test "hooks matcher includes team role aliases" {
+  run bash -c "grep -q 'team-lead' '$PROJECT_ROOT/hooks/hooks.json'"
+  [ "$status" -eq 0 ]
+}

@@ -44,8 +44,22 @@ is_marker_fresh() {
   [ "$age" -lt 86400 ]
 }
 
+derive_project_root() {
+  local path="$1"
+  local marker_dir="$2"
+  local root
+
+  root="${path%%/$marker_dir/*}"
+  if [ -z "$root" ] || [ "$root" = "$path" ]; then
+    root="."
+  fi
+
+  printf '%s' "$root"
+}
+
 if echo "$FILE_PATH" | grep -qF '.planning/' && ! echo "$FILE_PATH" | grep -qF '.vbw-planning/'; then
-  if is_marker_fresh ".vbw-planning/.active-agent" || is_marker_fresh ".vbw-planning/.vbw-session"; then
+  GSD_ROOT=$(derive_project_root "$FILE_PATH" ".planning")
+  if is_marker_fresh "$GSD_ROOT/.vbw-planning/.active-agent" || is_marker_fresh "$GSD_ROOT/.vbw-planning/.vbw-session"; then
     echo "Blocked: .planning/ is managed by GSD, not VBW ($FILE_PATH)" >&2
     exit 2
   fi
@@ -55,9 +69,14 @@ fi
 # .gsd-isolation = opt-in flag created during /vbw:init consent flow.
 # .active-agent = VBW subagent is running (managed by agent-start.sh / agent-stop.sh).
 # .vbw-session = VBW command is active (managed by prompt-preflight.sh / session-stop.sh).
+#
+# Resolve markers from the target file's project root (derived from FILE_PATH)
+# rather than CWD, so the check works even if the hook runs with a different CWD.
 if echo "$FILE_PATH" | grep -qF '.vbw-planning/'; then
-  if [ -f ".vbw-planning/.gsd-isolation" ]; then
-    if [ ! -f ".vbw-planning/.active-agent" ] && [ ! -f ".vbw-planning/.vbw-session" ]; then
+  VBW_ROOT=$(derive_project_root "$FILE_PATH" ".vbw-planning")
+  if [ -f "$VBW_ROOT/.vbw-planning/.gsd-isolation" ]; then
+    if ! is_marker_fresh "$VBW_ROOT/.vbw-planning/.active-agent" \
+      && ! is_marker_fresh "$VBW_ROOT/.vbw-planning/.vbw-session"; then
       echo "Blocked: .vbw-planning/ is isolated from non-VBW access ($FILE_PATH)" >&2
       exit 2
     fi

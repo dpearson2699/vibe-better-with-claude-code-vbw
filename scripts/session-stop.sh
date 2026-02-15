@@ -47,10 +47,11 @@ if [ -f "$PLANNING_DIR/.cost-ledger.json" ]; then
       '{timestamp: $ts, type: "cost_summary", costs: $costs}' \
       >> "$PLANNING_DIR/.session-log.jsonl" 2>/dev/null
   fi
-  rm -f "$PLANNING_DIR/.cost-ledger.json" "$PLANNING_DIR/.active-agent" 2>/dev/null
+  rm -f "$PLANNING_DIR/.cost-ledger.json" 2>/dev/null
 fi
 
-# Clean up GSD isolation session marker (if it exists)
-rm -f "$PLANNING_DIR/.vbw-session" 2>/dev/null
+# Clean up GSD isolation session marker, agent markers, and stale lock dir (always, not just with cost ledger)
+rmdir "$PLANNING_DIR/.active-agent-count.lock" 2>/dev/null || true
+rm -f "$PLANNING_DIR/.vbw-session" "$PLANNING_DIR/.active-agent" "$PLANNING_DIR/.active-agent-count" 2>/dev/null
 
 exit 0
