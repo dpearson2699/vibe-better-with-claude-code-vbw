@@ -943,9 +943,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on local development, proj
 
 ## Contributors
 
-- [@dpearson2699](https://github.com/dpearson2699) — config migration, CI hardening, hook resolution, planning artifact tracking
-- [@halindrome](https://github.com/halindrome) — statusline cache isolation
-- [@navin-moorthy](https://github.com/navin-moorthy) — human UAT verification gate
+<a href="https://github.com/yidakee/vibe-better-with-claude-code-vbw/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=yidakee/vibe-better-with-claude-code-vbw" />
+</a>
 
 <br>
 
