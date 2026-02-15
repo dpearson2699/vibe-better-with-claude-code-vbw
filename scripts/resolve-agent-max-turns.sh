@@ -1,27 +1,26 @@
 #!/usr/bin/env bash
 # resolve-agent-max-turns.sh - Turn budget resolution for VBW agents
 #
-# Reads agent_max_turns from config.json and resolves maxTurns for a given
-# agent and effort profile.
+# Usage:
+#   resolve-agent-max-turns.sh <agent-name> <config-path> [effort]
 #
-# Usage: resolve-agent-max-turns.sh <agent-name> <config-path> <effort>
-#   agent-name: lead|dev|qa|scout|debugger|architect
-#   config-path: path to .vbw-planning/config.json
-#   effort: thorough|balanced|fast|turbo
+# agent-name: lead|dev|qa|scout|debugger|architect
+# config-path: path to .vbw-planning/config.json (optional/fail-open)
+# effort: thorough|balanced|fast|turbo (also accepts high|medium|low)
 #
-# Returns: stdout = integer maxTurns (0 means "disabled"), exit 0
-# Errors: stderr = error message, exit 1
+# Returns: stdout = integer maxTurns (0 disables maxTurns), exit 0
+# Errors: invalid agent/usage -> exit 1
 
 set -euo pipefail
 
-if [ "$#" -ne 3 ]; then
-  echo "Usage: resolve-agent-max-turns.sh <agent-name> <config-path> <effort>" >&2
+if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
+  echo "Usage: resolve-agent-max-turns.sh <agent-name> <config-path> [effort]" >&2
   exit 1
 fi
 
 AGENT="$1"
 CONFIG_PATH="$2"
-EFFORT="$3"
+EFFORT_INPUT="${3:-}"
 
 case "$AGENT" in
   lead|dev|qa|scout|debugger|architect)
@@ -31,25 +30,6 @@ case "$AGENT" in
     exit 1
     ;;
 esac
-
-case "$EFFORT" in
-  thorough|balanced|fast|turbo)
-    ;;
-  *)
-    echo "Invalid effort '$EFFORT'. Valid: thorough, balanced, fast, turbo" >&2
-    exit 1
-    ;;
-esac
-
-if [ ! -f "$CONFIG_PATH" ]; then
-  echo "Config not found at $CONFIG_PATH. Run /vbw:init first." >&2
-  exit 1
-fi
-
-if ! jq empty "$CONFIG_PATH" >/dev/null 2>&1; then
-  echo "Malformed config JSON at $CONFIG_PATH" >&2
-  exit 1
-fi
 
 default_base_turns() {
   case "$1" in
@@ -62,13 +42,49 @@ default_base_turns() {
   esac
 }
 
-multiplier_for_effort() {
-  # Output "numerator denominator"
+legacy_effort_alias() {
   case "$1" in
-    thorough) echo "3 2" ;;   # 1.5x
-    balanced) echo "1 1" ;;   # 1.0x
-    fast) echo "4 5" ;;       # 0.8x
-    turbo) echo "3 5" ;;      # 0.6x
+    thorough) echo high ;;
+    balanced) echo medium ;;
+    fast) echo medium ;;
+    turbo) echo low ;;
+    *) echo medium ;;
+  esac
+}
+
+normalize_effort() {
+  local raw
+  raw=$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')
+
+  case "$raw" in
+    thorough|balanced|fast|turbo)
+      printf '%s' "$raw"
+      ;;
+    high)
+      printf 'thorough'
+      ;;
+    medium)
+      printf 'balanced'
+      ;;
+    low)
+      printf 'turbo'
+      ;;
+    "")
+      printf ''
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+multiplier_for_effort() {
+  # Output: "numerator denominator"
+  case "$1" in
+    thorough) echo "3 2" ;; # 1.5x
+    balanced) echo "1 1" ;; # 1.0x
+    fast) echo "4 5" ;;     # 0.8x
+    turbo) echo "3 5" ;;    # 0.6x
   esac
 }
 
@@ -88,7 +104,6 @@ normalize_turn_value() {
   fi
 
   if ! [[ "$value" =~ ^-?[0-9]+$ ]]; then
-    echo "Invalid turn budget value '$value' for agent '$AGENT'" >&2
     return 1
   fi
 
@@ -100,21 +115,94 @@ normalize_turn_value() {
   echo "$value"
 }
 
-CONFIGURED_TYPE=$(jq -r ".agent_max_turns.$AGENT | type? // \"null\"" "$CONFIG_PATH")
+CONFIG_VALID=0
+if [ -f "$CONFIG_PATH" ] && jq empty "$CONFIG_PATH" >/dev/null 2>&1; then
+  CONFIG_VALID=1
+fi
 
-# Object mode: explicit per-effort values, no multiplier applied.
-if [ "$CONFIGURED_TYPE" = "object" ]; then
-  RAW_VALUE=$(jq -r ".agent_max_turns.$AGENT.$EFFORT // .agent_max_turns.$AGENT.balanced // empty" "$CONFIG_PATH")
-  EXPLICIT_VALUE=$(normalize_turn_value "$RAW_VALUE")
-  if [ -n "$EXPLICIT_VALUE" ]; then
-    echo "$EXPLICIT_VALUE"
-    exit 0
+# Resolve effort with robust fallbacks:
+# 1) explicit argument (if valid)
+# 2) config.effort (if available + valid)
+# 3) balanced
+EFFORT=""
+if EFFORT=$(normalize_effort "$EFFORT_INPUT" 2>/dev/null); then
+  :
+else
+  EFFORT=""
+fi
+
+if [ -z "$EFFORT" ] && [ "$CONFIG_VALID" -eq 1 ]; then
+  CFG_EFFORT=$(jq -r '.effort // empty' "$CONFIG_PATH" 2>/dev/null || echo "")
+  if EFFORT=$(normalize_effort "$CFG_EFFORT" 2>/dev/null); then
+    :
+  else
+    EFFORT=""
   fi
 fi
 
-# Scalar mode: configured or default base value with effort multiplier.
-RAW_BASE=$(jq -r ".agent_max_turns.$AGENT" "$CONFIG_PATH")
-BASE=$(normalize_turn_value "$RAW_BASE")
+[ -z "$EFFORT" ] && EFFORT="balanced"
+LEGACY_EFFORT=$(legacy_effort_alias "$EFFORT")
+
+EXPLICIT_VALUE=""
+RAW_BASE=""
+
+if [ "$CONFIG_VALID" -eq 1 ]; then
+  CONFIGURED_TYPE=$(jq -r --arg agent "$AGENT" '
+    if (.agent_max_turns | type == "object") and (.agent_max_turns | has($agent)) then
+      (.agent_max_turns[$agent] | type)
+    elif (.max_turns | type == "object") and (.max_turns | has($agent)) then
+      (.max_turns[$agent] | type)
+    else
+      "null"
+    end
+  ' "$CONFIG_PATH" 2>/dev/null || echo "null")
+
+  # Object mode: per-effort values (no multiplier applied)
+  if [ "$CONFIGURED_TYPE" = "object" ]; then
+    RAW_VALUE=$(jq -r "(
+      .agent_max_turns.$AGENT.$EFFORT //
+      .agent_max_turns.$AGENT.$LEGACY_EFFORT //
+      .agent_max_turns.$AGENT.balanced //
+      .agent_max_turns.$AGENT.medium //
+      .max_turns.$AGENT.$EFFORT //
+      .max_turns.$AGENT.$LEGACY_EFFORT //
+      .max_turns.$AGENT.balanced //
+      .max_turns.$AGENT.medium //
+      empty
+    )" "$CONFIG_PATH" 2>/dev/null || echo "")
+
+    if EXPLICIT_VALUE=$(normalize_turn_value "$RAW_VALUE" 2>/dev/null); then
+      :
+    else
+      EXPLICIT_VALUE=""
+    fi
+
+    if [ -n "$EXPLICIT_VALUE" ]; then
+      echo "$EXPLICIT_VALUE"
+      exit 0
+    fi
+  fi
+
+  RAW_BASE=$(jq -r --arg agent "$AGENT" '
+    if (.agent_max_turns | type == "object") and (.agent_max_turns | has($agent)) then
+      .agent_max_turns[$agent]
+    elif (.max_turns | type == "object") and (.max_turns | has($agent)) then
+      .max_turns[$agent]
+    else
+      empty
+    end
+  ' "$CONFIG_PATH" 2>/dev/null || echo "")
+fi
+
+BASE=""
+if [ -n "$RAW_BASE" ]; then
+  if BASE=$(normalize_turn_value "$RAW_BASE" 2>/dev/null); then
+    :
+  else
+    BASE=""
+  fi
+fi
+
 if [ -z "$BASE" ]; then
   BASE=$(default_base_turns "$AGENT")
 fi

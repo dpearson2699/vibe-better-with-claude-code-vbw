@@ -11,38 +11,29 @@ teardown() {
   teardown_temp_dir
 }
 
-@test "resolves balanced default for debugger" {
-  run bash "$SCRIPTS_DIR/resolve-agent-max-turns.sh" debugger "$TEST_TEMP_DIR/.vbw-planning/config.json" balanced
+@test "legacy 2-arg invocation resolves using config/default effort" {
+  run bash "$SCRIPTS_DIR/resolve-agent-max-turns.sh" debugger "$TEST_TEMP_DIR/.vbw-planning/config.json"
   [ "$status" -eq 0 ]
   [ "$output" = "80" ]
 }
 
-@test "scales scalar turn budgets by effort" {
-  run bash "$SCRIPTS_DIR/resolve-agent-max-turns.sh" dev "$TEST_TEMP_DIR/.vbw-planning/config.json" thorough
+@test "uses config effort when 3rd argument is omitted" {
+  jq '.effort = "thorough"' "$TEST_TEMP_DIR/.vbw-planning/config.json" > "$TEST_TEMP_DIR/.vbw-planning/config.json.tmp"
+  mv "$TEST_TEMP_DIR/.vbw-planning/config.json.tmp" "$TEST_TEMP_DIR/.vbw-planning/config.json"
+
+  run bash "$SCRIPTS_DIR/resolve-agent-max-turns.sh" debugger "$TEST_TEMP_DIR/.vbw-planning/config.json"
+  [ "$status" -eq 0 ]
+  [ "$output" = "120" ]
+}
+
+@test "accepts high/medium/low aliases" {
+  run bash "$SCRIPTS_DIR/resolve-agent-max-turns.sh" dev "$TEST_TEMP_DIR/.vbw-planning/config.json" high
   [ "$status" -eq 0 ]
   [ "$output" = "113" ]
 
-  run bash "$SCRIPTS_DIR/resolve-agent-max-turns.sh" dev "$TEST_TEMP_DIR/.vbw-planning/config.json" turbo
+  run bash "$SCRIPTS_DIR/resolve-agent-max-turns.sh" dev "$TEST_TEMP_DIR/.vbw-planning/config.json" low
   [ "$status" -eq 0 ]
   [ "$output" = "45" ]
-}
-
-@test "returns zero when agent turn budget disabled via false" {
-  jq '.agent_max_turns.debugger = false' "$TEST_TEMP_DIR/.vbw-planning/config.json" > "$TEST_TEMP_DIR/.vbw-planning/config.json.tmp"
-  mv "$TEST_TEMP_DIR/.vbw-planning/config.json.tmp" "$TEST_TEMP_DIR/.vbw-planning/config.json"
-
-  run bash "$SCRIPTS_DIR/resolve-agent-max-turns.sh" debugger "$TEST_TEMP_DIR/.vbw-planning/config.json" thorough
-  [ "$status" -eq 0 ]
-  [ "$output" = "0" ]
-}
-
-@test "returns zero when agent turn budget disabled via zero" {
-  jq '.agent_max_turns.debugger = 0' "$TEST_TEMP_DIR/.vbw-planning/config.json" > "$TEST_TEMP_DIR/.vbw-planning/config.json.tmp"
-  mv "$TEST_TEMP_DIR/.vbw-planning/config.json.tmp" "$TEST_TEMP_DIR/.vbw-planning/config.json"
-
-  run bash "$SCRIPTS_DIR/resolve-agent-max-turns.sh" debugger "$TEST_TEMP_DIR/.vbw-planning/config.json" balanced
-  [ "$status" -eq 0 ]
-  [ "$output" = "0" ]
 }
 
 @test "supports explicit per-effort object values without multiplier" {
@@ -54,12 +45,30 @@ teardown() {
   [ "$output" = "70" ]
 }
 
-@test "rejects invalid agent name" {
-  run bash "$SCRIPTS_DIR/resolve-agent-max-turns.sh" invalid "$TEST_TEMP_DIR/.vbw-planning/config.json" balanced
-  [ "$status" -eq 1 ]
+@test "returns zero when agent turn budget disabled via false" {
+  jq '.agent_max_turns.debugger = false' "$TEST_TEMP_DIR/.vbw-planning/config.json" > "$TEST_TEMP_DIR/.vbw-planning/config.json.tmp"
+  mv "$TEST_TEMP_DIR/.vbw-planning/config.json.tmp" "$TEST_TEMP_DIR/.vbw-planning/config.json"
+
+  run bash "$SCRIPTS_DIR/resolve-agent-max-turns.sh" debugger "$TEST_TEMP_DIR/.vbw-planning/config.json" thorough
+  [ "$status" -eq 0 ]
+  [ "$output" = "0" ]
 }
 
-@test "rejects invalid effort name" {
-  run bash "$SCRIPTS_DIR/resolve-agent-max-turns.sh" debugger "$TEST_TEMP_DIR/.vbw-planning/config.json" medium
+@test "falls back to defaults when config is missing" {
+  run bash "$SCRIPTS_DIR/resolve-agent-max-turns.sh" dev "$TEST_TEMP_DIR/.vbw-planning/does-not-exist.json" turbo
+  [ "$status" -eq 0 ]
+  [ "$output" = "45" ]
+}
+
+@test "falls back to defaults when config is malformed" {
+  echo '{ invalid json' > "$TEST_TEMP_DIR/.vbw-planning/config.json"
+
+  run bash "$SCRIPTS_DIR/resolve-agent-max-turns.sh" qa "$TEST_TEMP_DIR/.vbw-planning/config.json" balanced
+  [ "$status" -eq 0 ]
+  [ "$output" = "25" ]
+}
+
+@test "rejects invalid agent name" {
+  run bash "$SCRIPTS_DIR/resolve-agent-max-turns.sh" invalid "$TEST_TEMP_DIR/.vbw-planning/config.json" balanced
   [ "$status" -eq 1 ]
 }
